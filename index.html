@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--ARTIFACT-HEAD-->
+<title>ハムスター大相撲！ころりん場所</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* Layout: 土俵(3D)を左、番付と稽古の帳面を右に置く二面構成。狭い画面では土俵が上。 */
+:root {
+  --bg: #f3eff9;
+  --surface: #ffffff;
+  --surface-2: #ebe5f5;
+  --ink: #2a2140;
+  --muted: #6a6182;
+  --line: #d9d0ea;
+  --murasaki: #5b3a9e;
+  --on-murasaki: #ffffff;
+  --aka: #cf3f36;
+  --kin: #b9861a;
+  --stage-top: #e3d8f6;
+  --stage-bot: #fbf1dc;
+  --shadow: 0 2px 0 rgba(42, 33, 64, .08);
+  --font-display: "Dela Gothic One", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #18132a; --surface: #241c3a; --surface-2: #2e2548; --ink: #f2edfb; --muted: #aaa1c4;
+    --line: #3c3259; --murasaki: #b89df6; --on-murasaki: #1c1433; --aka: #ff7b70; --kin: #e9bd55;
+    --stage-top: #31265a; --stage-bot: #1a1326; --shadow: 0 2px 0 rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #18132a; --surface: #241c3a; --surface-2: #2e2548; --ink: #f2edfb; --muted: #aaa1c4;
+  --line: #3c3259; --murasaki: #b89df6; --on-murasaki: #1c1433; --aka: #ff7b70; --kin: #e9bd55;
+  --stage-top: #31265a; --stage-bot: #1a1326; --shadow: 0 2px 0 rgba(0, 0, 0, .3);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.6; font-weight: 500;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--murasaki); outline-offset: 2px; }
+
+.app {
+  max-width: 1120px; margin: 0 auto; padding-block: 14px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 14px;
+}
+.mast { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.mast h1 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-family: var(--font-display); font-weight: 400; line-height: 1.15; }
+.mast .t1 { font-size: clamp(20px, 4.6vw, 30px); letter-spacing: .02em; }
+.mast .t2 { font-size: clamp(14px, 3vw, 18px); background: var(--murasaki); color: var(--on-murasaki); padding: 3px 12px 4px; border-radius: 4px; }
+.mast-info { font-weight: 700; color: var(--muted); font-size: 14px; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (min-width: 880px) {
+  .layout .stage { aspect-ratio: 4 / 3; }
+  .layout { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+}
+
+/* ---------- 土俵 ---------- */
+.stage {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; box-shadow: 0 -12px 0 var(--bg);
+  width: 100%; max-width: 100%; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden;
+  background: linear-gradient(var(--stage-top), var(--stage-bot)); border: 2px solid var(--ink);
+}
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.stage-tag {
+  position: absolute; top: 10px; left: 10px; background: var(--surface); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 6px; padding: 1px 10px; font-weight: 700; font-size: 13px;
+}
+.stage-say {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; text-align: center; pointer-events: none;
+  font-weight: 900; font-size: clamp(14px, 2.6vw, 18px); color: var(--ink);
+  text-shadow: 0 0 6px var(--surface), 0 0 6px var(--surface), 0 0 2px var(--surface);
+}
+.stage-big {
+  position: absolute; inset: 12% 0 auto; text-align: center; pointer-events: none;
+  font-family: var(--font-display); color: var(--ink);
+  text-shadow: 0 0 10px var(--surface), 0 0 10px var(--surface), 0 0 3px var(--surface);
+}
+.stage-big .k { font-size: clamp(30px, 8vw, 60px); line-height: 1.1; animation: pop .45s cubic-bezier(.2, 1.6, .4, 1); }
+.stage-big .s { font-size: clamp(15px, 3vw, 20px); font-family: var(--font-body); font-weight: 900; }
+.stage-big.win .k { color: var(--aka); }
+.toast {
+  position: absolute; top: 14%; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 4px 16px; font-weight: 900;
+  animation: rise 1.9s ease-out forwards;
+}
+@keyframes pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rise { 0% { opacity: 0; margin-top: 16px; } 15% { opacity: 1; margin-top: 0; } 80% { opacity: 1; } 100% { opacity: 0; margin-top: -14px; } }
+@media (prefers-reduced-motion: reduce) { .stage-big .k, .toast { animation-duration: .01s; } }
+
+/* ---------- 帳面 ---------- */
+.panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card { background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+.card h2 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 400; font-size: 18px; text-wrap: balance; }
+.card p { margin: 0; }
+.sub { color: var(--muted); font-size: 13px; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.between { justify-content: space-between; }
+
+.btn {
+  border: 2px solid var(--ink); background: var(--surface); border-radius: 10px; padding: 9px 16px; font-weight: 900;
+  box-shadow: 0 3px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 0 var(--ink); }
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--murasaki); color: var(--on-murasaki); }
+.btn.wide { width: 100%; font-size: 17px; padding-block: 12px; }
+.btn.small { padding: 4px 12px; font-size: 13px; box-shadow: 0 2px 0 var(--ink); }
+.linkbtn { background: none; border: 0; padding: 4px; color: var(--muted); text-decoration: underline; font-size: 13px; }
+
+/* ハムスター選択 */
+.kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.kind { text-align: left; border: 2px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.kind[aria-pressed="true"] { border-color: var(--ink); background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
+.kind b { font-weight: 900; display: flex; align-items: center; gap: 6px; }
+.kind .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); flex: none; }
+.kind span { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-weight: 900; font-size: 13px; }
+.field input { border: 2px solid var(--ink); border-radius: 8px; padding: 8px 10px; background: var(--surface); min-width: 0; flex: 1; font-weight: 700; font-size: 16px; }
+
+/* 力士カード */
+.rank { font-size: 13px; font-weight: 900; color: var(--murasaki); }
+.shikona { font-family: var(--font-display); font-size: 24px; line-height: 1.2; overflow-wrap: anywhere; }
+.rec { font-weight: 900; text-align: right; font-variant-numeric: tabular-nums; }
+.stars { letter-spacing: .12em; font-size: 15px; }
+.stars .w { color: var(--aka); }
+.meter { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) 2.4em; align-items: center; gap: 8px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.meter .bar { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; border-radius: 99px; background: var(--murasaki); transition: width .4s; }
+.meter.energy .bar i { background: var(--kin); }
+.meter .n { text-align: right; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 16px; }
+
+.tabs { display: flex; gap: 6px; }
+.tab { flex: 1; border: 2px solid var(--ink); background: var(--surface); border-radius: 10px 10px 0 0; padding: 7px 8px; font-weight: 900; border-bottom-width: 2px; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+.trains { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 8px; }
+.train { text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; }
+.train b { font-size: 15px; }
+.train span { font-size: 12px; font-weight: 700; color: var(--muted); }
+.vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; text-align: center; }
+.vs .n { font-family: var(--font-display); font-size: 17px; overflow-wrap: anywhere; line-height: 1.25; }
+.vs .mid { font-family: var(--font-display); color: var(--muted); }
+
+/* 番付表: 本物と同じく東が右 */
+.banzuke { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); border: 2px solid var(--ink); border-radius: 8px; overflow: hidden; font-variant-numeric: tabular-nums; }
+.banzuke > div { padding: 4px 8px; border-bottom: 1px solid var(--line); min-width: 0; display: flex; align-items: center; gap: 6px; }
+.banzuke .hd { background: var(--ink); color: var(--bg); font-weight: 900; justify-content: center; font-size: 13px; }
+.banzuke .rk { justify-content: center; font-weight: 900; font-size: 12px; background: var(--surface-2); white-space: nowrap; border-inline: 1px solid var(--line); }
+.banzuke .rk.top { font-family: var(--font-display); font-size: 14px; font-weight: 400; }
+.banzuke .cell { justify-content: space-between; }
+.banzuke .cell .nm { font-weight: 700; overflow-wrap: anywhere; line-height: 1.3; }
+.banzuke .cell .wl { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.banzuke .cell.me { background: var(--murasaki); }
+.banzuke .cell.me .nm, .banzuke .cell.me .wl { color: var(--on-murasaki); font-weight: 900; }
+.banzuke .up { color: var(--aka); font-weight: 900; }
+.banzuke .down { color: var(--muted); font-weight: 900; }
+.banzuke .cell.me .up, .banzuke .cell.me .down { color: var(--on-murasaki); }
+.banzuke .div { grid-column: 1 / -1; background: var(--surface-2); font-size: 12px; font-weight: 900; color: var(--muted); justify-content: center; padding-block: 2px; }
+
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+.log li { padding: 2px 0; border-bottom: 1px dashed var(--line); }
+.log li.g { font-weight: 900; color: var(--murasaki); }
+.verdict { font-family: var(--font-display); font-size: 32px; line-height: 1.1; }
+.verdict.win { color: var(--aka); }
+.news { display: flex; flex-direction: column; gap: 6px; }
+.news div { border-left: 0; background: var(--surface-2); border-radius: 8px; padding: 6px 12px; font-weight: 900; }
+.news div.gold { background: var(--kin); color: var(--surface); }
+.foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
+</style>
+<!--/ARTIFACT-HEAD-->
+</head>
+<body>
+<!--ARTIFACT-BODY-->
+<div class="app">
+  <header class="mast">
+    <h1><span class="t1">ハムスター大相撲！</span><span class="t2">ころりん場所</span></h1>
+    <div class="mast-info" id="mastInfo"></div>
+  </header>
+  <main class="layout">
+    <section class="stage" id="stage" aria-label="土俵">
+      <canvas id="cv"></canvas>
+      <div class="stage-tag" id="stageTag" hidden></div>
+      <div class="stage-big" id="stageBig" hidden></div>
+      <div class="stage-say" id="stageSay" aria-live="polite"></div>
+    </section>
+    <section class="panel" id="panel" aria-label="帳面"></section>
+  </main>
+  <footer class="foot">
+    <span>セーブはこのブラウザに自動で保存されます。</span>
+    <span id="resetBox"></span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+
+/* ================= データ ================= */
+const KINDS = [
+  { id: 'golden', name: 'ゴールデン', desc: 'どっしり王道。力と体のバランス型。', fur: 0xf0a24a, belly: 0xfff6e6, pattern: 'plain', scale: 1.0, stats: { pow: 13, tec: 12, body: 13, spd: 11, guts: 11 } },
+  { id: 'djungarian', name: 'ジャンガリアン', desc: '技とすばやさで勝負する技巧派。', fur: 0x9c9cab, belly: 0xffffff, stripe: 0x4d4b5a, pattern: 'stripe', scale: .92, stats: { pow: 9, tec: 15, body: 9, spd: 14, guts: 13 } },
+  { id: 'kinkuma', name: 'キンクマ', desc: 'おおきな体で押しまくる重量級。', fur: 0xf6c98a, belly: 0xfde9cc, pattern: 'plain', scale: 1.08, stats: { pow: 15, tec: 8, body: 17, spd: 7, guts: 13 } },
+  { id: 'robo', name: 'ロボロフスキー', desc: '小兵ながら立合いの速さは随一。', fur: 0xd9a868, belly: 0xffffff, pattern: 'brow', scale: .84, stats: { pow: 8, tec: 12, body: 7, spd: 18, guts: 15 } },
+  { id: 'pearl', name: 'パールホワイト', desc: '土俵際でねばる根性のかたまり。', fur: 0xf7f4ef, belly: 0xffffff, stripe: 0xc9c5d2, pattern: 'stripe', scale: .92, stats: { pow: 10, tec: 13, body: 10, spd: 10, guts: 17 } },
+];
+const kindOf = id => KINDS.find(k => k.id === id) || KINDS[0];
+const MAWASHI = [0x5b3a9e, 0x1f5fa8, 0xb8322c, 0x1d7a55, 0x2a2140, 0xd08a1c, 0x8a2d6b, 0x2c8c9c];
+const STAT = [['pow', '力'], ['tec', '技'], ['body', '体'], ['spd', '速'], ['guts', '心']];
+const NPC_NAMES = ['種ノ海', '頬袋山', '向日葵富士', '回し車', '胡桃錦', '団子山', '毛玉龍', 'ちゅう乃花', '餅ノ里', '南瓜山', '滑車海', '巣箱錦', '牧草山', '大福龍', '木の実岳', '夜行山', '丸々海', 'ふくふく丸', '砂浴錦', '齧ノ富士', '煎餅山', '胡麻ノ花', '栗ノ海', '豆大福', '落花生', '白玉山', '粟ノ里', '稗ノ山', '麦ノ海'];
+const MY_NAMES = ['ころ丸', 'ひま若', 'もちの海', 'ちび富士', 'ほお袋', 'まる錦', 'たね太郎', 'ふく乃山'];
+const BASHO = ['初場所', '春場所', '夏場所', '名古屋場所', '秋場所', '九州場所'];
+const DAYS = ['初日', '二日目', '三日目', '四日目', '五日目', '六日目', '千秋楽'];
+const KANJI = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+const TRAININGS = [
+  { id: 'shiko', name: '四股', cost: 25, gain: { body: 3, pow: 1 }, note: '体+ 力+' },
+  { id: 'teppo', name: 'てっぽう', cost: 25, gain: { pow: 3, tec: 1 }, note: '力+ 技+' },
+  { id: 'butsukari', name: 'ぶつかり稽古', cost: 35, gain: { tec: 2, guts: 2, pow: 1 }, note: '技+ 心+ 力+' },
+  { id: 'wheel', name: '回し車ダッシュ', cost: 25, gain: { spd: 3, guts: 1 }, note: '速+ 心+' },
+  { id: 'eat', name: 'ひまわりの種', cost: 0, gain: { body: 1 }, energy: 35, note: '元気+35 体+' },
+  { id: 'nap', name: 'おひるね', cost: 0, gain: { guts: 1 }, energy: 60, note: '元気+60 心+' },
+];
+const THROWS = ['上手投げ', '下手投げ', 'すくい投げ', 'ころりん投げ'];
+const SLAPS = ['はたき込み', '突き落とし', '引き落とし'];
+const N = 30, STAT_MAX = 120, ACTIONS = 3;
+
+function rankInfo(pos) {
+  const side = pos % 2 === 0 ? '東' : '西';
+  let base, num = 0, tier;
+  if (pos < 2) { base = '横綱'; tier = 6; }
+  else if (pos < 4) { base = '大関'; tier = 5; }
+  else if (pos < 6) { base = '関脇'; tier = 4; }
+  else if (pos < 8) { base = '小結'; tier = 3; }
+  else if (pos < 18) { base = '前頭'; num = Math.floor((pos - 8) / 2) + 1; tier = 2; }
+  else if (pos < 24) { base = '十両'; num = Math.floor((pos - 18) / 2) + 1; tier = 1; }
+  else { base = '幕下'; num = Math.floor((pos - 24) / 2) + 1; tier = 0; }
+  const short = base + (num ? (num === 1 ? '筆頭' : KANJI[num - 1] + '枚目') : '');
+  const division = pos < 18 ? '幕内' : pos < 24 ? '十両' : '幕下';
+  return { side, base, num, tier, short, label: side + short, division };
+}
+const bashoName = n => `${KANJI[Math.floor((n - 1) / 6)] || Math.floor((n - 1) / 6) + 1}年目 ${BASHO[(n - 1) % 6]}`;
+
+/* ================= 取組シミュレーション ================= */
+function simulateBout(A, B) {
+  const ev = []; const S = [A, B]; const neb = [false, false];
+  const ta = A.spd * rnd(.6, 1.4) + A.pow * .3, tb = B.spd * rnd(.6, 1.4) + B.pow * .3;
+  let x = clamp((ta - tb) / (ta + tb) * 1.2, -.35, .35);
+  ev.push({ t: 'tachiai', x });
+  const finish = (w, type, kimarite) => { ev.push({ t: 'end', winner: w, type, kimarite }); return { winner: w, kimarite, events: ev }; };
+  for (let i = 0; i < 10; i++) {
+    let dx;
+    if (Math.random() < .3) {
+      const by = Math.random() < .5 ? 0 : 1, a = S[by], d = S[1 - by], dir = by === 0 ? 1 : -1;
+      const pa = a.tec * rnd(.4, 1.6) + a.spd * .3, pd = d.tec * rnd(.4, 1.6) + d.body * .3;
+      if (pa > pd * 1.7) { const type = Math.random() < .5 ? 'throw' : 'slap'; return finish(by, type, pick(type === 'throw' ? THROWS : SLAPS)); }
+      if (pa > pd) { dx = dir * .22; x += dx; ev.push({ t: 'waza', by, x: clamp(x, -1, 1) }); }
+      else { dx = -dir * .12; x += dx; ev.push({ t: 'miss', by, x: clamp(x, -1, 1) }); }
+    } else {
+      const fa = (A.pow * .65 + A.body * .35) * rnd(.15, 1.85), fb = (B.pow * .65 + B.body * .35) * rnd(.15, 1.85);
+      dx = clamp((fa - fb) / (fa + fb) * 1.6, -.5, .5); x += dx;
+      ev.push({ t: 'push', x: clamp(x, -1, 1), dx });
+    }
+    if (Math.abs(x) >= 1) {
+      const w = x > 0 ? 0 : 1, l = 1 - w;
+      if (!neb[l] && Math.random() < S[l].guts / (S[l].guts + S[w].guts) * .55) {
+        neb[l] = true;
+        if (Math.random() < .2) { ev.push({ t: 'nebari', by: l, x: Math.sign(x) * .98 }); return finish(l, 'utchari', 'うっちゃり'); }
+        x = Math.sign(x) * .55; ev.push({ t: 'nebari', by: l, x }); continue;
+      }
+      return finish(w, 'out', Math.abs(dx) > .3 ? pick(['押し出し', '突き出し']) : '寄り切り');
+    }
+  }
+  const w = x >= 0 ? 0 : 1;
+  ev.push({ t: 'push', x: w === 0 ? 1 : -1, dx: .2 });
+  return finish(w, 'out', '寄り切り');
+}
+const effStats = (s, cond) => ({ pow: s.pow * cond, tec: s.tec * cond, body: s.body * cond, spd: s.spd * cond, guts: s.guts * cond });
+
+/* ================= 状態 ================= */
+const SAVE_KEY = 'hamsumo.v1';
+let state = null;
+let ui = { tab: 'train', kind: 'golden', name: pick(MY_NAMES), busy: false, last: null, news: null, resetAsk: false };
+
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* 保存できない環境でも遊べる */ } }
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && s.v === 1 && Array.isArray(s.roster) && s.roster.length === N) return s; } catch (e) { /* noop */ }
+  return null;
+}
+const me = () => state.roster.find(r => r.me);
+const posOf = r => state.roster.indexOf(r);
+const byId = id => state.roster.find(r => r.id === id);
+
+function newGame(kindId, name) {
+  const K = kindOf(kindId), roster = [];
+  for (let i = 0; i < N - 1; i++) {
+    const base = 9 + (N - 1 - i) * 2.3, st = {};
+    STAT.forEach(([k]) => { st[k] = Math.round(base * rnd(.8, 1.2)); });
+    roster.push({ id: i + 1, name: NPC_NAMES[i], kind: pick(KINDS).id, mawashi: pick(MAWASHI), stats: st, w: 0, l: 0, delta: 0 });
+  }
+  for (let i = roster.length - 1; i > 0; i--) { // 四股名だけシャッフル
+    const j = Math.floor(Math.random() * (i + 1)); const t = roster[i].name; roster[i].name = roster[j].name; roster[j].name = t;
+  }
+  roster.push({ id: 0, me: true, name, kind: K.id, mawashi: MAWASHI[0], stats: { ...K.stats }, w: 0, l: 0, delta: 0 });
+  state = { v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1 };
+  pickOpponent(); save();
+}
+function pickOpponent() {
+  const p = posOf(me());
+  const c = state.roster.filter(r => !r.me && !state.faced.includes(r.id)).sort((a, b) => Math.abs(posOf(a) - p) - Math.abs(posOf(b) - p));
+  state.oppId = pick(c.slice(0, 4)).id;
+}
+function simulateOthers(oppId) {
+  const rest = state.roster.filter(r => !r.me && r.id !== oppId);
+  while (rest.length >= 2) {
+    const a = rest.shift(), b = rest.splice(Math.min(rest.length - 1, Math.floor(Math.random() * 3)), 1)[0];
+    const res = simulateBout(effStats(a.stats, .9), effStats(b.stats, .9));
+    if (res.winner === 0) { a.w++; b.l++; } else { b.w++; a.l++; }
+  }
+}
+function train(T) {
+  const m = me(), low = state.energy < 30 && T.cost > 0;
+  const great = !low && Math.random() < .15, parts = [];
+  for (const k in T.gain) {
+    let g = T.gain[k] * (great ? 2 : 1) * (low ? .5 : 1) * (1 - m.stats[k] / 200) * rnd(.85, 1.25);
+    g = Math.max(1, Math.round(g));
+    const before = m.stats[k]; m.stats[k] = Math.min(STAT_MAX, before + g);
+    if (m.stats[k] > before) parts.push(`${STAT.find(s => s[0] === k)[1]}+${m.stats[k] - before}`);
+  }
+  if (T.energy) { const b = state.energy; state.energy = Math.min(100, b + T.energy); if (state.energy > b) parts.push(`元気+${state.energy - b}`); }
+  state.energy = Math.max(0, state.energy - T.cost);
+  state.actions--; save();
+  return (great ? '大成功！ ' : low ? 'へとへと… ' : '') + parts.join(' ');
+}
+function finishBout(res, opp) {
+  const m = me(), win = res.winner === 0;
+  if (win) { m.w++; opp.l++; } else { m.l++; opp.w++; }
+  state.marks.push(win ? 1 : 0); state.faced.push(opp.id);
+  simulateOthers(opp.id);
+  state.energy = Math.max(0, state.energy - 15);
+  state.phase = 'result';
+  ui.last = { win, kimarite: res.kimarite, opp: opp.name, oppRank: rankInfo(posOf(opp)).label };
+  save();
+}
+function nextDay() {
+  if (state.day >= 7) return endBasho();
+  state.day++; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 15);
+  state.phase = 'home'; pickOpponent(); save();
+}
+function endBasho() {
+  const m = me(), oldPos = posOf(m), oldInfo = rankInfo(oldPos), news = [];
+  // 優勝争い
+  const div = state.roster.filter(r => rankInfo(posOf(r)).division === oldInfo.division);
+  const top = Math.max(...div.map(r => r.w));
+  if (m.w === top) {
+    const rivals = div.filter(r => !r.me && r.w === top);
+    let won = true;
+    for (const r of rivals) { if (simulateBout(effStats(m.stats, .95), effStats(r.stats, .9)).winner !== 0) { won = false; news.push({ t: `優勝決定戦で${r.name}に敗れる…あと一歩！` }); break; } }
+    if (won) { state.yusho++; news.push({ t: `${oldInfo.division}優勝！（${m.w}勝${m.l}敗${rivals.length ? '・決定戦を制す' : ''}）`, gold: true }); }
+  }
+  // 番付編成
+  const order = state.roster.map((r, i) => ({ r, i, s: i - (r.w - r.l) * 1.3 }));
+  order.sort((a, b) => a.s - b.s || a.i - b.i);
+  order.forEach((o, ni) => { o.r.delta = o.i - ni; o.r.pw = o.r.w; o.r.pl = o.r.l; });
+  state.roster = order.map(o => o.r);
+  const newPos = posOf(m), ni = rankInfo(newPos);
+  news.push({ t: `${m.w}勝${m.l}敗で${m.w > m.l ? '勝ち越し' : '負け越し'}。新番付は ${ni.label}。` });
+  if (ni.tier > oldInfo.tier) news.push({ t: ['', '新十両！関取の仲間入り。大銀杏が結えます', '新入幕！幕内力士に昇進', '新三役！小結に昇進', '関脇に昇進！', '大関昇進！', '横綱昇進！！ 綱を締めて土俵入り'][ni.tier], gold: ni.tier >= 5 });
+  else if (ni.tier < oldInfo.tier) news.push({ t: `${ni.base}に陥落…稽古で出直し。` });
+  if (newPos < state.best) state.best = newPos;
+  // 来場所の準備
+  state.roster.forEach(r => { r.w = 0; r.l = 0; if (!r.me) STAT.forEach(([k]) => { r.stats[k] = clamp(Math.round(r.stats[k] + rnd(-1.5, 2.2)), 5, STAT_MAX); }); });
+  ui.news = news; ui.finished = bashoName(state.basho);
+  state.basho++; state.day = 1; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 40);
+  state.faced = []; state.marks = []; state.phase = 'banzuke'; pickOpponent(); save();
+}
+
+/* ================= 3D ================= */
+const stageEl = $('#stage'), sayEl = $('#stageSay'), bigEl = $('#stageBig'), tagEl = $('#stageTag');
+const RING = 3.6, RIG_Y = .88;
+let three = null;
+function initThree() {
+  if (!window.THREE) return null;
+  const T = THREE;
+  let renderer;
+  try { renderer = new T.WebGLRenderer({ canvas: $('#cv'), antialias: true, alpha: true }); } catch (e) { return null; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+  const scene = new T.Scene();
+  const camera = new T.PerspectiveCamera(35, 4 / 3, .1, 100);
+  scene.add(new T.HemisphereLight(0xffffff, 0xcdb8a0, .7));
+  const sun = new T.DirectionalLight(0xfff2dd, .62); sun.position.set(4, 10, 6); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); const sc = sun.shadow.camera; sc.left = -7; sc.right = 7; sc.top = 7; sc.bottom = -7; sc.far = 30;
+  scene.add(sun);
+
+  const mats = new Map();
+  const mat = (c, rough = .85) => { const k = c + '_' + rough; if (!mats.has(k)) mats.set(k, new T.MeshStandardMaterial({ color: c, roughness: rough })); return mats.get(k); };
+  const SPH = new T.SphereGeometry(1, 28, 20);
+  const sph = (r, c, sx = 1, sy = 1, sz = 1, rough) => { const m = new T.Mesh(SPH, mat(c, rough)); m.scale.set(r * sx, r * sy, r * sz); m.castShadow = true; return m; };
+  const at = (o, x, y, z) => { o.position.set(x, y, z); return o; };
+
+  // 土俵
+  const dohyo = new T.Group(); scene.add(dohyo);
+  const base = new T.Mesh(new T.BoxGeometry(10.6, .7, 10.6), mat(0xc9a676, 1)); base.position.y = -.35; base.receiveShadow = true; dohyo.add(base);
+  const skirt = new T.Mesh(new T.BoxGeometry(11.4, .3, 11.4), mat(0xa98558, 1)); skirt.position.y = -.85; skirt.receiveShadow = true; dohyo.add(skirt);
+  const tawara = new T.Mesh(new T.TorusGeometry(RING, .13, 10, 64), mat(0xf0dca0, 1)); tawara.rotation.x = Math.PI / 2; tawara.position.y = .03; tawara.receiveShadow = true; dohyo.add(tawara);
+  for (const sx of [-.6, .6]) { const l = new T.Mesh(new T.BoxGeometry(.1, .02, .9), mat(0xffffff, 1)); l.position.set(sx, .011, 0); dohyo.add(l); }
+  // 四房: 正面(手前)から見て 左手前=青房 左奥=赤房 右奥=白房 右手前=黒房
+  [[-4.6, 3.4, 0x2b8a55], [-4.6, -4.2, 0xcf3f36], [4.6, -4.2, 0xffffff], [4.6, 3.4, 0x2a2140]].forEach(([x, z, c]) => {
+    const g = new T.Group(); g.position.set(x, 5.2, z);
+    const cord = new T.Mesh(new T.CylinderGeometry(.03, .03, 1.2, 6), mat(c)); cord.position.y = .9; g.add(cord);
+    g.add(sph(.2, c)); const tas = new T.Mesh(new T.CylinderGeometry(.14, .26, .8, 12), mat(c)); tas.position.y = -.5; g.add(tas);
+    g.children.forEach(c => { c.castShadow = false; });
+    dohyo.add(g);
+  });
+
+  // 稽古道具
+  const pole = new T.Mesh(new T.CylinderGeometry(.22, .25, 3, 16), mat(0x9b6a3c, 1)); pole.position.set(0, 1.5, 1.25); pole.castShadow = true; pole.visible = false; scene.add(pole);
+  const wheel = new T.Group(); wheel.position.set(0, 1.62, 0); wheel.visible = false; scene.add(wheel);
+  for (const z of [-.6, .6]) { const r = new T.Mesh(new T.TorusGeometry(1.62, .06, 8, 40), mat(0x8a7fb0)); r.position.z = z; wheel.add(r); }
+  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; const b = new T.Mesh(new T.CylinderGeometry(.035, .035, 1.2, 6), mat(0xb9b0d6)); b.rotation.x = Math.PI / 2; b.position.set(Math.cos(a) * 1.62, Math.sin(a) * 1.62, 0); wheel.add(b); }
+
+  function makeHamster(kindId, mawashi, opts = {}) {
+    const K = kindOf(kindId), PINK = 0xf6aeb0;
+    const root = new T.Group(), rig = new T.Group(); root.add(rig);
+    rig.add(sph(.8, K.fur, 1, .95, .92));
+    rig.add(at(sph(.64, K.belly, 1, 1, .62), 0, -.06, .36));
+    rig.add(at(sph(.11, K.belly), 0, -.45, -.68));
+    if (K.pattern === 'stripe') rig.add(at(sph(.81, K.stripe, .14, .97, .93), 0, 0, -.06));
+    const head = new T.Group(); head.position.set(0, .82, .1); rig.add(head);
+    head.add(sph(.66, K.fur, 1.08, .95, 1));
+    if (K.pattern === 'stripe') head.add(at(sph(.67, K.stripe, .15, .96, 1), 0, 0, -.05));
+    head.add(at(sph(.3, K.belly, 1.25, .8, .7), 0, -.14, .5));
+    const cheeks = [], eyes = [];
+    for (const s of [-1, 1]) {
+      const ch = at(sph(.24, K.belly), s * .36, -.16, .38); head.add(ch); cheeks.push(ch);
+      head.add(at(sph(.09, 0xff9aa8, 1, .7, .35), s * .45, -.1, .585));
+      const eye = new T.Group(); eye.position.set(s * .25, .1, .56); eye.add(sph(.085, 0x1c1420, 1, 1, 1, .15)); eye.add(at(sph(.028, 0xffffff, 1, 1, 1, .3), .03, .035, .07)); head.add(eye); eyes.push(eye);
+      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : K.fur, 1, 1, .4)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear);
+      if (K.pattern === 'brow') head.add(at(sph(.07, 0xffffff, 1.3, .8, .4), s * .25, .27, .54));
+    }
+    head.add(at(sph(.05, 0xe8838c), 0, -.04, .7));
+    const mage = new T.Group(); mage.add(at(sph(.17, 0x1c1420, 1, .55, 1.35), 0, .62, -.1)); mage.add(at(sph(.08, 0x1c1420, 1, .8, 1.3), 0, .7, .08)); head.add(mage);
+    const arms = [], feet = [];
+    for (const s of [-1, 1]) {
+      const arm = new T.Group(); arm.position.set(s * .6, .2, .3); arm.add(at(sph(.17, K.fur, 1, 1.5, 1), 0, -.14, .08)); arm.add(at(sph(.08, PINK), 0, -.37, .1)); rig.add(arm); arms.push(arm);
+      const foot = new T.Group(); foot.position.set(s * .36, -.78, .2); foot.add(sph(.2, PINK, 1, .5, 1.5)); rig.add(foot); feet.push(foot);
+    }
+    const belt = new T.Mesh(new T.TorusGeometry(.71, .13, 10, 36), mat(mawashi, .6)); belt.rotation.x = Math.PI / 2; belt.scale.set(1, .92, 1); belt.position.y = -.36; belt.castShadow = true; rig.add(belt);
+    const flap = new T.Mesh(new T.BoxGeometry(.34, .34, .1), mat(mawashi, .6)); flap.position.set(0, -.55, .58); flap.rotation.x = .4; rig.add(flap);
+    const tsuna = new T.Group(); const rope = new T.Mesh(new T.TorusGeometry(.76, .1, 10, 36), mat(0xffffff, 1)); rope.rotation.x = Math.PI / 2; rope.scale.set(1, .92, 1); rope.position.y = -.17; tsuna.add(rope);
+    for (const sx of [-.3, 0, .3]) { const sh = new T.Mesh(new T.BoxGeometry(.12, .3, .03), mat(0xffffff, 1)); sh.position.set(sx, -.38, .82 - Math.abs(sx) * .25); tsuna.add(sh); }
+    rig.add(tsuna);
+    const seed = at(sph(.12, 0x3a3340, .7, 1.3, .4), 0, .42, .78); seed.visible = false; rig.add(seed);
+    root.scale.setScalar(K.scale);
+    const H = { root, rig, head, arms, feet, eyes, cheeks, mage, tsuna, seed, anim: 'idle', t: Math.random() * 5, fat: 1, blink: rnd(1, 4), ex: { rx: 0, rz: 0, y: 0, z: 0 } };
+    H.dress = pos => { mage.visible = pos < 24; tsuna.visible = pos < 2; };
+    H.dress(opts.pos === undefined ? 29 : opts.pos);
+    H.fat = 1 + Math.min(opts.body || 10, STAT_MAX) / 500;
+    scene.add(root);
+    return H;
+  }
+
+  function pose(H, dt) {
+    H.t += dt; const t = H.t, r = H.rig, f = H.fat, PI = Math.PI;
+    r.position.set(0, RIG_Y, 0); r.rotation.set(0, 0, 0); r.scale.set(f, 1, f);
+    H.head.rotation.set(0, 0, 0);
+    H.arms.forEach((a, i) => { a.rotation.set(-.3, 0, 0); a.position.set((i ? 1 : -1) * .6, .2, .3); });
+    H.feet.forEach((ft, i) => { ft.position.set((i ? 1 : -1) * .36, -.78, .2); ft.rotation.set(0, 0, 0); });
+    H.cheeks.forEach(c => c.scale.setScalar(.24));
+    H.seed.visible = H.anim === 'eat';
+    H.blink -= dt; if (H.blink < -.12) H.blink = rnd(1.5, 4.5);
+    let eyeY = H.blink < 0 ? .1 : 1;
+    const breathe = Math.sin(t * 2.2);
+    switch (H.anim) {
+      case 'idle': r.scale.y = 1 + breathe * .015; r.position.y += breathe * .012; H.head.rotation.z = Math.sin(t * .9) * .05; break;
+      case 'shiko': {
+        const p = (t % 2) / 2, side = Math.floor(t / 2) % 2 ? 1 : -1, up = Math.sin(clamp(p / .7, 0, 1) * PI);
+        r.rotation.z = -side * up * .4; r.position.y -= .08 * (1 - up);
+        const ft = H.feet[side > 0 ? 1 : 0]; ft.position.y += up * .55; ft.position.x += side * up * .25;
+        H.arms.forEach(a => { a.rotation.x = -.6; });
+        if (p > .7) r.position.y -= Math.sin((p - .7) / .3 * PI) * .06;
+        break;
+      }
+      case 'teppo': {
+        r.rotation.x = .18;
+        H.arms.forEach((a, i) => { const k = Math.max(0, Math.sin(t * 9 + i * PI)); a.rotation.x = -1.25 - k * .35; a.position.z = .3 + k * .22; });
+        r.position.z = Math.abs(Math.sin(t * 9)) * .06;
+        break;
+      }
+      case 'butsukari': {
+        const p = (t % 1.3) / 1.3; const z = p < .45 ? ease(p / .45) * 1.5 : 1.5 * (1 - ease((p - .45) / .55));
+        r.position.z = z - .5; r.rotation.x = p < .45 ? .4 : -.15 * Math.sin((p - .45) / .55 * PI);
+        H.arms.forEach(a => { a.rotation.x = -1.2; });
+        H.feet.forEach((ft, i) => { ft.position.z += Math.sin(t * 20 + i * PI) * .1; });
+        break;
+      }
+      case 'wheel':
+        r.rotation.x = .3; r.position.y += Math.abs(Math.sin(t * 16)) * .06;
+        H.feet.forEach((ft, i) => { ft.position.z += Math.sin(t * 16 + i * PI) * .2; ft.position.y += Math.max(0, Math.cos(t * 16 + i * PI)) * .1; });
+        H.arms.forEach((a, i) => { a.rotation.x = -.8 + Math.sin(t * 16 + i * PI) * .6; });
+        break;
+      case 'eat': {
+        const k = Math.abs(Math.sin(t * 9));
+        H.arms.forEach((a, i) => { a.rotation.x = -2.25; a.rotation.z = (i ? 1 : -1) * .55; });
+        H.head.rotation.x = .08 + k * .05; H.cheeks.forEach(c => c.scale.setScalar(.24 * (1.1 + k * .28)));
+        break;
+      }
+      case 'nap': r.rotation.x = -PI / 2 * .96; r.position.y = .72; r.scale.y = 1 + breathe * .03; eyeY = .1; H.arms.forEach(a => { a.rotation.x = -.9; }); break;
+      case 'shikiri': r.rotation.x = .55; r.position.y -= .1; H.arms.forEach(a => { a.rotation.x = -.5; }); break;
+      case 'push':
+        r.rotation.x = .34 + Math.sin(t * 15) * .04; r.position.x = Math.sin(t * 11) * .03;
+        H.arms.forEach(a => { a.rotation.x = -1.3; a.position.z = .42; });
+        H.feet.forEach((ft, i) => { ft.position.z += Math.sin(t * 15 + i * PI) * .13; });
+        break;
+      case 'win': r.position.y += Math.abs(Math.sin(t * 6)) * .45; H.arms.forEach((a, i) => { a.rotation.x = -2.9; a.rotation.z = (i ? 1 : -1) * .5; }); eyeY = .35; break;
+      case 'down': eyeY = .1; H.arms.forEach((a, i) => { a.rotation.x = -1.4 + Math.sin(t * 7 + i * PI) * .5; }); H.feet.forEach((ft, i) => { ft.position.y += Math.max(0, Math.sin(t * 7 + i * PI)) * .12; }); break;
+    }
+    H.eyes.forEach(e => { e.scale.y = eyeY; });
+    r.rotation.x += H.ex.rx; r.rotation.z += H.ex.rz; r.position.y += H.ex.y; r.position.z += H.ex.z;
+  }
+
+  const actors = [];
+  const cam = { pos: new T.Vector3(0, 2.7, 8.6), look: new T.Vector3(0, 1.25, 0), tp: new T.Vector3(0, 2.7, 8.6), tl: new T.Vector3(0, 1.25, 0) };
+  const api = { makeHamster, actors, pole, wheel, cam, mode: 'home', yaw: 0, shake: 0, solo: null, tweens: [], skip: false };
+  api.clear = () => { actors.splice(0).forEach(h => scene.remove(h.root)); api.solo = null; pole.visible = false; wheel.visible = false; };
+  api.setCam = (mode, instant) => {
+    if (mode === 'match') { cam.tp.set(0, 3.9, 11.2); cam.tl.set(0, 1.0, 0); } else { cam.tp.set(0, 2.7, 8.6); cam.tl.set(0, 1.25, 0); }
+    if (instant) { cam.pos.copy(cam.tp); cam.look.copy(cam.tl); }
+  };
+  api.tween = (dur, fn) => new Promise(res => { if (api.skip) { fn(1); res(); } else api.tweens.push({ t: 0, dur, fn, res }); });
+  api.wait = dur => api.tween(dur, () => {});
+
+  // ドラッグでくるっと回す
+  let drag = null; const cv = renderer.domElement;
+  cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, yaw: api.yaw }; });
+  window.addEventListener('pointermove', e => { if (drag) api.yaw = drag.yaw + (e.clientX - drag.x) * .012; });
+  window.addEventListener('pointerup', () => { drag = null; });
+
+  function resize() { const w = stageEl.clientWidth, h = stageEl.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  new ResizeObserver(resize).observe(stageEl); resize();
+
+  let last = performance.now(), time = 0;
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now; time += dt;
+    for (let i = api.tweens.length - 1; i >= 0; i--) {
+      const tw = api.tweens[i]; tw.t += dt; const k = api.skip ? 1 : Math.min(1, tw.t / tw.dur); tw.fn(k);
+      if (k >= 1) { api.tweens.splice(i, 1); tw.res(); }
+    }
+    if (api.solo) {
+      const H = api.solo;
+      if (H.anim === 'wheel') { H.root.rotation.y = Math.PI / 2; wheel.rotation.z += dt * 9; }
+      else { if (!drag && api.mode === 'select') api.yaw += dt * .5; H.root.rotation.y = api.yaw; }
+    }
+    actors.forEach(h => pose(h, dt));
+    cam.pos.lerp(cam.tp, 1 - Math.pow(.02, dt)); cam.look.lerp(cam.tl, 1 - Math.pow(.02, dt));
+    camera.position.copy(cam.pos);
+    if (api.shake > 0) { api.shake -= dt; camera.position.x += Math.sin(time * 90) * .08 * api.shake * 3; camera.position.y += Math.cos(time * 70) * .06 * api.shake * 3; }
+    camera.lookAt(cam.look);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return api;
+}
+
+/* ---------- 3D 場面 ---------- */
+function showSolo(kindId, mawashi, pos, body, mode) {
+  if (!three) return;
+  three.clear(); three.mode = mode; three.yaw = mode === 'select' ? .4 : 0;
+  const H = three.makeHamster(kindId, mawashi, { pos, body });
+  three.actors.push(H); three.solo = H; three.setCam('home');
+}
+function showHome() { const m = me(); showSolo(m.kind, m.mawashi, posOf(m), m.stats.body, 'home'); }
+let animTimer = 0;
+function playTraining(id) {
+  if (!three || !three.solo) return;
+  const H = three.solo; clearTimeout(animTimer);
+  three.yaw = 0; H.anim = id; H.t = 0;
+  three.pole.visible = id === 'teppo' || id === 'butsukari';
+  three.wheel.visible = id === 'wheel';
+  animTimer = setTimeout(() => { H.anim = 'idle'; three.pole.visible = false; three.wheel.visible = false; }, 2000);
+}
+function toast(text) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = text; stageEl.appendChild(d); setTimeout(() => d.remove(), 2000); }
+function say(text) { sayEl.textContent = text; logLine(text); }
+let logEl = null;
+function logLine(text, cls) { if (!logEl) return; const li = document.createElement('li'); li.textContent = text; if (cls) li.className = cls; logEl.appendChild(li); logEl.scrollTop = logEl.scrollHeight; }
+
+async function animateBout(res, m, opp) {
+  if (!three) return;
+  const PI = Math.PI, east = posOf(m) % 2 === 0, s = east ? 1 : -1; // 東は正面から見て左
+  three.clear(); three.mode = 'match'; three.skip = false; three.setCam('match');
+  const A = three.makeHamster(m.kind, m.mawashi, { pos: posOf(m), body: m.stats.body });
+  const B = three.makeHamster(opp.kind, opp.mawashi, { pos: posOf(opp), body: opp.stats.body });
+  three.actors.push(A, B);
+  const H = [A, B], names = [m.name, opp.name], X = RING - 1.0, d = .84, start = 1.7;
+  A.root.rotation.y = s * PI / 2; B.root.rotation.y = -s * PI / 2;
+  A.root.position.set(-s * start, 0, 0); B.root.position.set(s * start, 0, 0);
+  let cur = 0;
+  const place = x => { const cx = s * x * X; A.root.position.x = cx - s * d; B.root.position.x = cx + s * d; };
+  const moveTo = (x, dur) => { const from = cur; cur = x; return three.tween(dur, k => place(lerp(from, x, ease(k)))); };
+  const { tween, wait } = three;
+
+  say(`ひが〜し〜、${east ? m.name : opp.name}。に〜し〜、${east ? opp.name : m.name}。`);
+  await wait(1.2);
+  A.anim = B.anim = 'shiko'; A.t = B.t = 0; await wait(2);
+  A.anim = B.anim = 'shikiri'; say('はっけよ〜い…'); await wait(1);
+  say('のこった！'); A.anim = B.anim = 'push';
+  await tween(.2, k => { A.root.position.x = -s * lerp(start, d, k); B.root.position.x = s * lerp(start, d, k); });
+  three.shake = .25;
+  for (const e of res.events) {
+    if (e.t === 'tachiai') { await moveTo(e.x, .5); if (Math.abs(e.x) > .15) say(`${names[e.x > 0 ? 0 : 1]}、するどい立合い！`); }
+    else if (e.t === 'push') { if (Math.abs(e.dx) > .25) say(`${names[e.dx > 0 ? 0 : 1]}、一気に前へ！`); await moveTo(e.x, .62); }
+    else if (e.t === 'waza') { say(`${names[e.by]}、いなして体を入れかえる！`); const h = H[e.by]; await Promise.all([moveTo(e.x, .55), tween(.55, k => { h.ex.z = Math.sin(k * PI) * .45; })]); }
+    else if (e.t === 'miss') { say(`${names[e.by]}の技、${names[1 - e.by]}がこらえた！`); await moveTo(e.x, .5); }
+    else if (e.t === 'nebari') { say(`${names[e.by]}、土俵際でねばる！`); const h = H[e.by]; await tween(.6, k => { h.ex.rx = -.55 * Math.sin(k * PI); }); await moveTo(e.x, .45); }
+    else if (e.t === 'end') {
+      const W = H[e.winner], L = H[1 - e.winner];
+      const dirL = e.winner === 0 ? s : -s; // 負けた側の土俵際の向き
+      const lx = L.root.position.x, wx = W.root.position.x, roll = PI * 2.5;
+      W.anim = 'idle';
+      if (e.type === 'out') {
+        three.shake = .2;
+        await tween(.9, k => { L.root.position.x = lerp(lx, dirL * (RING + 1.15), ease(k)); L.ex.rx = -roll * k; L.ex.y = Math.sin(k * PI) * .7 - .16 * k; });
+      } else if (e.type === 'throw') {
+        await tween(.9, k => { W.root.rotation.y = (e.winner === 0 ? s : -s) * PI / 2 + k * PI * 2; L.root.position.z = lerp(0, 2.3, ease(k)); L.root.position.x = lerp(lx, wx, ease(k)); L.ex.rz = roll * k; L.ex.y = Math.sin(k * PI) * .8 - .1 * k; });
+      } else if (e.type === 'slap') {
+        await tween(.7, k => { W.root.position.z = -1.1 * ease(k); L.root.position.x = lerp(lx, lx - dirL * 1.5, ease(k)); L.ex.rx = PI / 2 * ease(k); L.ex.y = -.2 * k; });
+      } else { // うっちゃり
+        await tween(1, k => { W.root.rotation.y = (e.winner === 0 ? s : -s) * PI / 2 + k * PI; L.root.position.x = lerp(lx, -dirL * (RING + 1.15), ease(k)); L.ex.rx = roll * k; L.ex.y = Math.sin(k * PI) * 1.1 - .16 * k; });
+      }
+      L.anim = 'down'; W.anim = 'win';
+      const wy = W.root.rotation.y;
+      await tween(.3, k => { W.root.rotation.y = lerp(wy, 0, k); });
+      say(`${e.kimarite}で、${names[e.winner]}の勝ち！`);
+      bigEl.className = 'stage-big' + (e.winner === 0 ? ' win' : '');
+      bigEl.innerHTML = `<div class="k">${esc(e.kimarite)}</div><div class="s">${e.winner === 0 ? '白星！' : '黒星…'}</div>`;
+      bigEl.hidden = false;
+      await wait(.6);
+    }
+  }
+  three.skip = false;
+}
+
+/* ================= 画面 ================= */
+const panel = $('#panel');
+const meter = (label, v, max, cls = '') => `<div class="meter ${cls}"><span>${label}</span><div class="bar"><i style="width:${clamp(v / max * 100, 0, 100)}%"></i></div><span class="n">${v}</span></div>`;
+const starsHtml = marks => marks.map(w => w ? '<span class="w">○</span>' : '●').join('') + '<span class="sub">' + '・'.repeat(Math.max(0, 7 - marks.length)) + '</span>';
+
+function banzukeHtml(showDelta) {
+  const cell = r => {
+    const d = r.delta, mv = !showDelta ? '' : d > 0 ? `<span class="up">↑${d}</span>` : d < 0 ? `<span class="down">↓${-d}</span>` : '<span class="down">→</span>';
+    const wl = showDelta ? `${r.pw}-${r.pl} ${mv}` : `${r.w}-${r.l}`;
+    return `<div class="cell${r.me ? ' me' : ''}"><span class="nm">${esc(r.name)}</span><span class="wl">${wl}</span></div>`;
+  };
+  let h = '<div class="banzuke"><div class="hd">西</div><div class="hd">番付</div><div class="hd">東</div>', lastDiv = '';
+  for (let i = 0; i < N; i += 2) {
+    const info = rankInfo(i);
+    if (info.division !== lastDiv) { lastDiv = info.division; h += `<div class="div">${info.division}</div>`; }
+    h += cell(state.roster[i + 1]) + `<div class="rk${info.tier >= 3 ? ' top' : ''}">${info.short}</div>` + cell(state.roster[i]);
+  }
+  return h + '</div>';
+}
+
+function render() {
+  logEl = null;
+  const ph = state ? state.phase : 'select';
+  $('#mastInfo').textContent = state ? `優勝 ${state.yusho}回 ・ 最高位 ${rankInfo(state.best).short}` : '';
+  tagEl.hidden = !state || ph === 'banzuke';
+  if (state) tagEl.textContent = `${bashoName(state.basho)} ${DAYS[state.day - 1]}`;
+  if (ph !== 'result') bigEl.hidden = true;
+  if (ph !== 'result' && ph !== 'match') sayEl.textContent = '';
+  ({ select: renderSelect, home: renderHome, result: renderResult, banzuke: renderBanzuke })[ph]();
+  renderReset();
+}
+function renderReset() {
+  const box = $('#resetBox');
+  if (!state) { box.innerHTML = ''; return; }
+  box.innerHTML = ui.resetAsk
+    ? '<span>セーブを消して最初から始めますか？</span> <button class="linkbtn" id="resetYes">消して始める</button> <button class="linkbtn" id="resetNo">やめる</button>'
+    : '<button class="linkbtn" id="resetAsk">はじめからやりなおす</button>';
+  const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  on('resetAsk', () => { ui.resetAsk = true; renderReset(); });
+  on('resetNo', () => { ui.resetAsk = false; renderReset(); });
+  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.resetAsk = false; ui.tab = 'train'; showSolo(ui.kind, MAWASHI[0], 29, 12, 'select'); render(); });
+}
+
+function renderSelect() {
+  const K = kindOf(ui.kind);
+  panel.innerHTML = `
+  <div class="card stack">
+    <h2>入門するハムスターをえらぶ</h2>
+    <div class="kinds">${KINDS.map(k => `<button class="kind" data-kind="${k.id}" aria-pressed="${k.id === ui.kind}"><b><i class="dot" style="background:#${k.fur.toString(16).padStart(6, '0')}"></i>${k.name}</b><span>${k.desc}</span></button>`).join('')}</div>
+    <div class="stats">${STAT.map(([k, l]) => meter(l, K.stats[k], 20)).join('')}</div>
+    <div class="field"><label for="shikona">四股名（8文字まで）</label>
+      <div class="row"><input id="shikona" maxlength="8" value="${esc(ui.name)}" autocomplete="off"><button class="btn small" id="dice">おまかせ</button></div></div>
+    <button class="btn primary wide" id="start">この子で入門する</button>
+    <p class="sub">幕下からスタート。1場所は7日間。毎日3回の稽古のあと、取組は自動で進みます。勝ち越して番付を上げ、横綱をめざしましょう。土俵のハムスターはドラッグで回せます。</p>
+  </div>`;
+  panel.querySelectorAll('.kind').forEach(b => { b.onclick = () => { ui.kind = b.dataset.kind; ui.name = $('#shikona').value; showSolo(ui.kind, MAWASHI[0], 29, 12, 'select'); render(); }; });
+  $('#dice').onclick = () => { ui.name = pick(MY_NAMES.filter(n => n !== $('#shikona').value)); $('#shikona').value = ui.name; };
+  $('#start').onclick = () => { const name = $('#shikona').value.trim() || pick(MY_NAMES); newGame(ui.kind, name); showHome(); render(); };
+}
+
+function whoCard() {
+  const m = me(), info = rankInfo(posOf(m));
+  return `<div class="card stack">
+    <div class="row between"><div><div class="rank">${info.label}・${kindOf(m.kind).name}</div><div class="shikona">${esc(m.name)}</div></div>
+      <div class="rec">${m.w}勝${m.l}敗<br><span class="stars">${starsHtml(state.marks)}</span></div></div>
+    ${meter('元気', state.energy, 100, 'energy')}
+    <div class="stats">${STAT.map(([k, l]) => meter(l, m.stats[k], STAT_MAX)).join('')}</div>
+  </div>`;
+}
+function renderHome() {
+  const m = me(), opp = byId(state.oppId), oi = rankInfo(posOf(opp));
+  const tabs = `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="train" aria-selected="${ui.tab === 'train'}">稽古と取組</button><button class="tab" role="tab" data-tab="banzuke" aria-selected="${ui.tab === 'banzuke'}">番付表</button></div>`;
+  let body;
+  if (ui.tab === 'banzuke') body = `<div class="card stack"><h2>${bashoName(state.basho)} 番付</h2>${banzukeHtml(false)}</div>`;
+  else body = `
+  <div class="card stack">
+    <div class="row between"><h2 style="margin:0">きょうの稽古</h2><span class="sub">のこり <b>${state.actions}</b> / ${ACTIONS} 回</span></div>
+    <div class="trains">${TRAININGS.map(T => `<button class="btn train" data-train="${T.id}" ${state.actions <= 0 || ui.busy || state.energy < T.cost ? 'disabled' : ''}><b>${T.name}</b><span>${T.note}${T.cost ? `／元気-${T.cost}` : ''}</span></button>`).join('')}</div>
+    <p class="sub">元気が30を切ると稽古の効果が半分に。取組の調子にもひびきます。</p>
+  </div>
+  <div class="card stack">
+    <h2>${DAYS[state.day - 1]}の取組</h2>
+    <div class="vs"><div><div class="sub">${rankInfo(posOf(m)).label}</div><div class="n">${esc(m.name)}</div><div class="sub">${m.w}勝${m.l}敗</div></div><div class="mid">対</div>
+      <div><div class="sub">${oi.label}</div><div class="n">${esc(opp.name)}</div><div class="sub">${opp.w}勝${opp.l}敗・${kindOf(opp.kind).name}</div></div></div>
+    <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>
+  </div>`;
+  panel.innerHTML = whoCard() + tabs + body;
+  panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; render(); }; });
+  panel.querySelectorAll('.train').forEach(b => {
+    b.onclick = () => {
+      const T = TRAININGS.find(x => x.id === b.dataset.train); if (!T || ui.busy) return;
+      const msg = train(T); ui.busy = true; playTraining(T.id); toast(`${T.name}！ ${msg}`);
+      if (three && three.solo) three.solo.fat = 1 + me().stats.body / 500;
+      render(); setTimeout(() => { ui.busy = false; if (state && state.phase === 'home') render(); }, three ? 1900 : 300);
+    };
+  });
+  const go = $('#goBout'); if (go) go.onclick = startBout;
+}
+
+async function startBout() {
+  const m = me(), opp = byId(state.oppId);
+  const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100), effStats(opp.stats, .9));
+  state.phase = 'match'; ui.tab = 'train';
+  panel.innerHTML = `<div class="card stack"><div class="row between"><h2 style="margin:0">${DAYS[state.day - 1]} 結びの一番</h2><button class="btn small" id="skip">早送り</button></div><ul class="log" id="log" aria-live="polite"></ul></div>`;
+  logEl = $('#log'); tagEl.hidden = false;
+  $('#skip').onclick = () => { if (three) three.skip = true; };
+  await animateBout(res, m, opp);
+  finishBout(res, opp);
+  render();
+}
+function renderResult() {
+  const L = ui.last || { win: state.marks[state.marks.length - 1] === 1, kimarite: '', opp: '', oppRank: '' }, m = me();
+  panel.innerHTML = whoCard() + `<div class="card stack">
+    <div class="verdict ${L.win ? 'win' : ''}">${L.win ? '白星！' : '黒星…'}</div>
+    ${L.kimarite ? `<p>決まり手は <b>${esc(L.kimarite)}</b>。${L.win ? '○' : '●'} ${esc(m.name)} ― ${L.win ? '●' : '○'} ${esc(L.opp)}（${L.oppRank}）</p>` : ''}
+    <button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button>
+  </div>`;
+  $('#next').onclick = () => { nextDay(); if (three) showHome(); render(); };
+}
+function renderBanzuke() {
+  const news = ui.news || [];
+  panel.innerHTML = `<div class="card stack"><h2>${ui.finished ? esc(ui.finished) + ' おわり' : '場所おわり'}</h2>
+    <div class="news">${news.map(n => `<div class="${n.gold ? 'gold' : ''}">${esc(n.t)}</div>`).join('')}</div>
+    <button class="btn primary wide" id="nextBasho">${bashoName(state.basho)}へ</button></div>
+  <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>`;
+  if (three && three.solo) { three.solo.dress(posOf(me())); three.solo.anim = 'win'; }
+  $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); if (three) showHome(); render(); };
+}
+
+/* ================= 起動 ================= */
+window.__sumo = { simulateBout, rankInfo };
+function boot() {
+  three = initThree();
+  if (!three) sayEl.textContent = '3D表示を使えない環境です。文字だけで進行します。';
+  state = load();
+  if (state) { if (state.phase === 'match') state.phase = 'home'; showHome(); }
+  else showSolo(ui.kind, MAWASHI[0], 29, 12, 'select');
+  render();
+}
+boot();
+})();
+</script>
+<!--/ARTIFACT-BODY-->
+</body>
+</html>
