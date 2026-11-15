@@ -240,7 +240,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips span { background: var(--surface-2); border-radius: 999px; padding: 2px 12px; font-weight: 900; }
 .omikuji { font-family: var(--font-display); font-size: 40px; line-height: 1.1; color: var(--aka); }
-@media (max-width: 879px) { .outs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 879px) { .outs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
 /* 進行スピード */
 .speed { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .speed .lbl { font-size: 13px; font-weight: 900; color: var(--muted); }
@@ -259,6 +259,89 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
   .log { max-height: 34vh; }
 }
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
+/* ===== 1画面レイアウト ===== */
+html, body { height: 100%; }
+body { overflow: hidden; }
+.app { height: 100%; max-width: 1180px; padding-block: 8px; gap: 8px; display: flex; flex-direction: column; }
+.mast { flex: none; flex-wrap: nowrap; }
+.mast h1 { flex-wrap: nowrap; min-width: 0; white-space: nowrap; }
+.mast-right { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mast-info { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-btn { flex: none; border: 2px solid var(--ink); background: var(--surface); border-radius: 10px; min-height: 36px; padding: 0 12px; font-weight: 900; box-shadow: 0 2px 0 var(--ink); }
+.menu-btn[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
+.menu-pop { position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 12px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
+.layout { flex: 1; min-height: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 40%) minmax(0, 1fr); align-items: stretch; }
+.stage, .layout .stage { position: relative; top: auto; aspect-ratio: auto; height: 100%; box-shadow: none; }
+.panel { min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.pbody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+.pbody > .card.grow { flex: 1; }
+.dock { position: static; flex: none; margin: 0; padding: 0 0 env(safe-area-inset-bottom, 0px); background: none; flex-direction: row; align-items: center; gap: 10px; }
+.dock .btn.wide { width: auto; flex: 1 1 55%; min-height: 50px; }
+.dock-vs { flex: 1 1 45%; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; text-align: left; font-size: 13px; line-height: 1.35; gap: 0; }
+.dock-vs > * { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock .seg { flex: none; }
+.dock .seg button { padding: 0 10px; min-height: 44px; }
+.dock #skip { flex: 1; min-height: 46px; white-space: nowrap; padding-inline: 8px; }
+@media (min-width: 880px) { .layout { grid-template-columns: minmax(0, 1.25fr) minmax(360px, 1fr); grid-template-rows: minmax(0, 1fr); } }
+.status { flex: none; background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.st-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
+.st-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.st-name .shikona { font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-name .rank { white-space: nowrap; font-size: 12px; }
+.st-rec { font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 13px; }
+.st-rec .stars { font-size: 12px; letter-spacing: .05em; }
+.st-mid { display: flex; align-items: center; gap: 10px; }
+.st-mid .meter { flex: 1; grid-template-columns: 2.4em minmax(0, 1fr) 2em; gap: 6px; font-size: 13px; }
+.st-mid .purse { font-size: 14px; }
+.stat5 { gap: 4px; }
+.st5 { flex-direction: row; justify-content: center; align-items: baseline; gap: 4px; padding: 2px 4px 5px; position: relative; overflow: hidden; }
+.st5 span { font-size: 11px; }
+.st5 b { font-size: 14px; }
+.st5 i { position: absolute; left: 0; right: 0; bottom: 0; width: auto; height: 3px; border-radius: 0; }
+.tabs { flex: none; gap: 4px; }
+.tab { min-height: 40px; border-radius: 10px; font-size: 14px; padding: 4px 2px; }
+.tab .dotn { color: var(--aka); }
+.card { padding: 10px 12px; }
+.card h2 { font-size: 16px; margin-bottom: 4px; }
+.log { max-height: none; overflow: visible; }
+.groups { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; }
+.groups button { border: 0; background: var(--surface); min-height: 40px; font-weight: 900; }
+.groups button + button { border-left: 2px solid var(--ink); }
+.groups button[aria-pressed="true"] { background: var(--murasaki); color: var(--on-murasaki); }
+.dock .tryon { flex: 1; min-width: 0; padding: 6px 8px; }
+.items { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.item { padding: 6px 4px; }
+.sw { width: 38px; height: 38px; }
+.sw.apron { width: 50px; height: 38px; }
+.sw.belt { height: 18px; margin-block: 10px; width: 46px; }
+.trains { gap: 6px; }
+.train { min-height: 58px; padding: 6px 8px; }
+.kinds { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+.kind { padding: 6px 8px; }
+.kind span { display: none; }
+.kind-desc { font-weight: 700; }
+@media (max-width: 879px) {
+  .mast .t1 { font-size: 16px; } .mast .t2 { font-size: 12px; padding: 2px 8px; } .mast-info { display: none; } .mast h1 { gap: 6px; }
+  .stage-say { font-size: 14px; } .stage-big .k { font-size: clamp(26px, 9vw, 44px); }
+}
+@media (max-width: 879px) {
+  .layout { grid-template-rows: minmax(130px, 35%) minmax(0, 1fr); }
+  .card .tip { display: none; }
+  .out { min-height: 0; padding: 6px 8px; gap: 0; }
+  .out b { font-size: 14px; }
+  .out span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+  .train { min-height: 54px; }
+  .items { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  .item b { font-size: 12px; }
+}
+@media (max-width: 879px) and (max-height: 720px) {
+  .layout { grid-template-rows: minmax(120px, 28%) minmax(0, 1fr); }
+  .train { min-height: 46px; padding: 4px 6px; }
+  .train span + span { display: none; }
+  .tab { min-height: 36px; }
+  .mast-info { display: none; }
+  .stat5 { display: none; }
+}
 </style>
 <!--/ARTIFACT-HEAD-->
 </head>
@@ -267,8 +350,9 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 <div class="app">
   <header class="mast">
     <h1><span class="t1">ハムスター大相撲！</span><span class="t2">ころりん場所</span></h1>
-    <div class="mast-info" id="mastInfo"></div>
+    <div class="mast-right"><div class="mast-info" id="mastInfo"></div><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuPop">メニュー</button></div>
   </header>
+  <div class="menu-pop" id="menuPop" hidden></div>
   <main class="layout">
     <section class="stage" id="stage" aria-label="土俵">
       <canvas id="cv"></canvas>
@@ -278,10 +362,6 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
     </section>
     <section class="panel" id="panel" aria-label="帳面"></section>
   </main>
-  <footer class="foot">
-    <span>セーブはこのブラウザに自動で保存されます。</span>
-    <span id="resetBox"></span>
-  </footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -399,9 +479,42 @@ const OUTINGS = [
   { id: 'park', name: 'こうえん', desc: 'のんびり散歩。元気が回復', cost: 0, energy: 45, stat: ['guts', 1], seeds: [5, 15], likes: ['parka', 'cap', 'overall', 'scarf'] },
   { id: 'himawari', name: 'ひまわり畑', desc: '種ひろい。種がたくさん', cost: 0, energy: 20, seeds: [25, 45], likes: ['mugiwara', 'overall', 'hana'] },
   { id: 'umi', name: 'うみ', desc: '砂浜ダッシュ。速さアップ', cost: 0, energy: 25, stat: ['spd', 2], seeds: [0, 10], likes: ['aloha', 'mugiwara', 'sailor', 'sangura'] },
-  { id: 'cafe', name: '商店街のカフェ', desc: '種ケーキで体づくり', cost: 30, energy: 100, stat: ['body', 2], seeds: [0, 0], likes: ['beret', 'sailor', 'megane', 'chou'] },
+  { id: 'cafe', name: 'カフェ', desc: '商店街で種ケーキ。体づくり', cost: 30, energy: 100, stat: ['body', 2], seeds: [0, 0], likes: ['beret', 'sailor', 'megane', 'chou'] },
   { id: 'jinja', name: '神社', desc: 'お参りとおみくじ', cost: 5, energy: 20, omikuji: true, seeds: [0, 0], likes: ['yukata', 'haori', 'hanakanmuri'] },
 ];
+OUTFITS.push(
+  { id: 'jinbei', name: '甚平', price: 170, type: 'top', color: '#7fb6d8', pat: 'stripe' },
+  { id: 'jersey', name: 'ジャージ', price: 140, type: 'top', color: '#2a3a7a', pat: 'jersey' },
+  { id: 'onepiece', name: '水玉ワンピース', price: 240, type: 'robe', color: '#f2a0b8', pat: 'dots' },
+  { id: 'down', name: 'ダウンジャケット', price: 280, type: 'top', color: '#e8413a', pat: 'quilt', puffy: true },
+);
+HATS.push(
+  { id: 'silk', name: 'シルクハット', price: 260, color: 0x1c1420 },
+  { id: 'nekomimi', name: 'ねこみみ', price: 150, color: 0x8a7fb0 },
+  { id: 'amigasa', name: '編み笠', price: 180, color: 0xd9b56a },
+  { id: 'headphone', name: 'ヘッドホン', price: 200, color: 0x2c8c9c },
+);
+ACCS.push(
+  { id: 'pearl', name: '真珠のネックレス', price: 240, color: 0xf6f1ea },
+  { id: 'suzu', name: '鈴の首輪', price: 120, color: 0xcf3f36 },
+);
+const SHOES = [
+  { id: 'none', name: 'はだし', price: 0 },
+  { id: 'sneaker', name: 'スニーカー', price: 120, color: 0xe8413a },
+  { id: 'boots', name: '長ぐつ', price: 110, color: 0xf6c234 },
+  { id: 'geta', name: 'げた', price: 130, color: 0xa0703f },
+  { id: 'slipper', name: 'ふわふわスリッパ', price: 150, color: 0xf7c6d6 },
+  { id: 'sandal', name: 'ビーチサンダル', price: 90, color: 0x2fa7a0 },
+];
+const BAGS = [
+  { id: 'none', name: '持たない', price: 0 },
+  { id: 'pochette', name: 'ポシェット', price: 110, color: 0xcf3f36 },
+  { id: 'ryukku', name: 'リュック', price: 160, color: 0x1d7a55 },
+  { id: 'kago', name: 'かごバッグ', price: 140, color: 0xd9b56a },
+  { id: 'tanebukuro', name: '種ぶくろ', price: 90, color: 0xe9d29a },
+];
+const MORE_LIKES = { park: ['sneaker', 'ryukku', 'jersey'], himawari: ['kago', 'tanebukuro', 'boots'], umi: ['sandal', 'jinbei'], cafe: ['pochette', 'onepiece', 'silk', 'pearl'], jinja: ['geta', 'amigasa', 'jinbei', 'suzu'] };
+OUTINGS.forEach(o => o.likes.push(...(MORE_LIKES[o.id] || [])));
 const OFF_DAYS = 3;
 const WIGS = [
   { id: 'auto', name: '番付どおり', tier: 0, note: 'いまの番付' },
@@ -420,11 +533,17 @@ const SHOP = [
   { cat: 'mawashi', label: 'まわし', items: MAWASHIS },
   { cat: 'kesho', label: '化粧まわし', items: KESHO },
   { cat: 'wig', label: 'カツラ', items: WIGS },
-  { cat: 'acc', label: '小物', items: ACCS },
-  { cat: 'outfit', label: 'お出かけ服', items: OUTFITS },
+  { cat: 'outfit', label: '服', items: OUTFITS },
   { cat: 'hat', label: '帽子', items: HATS },
+  { cat: 'acc', label: '小物', items: ACCS },
+  { cat: 'shoes', label: 'くつ', items: SHOES },
+  { cat: 'bag', label: 'バッグ', items: BAGS },
 ];
-const OUT_CATS = ['outfit', 'hat'];
+const SHOP_GROUPS = [
+  { id: 'sumo', label: '相撲用', cats: ['fur', 'mawashi', 'kesho', 'wig'], note: '土俵や取組での姿です。毛色はお出かけでもそのまま。' },
+  { id: 'out', label: 'お出かけ用', cats: ['outfit', 'hat', 'acc', 'shoes', 'bag'], note: '休みの日のお出かけで身につけます。行き先に合うとボーナス。' },
+];
+const OUT_CATS = SHOP_GROUPS[1].cats;
 const KENSHO = [8, 12, 16, 20, 25, 32, 40];
 const findIn = (list, id) => list.find(x => x.id === id) || list[0];
 
@@ -546,9 +665,9 @@ function load() {
 }
 function migrate(s) {
   if (typeof s.money !== 'number') s.money = 120;
-  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'] }, s.owned || {});
+  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'], shoes: ['none'], bag: ['none'] }, s.owned || {});
   if (typeof s.off !== 'number') s.off = 0; if (typeof s.outed !== 'boolean') s.outed = false;
-  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none' }, s.equip || {});
+  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none', shoes: 'none', bag: 'none' }, s.equip || {});
   s.roster.forEach(r => { if (!r.me && !r.kesho) r.kesho = pick(KESHO.slice(1)).id; });
   return s;
 }
@@ -559,8 +678,8 @@ function lookOf(r, preview, outing) {
   if (!r.me) return { kind: r.kind, mawashi: r.mawashi, wig: WIG_BY_TIER[tier], kesho: pos < 24 ? r.kesho : null, name: r.name, yokozuna: pos < 2, body: r.stats.body };
   const e = Object.assign({}, state.equip, preview || {});
   const F = findIn(FURS, e.fur), M = findIn(MAWASHIS, e.mawashi);
-  const L = { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body, acc: e.acc === 'none' ? null : e.acc };
-  if (outing) { L.kesho = null; L.yokozuna = false; L.outfit = e.outfit === 'none' ? null : e.outfit; L.hat = e.hat === 'none' ? null : e.hat; }
+  const L = { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body };
+  if (outing) { L.kesho = null; L.yokozuna = false; const v = k => (e[k] === 'none' ? null : e[k]); L.outfit = v('outfit'); L.hat = v('hat'); L.acc = v('acc'); L.shoes = v('shoes'); L.bag = v('bag'); }
   return L;
 }
 const selectLook = () => ({ kind: ui.kind, mawashi: MAWASHIS[0].color, wig: 'chonmage', body: 12 });
@@ -617,7 +736,7 @@ function doOuting(O) {
     const x = Math.random(), L = x < .15 ? ['大吉', 40, 2] : x < .4 ? ['中吉', 20, 1] : x < .7 ? ['小吉', 10, 1] : x < .9 ? ['吉', 5, 0] : ['凶', 0, 0];
     r.omikuji = L[0]; seeds += L[1]; if (L[2]) { m.stats.guts = Math.min(STAT_MAX, m.stats.guts + L[2]); r.lines.push(`心+${L[2]}`); }
   }
-  r.liked = [e.outfit, e.hat, e.acc].some(id => O.likes.includes(id));
+  r.liked = [e.outfit, e.hat, e.acc, e.shoes, e.bag].some(id => O.likes.includes(id));
   if (r.liked) seeds += 15;
   const before = state.energy; state.energy = Math.min(100, state.energy + O.energy + (r.liked ? 10 : 0));
   if (state.energy > before) r.lines.push(`元気+${state.energy - before}`);
@@ -765,6 +884,10 @@ function initThree() {
     if (O.pat === 'flower') spots.forEach(([x, y], i) => { g.fillStyle = i % 2 ? '#ffffff' : '#ffd34d'; for (let k = 0; k < 5; k++) { const a = k / 5 * P2; dot(x + Math.cos(a) * 7, y + Math.sin(a) * 7, 6); } g.fillStyle = '#cf3f36'; dot(x, y, 3); });
     else if (O.pat === 'asagao') spots.forEach(([x, y], i) => { g.fillStyle = '#ffffff'; dot(x, y, 11); g.fillStyle = i % 2 ? '#f2a0b8' : '#8fb8f0'; dot(x, y, 7); g.fillStyle = '#ffffff'; dot(x, y, 2); });
     else if (O.pat === 'mon') [[64, 40], [192, 40]].forEach(([x, y]) => { g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 10, 0, P2); g.stroke(); g.fillStyle = '#ffffff'; for (let k = 0; k < 3; k++) { const a = k / 3 * P2 - PI / 2; dot(x + Math.cos(a) * 4, y + Math.sin(a) * 4, 3); } });
+    else if (O.pat === 'stripe') { g.fillStyle = 'rgba(255,255,255,.8)'; for (let x = 4; x < 256; x += 16) g.fillRect(x, 0, 3, 128); }
+    else if (O.pat === 'jersey') { g.fillStyle = '#ffffff'; for (const x of [52, 64, 180, 192]) g.fillRect(x, 0, 6, 128); }
+    else if (O.pat === 'dots') { g.fillStyle = '#ffffff'; for (let y = 8; y < 128; y += 22) for (let x = 8 + (y / 22 % 2) * 11; x < 256; x += 22) dot(x, y, 5); }
+    else if (O.pat === 'quilt') { g.fillStyle = 'rgba(0,0,0,.2)'; for (let y = 14; y < 128; y += 18) g.fillRect(0, y, 256, 4); }
     else { g.fillStyle = 'rgba(0,0,0,.06)'; for (let y = 0; y < 128; y += 8) g.fillRect(0, y, 256, 2); }
     const t = new T.CanvasTexture(c); t.wrapS = T.RepeatWrapping; t.repeat.x = 2; clothCache.set(O.id, t); return t;
   }
@@ -786,6 +909,11 @@ function initThree() {
       const f = new T.Group(); const pet = new T.Mesh(new T.CylinderGeometry(.17, .17, .03, 14), mat(c, .6)); pet.rotation.x = PI / 2; f.add(pet);
       const cen = new T.Mesh(new T.CylinderGeometry(.08, .08, .05, 12), mat(0x6b4320, .8)); cen.rotation.x = PI / 2; cen.position.z = .01; f.add(cen);
       f.position.set(.42, .42, .3); f.rotation.y = .4; head.add(f);
+    } else if (id === 'pearl') {
+      for (let i = 0; i < 16; i++) { const a = i / 16 * PI * 2; rig.add(at(sph(.055, c, 1, 1, 1, .15), Math.cos(a) * .56, .3 - Math.max(0, Math.sin(a)) * .06, Math.sin(a) * .54)); }
+    } else if (id === 'suzu') {
+      const t = new T.Mesh(new T.TorusGeometry(.56, .05, 8, 30), mat(c, .6)); t.rotation.x = PI / 2; t.position.y = .3; rig.add(t);
+      rig.add(at(sph(.1, 0xe2b23a, 1, 1, 1, .2), 0, .2, .72)); rig.add(at(sph(.025, 0x1c1420), 0, .14, .8));
     } else if (id === 'medal') {
       for (const s of [-1, 1]) { const rb = new T.Mesh(new T.BoxGeometry(.07, .42, .02), mat(0x1f5fa8, .6)); rb.position.set(s * .1, .14, .77); rb.rotation.z = s * .35; rig.add(rb); }
       const d = new T.Mesh(new T.CylinderGeometry(.13, .13, .04, 20), mat(c, .25)); d.rotation.x = PI / 2; d.position.set(0, -.06, .8); rig.add(d);
@@ -793,13 +921,13 @@ function initThree() {
   }
   function addOutfit(id, rig, arms) {
     const O = findIn(OUTFITS, id), cm = new T.MeshStandardMaterial({ map: clothTexture(O), roughness: .8 }), col = new T.Color(O.color).getHex();
-    const shellOf = geo => { const m = new T.Mesh(geo, cm); m.scale.set(.85, .8, .79); m.castShadow = true; rig.add(m); return m; };
+    const shellOf = geo => { const m = new T.Mesh(geo, cm); if (O.puffy) m.scale.set(.92, .86, .86); else m.scale.set(.85, .8, .79); m.castShadow = true; rig.add(m); return m; };
     if (O.type === 'top') { shellOf(SHELL_TOP); arms.forEach(a => a.add(at(sph(.2, col, 1, .95, 1.05, .8), 0, -.04, .08))); }
     if (O.type === 'robe') {
       shellOf(SHELL_ROBE);
       arms.forEach(a => { const sl = new T.Mesh(new T.BoxGeometry(.3, .44, .36), cm); sl.position.set(0, -.2, .06); sl.castShadow = true; a.add(sl); });
-      const obi = new T.Mesh(new T.TorusGeometry(.8, .11, 10, 36), mat(O.obi, .6)); obi.rotation.x = PI / 2; obi.scale.set(1.04, .97, 1); obi.position.y = -.2; rig.add(obi);
-      if (O.id !== 'raincoat') for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.06, .5, .03), mat(O.id === 'haori' ? 0xe9e4ef : 0xdfe6f5, .7)); lap.position.set(s * .1, .2, .77); lap.rotation.z = s * .5; rig.add(lap); }
+      if (O.obi) { const obi = new T.Mesh(new T.TorusGeometry(.8, .11, 10, 36), mat(O.obi, .6)); obi.rotation.x = PI / 2; obi.scale.set(1.04, .97, 1); obi.position.y = -.2; rig.add(obi); }
+      if (O.id === 'yukata' || O.id === 'haori') for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.06, .5, .03), mat(O.id === 'haori' ? 0xe9e4ef : 0xdfe6f5, .7)); lap.position.set(s * .1, .2, .77); lap.rotation.z = s * .5; rig.add(lap); }
     }
     if (O.type === 'overall') {
       shellOf(SHELL_LOW);
@@ -827,9 +955,47 @@ function initThree() {
     } else if (id === 'ribbon') {
       const bow = new T.Group(); for (const s of [-1, 1]) { const w = sph(.17, c, 1.3, .8, .5, .6); w.position.x = s * .17; w.rotation.z = s * .3; bow.add(w); } bow.add(sph(.07, c, 1, 1, 1, .6));
       bow.position.set(.3, .56, .12); bow.rotation.z = -.3; g.add(bow);
+    } else if (id === 'silk') {
+      const brim = new T.Mesh(new T.CylinderGeometry(.55, .55, .04, 28), mat(c, .4)); brim.position.y = .58; brim.castShadow = true; g.add(brim);
+      const crown = new T.Mesh(new T.CylinderGeometry(.32, .32, .55, 24), mat(c, .4)); crown.position.y = .86; crown.castShadow = true; g.add(crown);
+      const rib = new T.Mesh(new T.CylinderGeometry(.325, .325, .1, 24), mat(0xcf3f36, .5)); rib.position.y = .66; g.add(rib); g.rotation.z = -.1;
+    } else if (id === 'nekomimi') {
+      for (const s of [-1, 1]) { const e = new T.Mesh(new T.ConeGeometry(.17, .34, 12), mat(c, .8)); e.position.set(s * .3, .72, -.02); e.rotation.z = -s * .35; e.castShadow = true; g.add(e); const i2 = new T.Mesh(new T.ConeGeometry(.1, .22, 12), mat(0xf6aeb0, .8)); i2.position.set(s * .29, .7, .06); i2.rotation.z = -s * .35; g.add(i2); }
+    } else if (id === 'amigasa') {
+      const kasa = new T.Mesh(new T.ConeGeometry(.98, .48, 28), mat(c, .95)); kasa.position.y = .78; kasa.castShadow = true; g.add(kasa);
+    } else if (id === 'headphone') {
+      const band = new T.Mesh(new T.TorusGeometry(.76, .05, 8, 28, PI), mat(c, .4)); band.position.y = .05; g.add(band);
+      for (const s of [-1, 1]) { const cup = new T.Mesh(new T.CylinderGeometry(.18, .18, .14, 18), mat(c, .4)); cup.rotation.z = PI / 2; cup.position.set(s * .76, .05, 0); g.add(cup); }
     } else if (id === 'hanakanmuri') {
       const cols = [0xf7b6c8, 0xffffff, 0xf6c234];
       for (let i = 0; i < 14; i++) { const a = i / 14 * PI * 2; g.add(at(sph(i % 2 ? .07 : .095, i % 2 ? 0x7fbf4d : cols[(i / 2 | 0) % 3], 1, 1, 1, .7), Math.cos(a) * .46, .5, Math.sin(a) * .43)); }
+    }
+  }
+
+  function addShoes(id, feet) {
+    const S = findIn(SHOES, id), c = S.color;
+    feet.forEach(f => {
+      if (id === 'sneaker') { f.add(sph(.23, c, 1.05, .55, 1.55, .6)); f.add(at(sph(.235, 0xffffff, 1.06, .22, 1.58, .6), 0, -.07, 0)); f.add(at(sph(.05, 0xffffff, 1, 1, 1, .6), 0, .1, .12)); }
+      else if (id === 'boots') { f.add(sph(.23, c, 1.05, .5, 1.55, .35)); const sh = new T.Mesh(CYL, mat(c, .35)); sh.scale.set(.19, .34, .19); sh.position.y = .16; f.add(sh); }
+      else if (id === 'geta') { const b = new T.Mesh(new T.BoxGeometry(.34, .07, .54), mat(c, .9)); b.position.y = -.13; b.castShadow = true; f.add(b); for (const z of [-.15, .15]) { const t = new T.Mesh(new T.BoxGeometry(.32, .08, .06), mat(c, .9)); t.position.set(0, -.2, z); f.add(t); } const st = new T.Mesh(new T.BoxGeometry(.3, .05, .07), mat(0xcf3f36, .6)); st.position.set(0, -.02, .12); f.add(st); }
+      else if (id === 'slipper') { f.add(sph(.26, c, 1.1, .55, 1.6, 1)); f.add(at(sph(.1, 0xffffff, 1, 1, 1, 1), 0, .09, .26)); }
+      else if (id === 'sandal') { const b = new T.Mesh(new T.BoxGeometry(.34, .05, .52), mat(c, .7)); b.position.y = -.12; f.add(b); for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.04, .04, .26), mat(0xffffff, .6)); st.position.set(s * .08, -.01, .1); st.rotation.y = s * .4; f.add(st); } }
+    });
+  }
+  function addBag(id, rig, arms) {
+    const B = findIn(BAGS, id), c = B.color;
+    if (id === 'pochette') {
+      const g = new T.Group(); g.rotation.z = .7; const strap = new T.Mesh(new T.TorusGeometry(.86, .025, 6, 40), mat(0x6b4320, .6)); strap.rotation.x = PI / 2; strap.scale.set(1, .92, 1); g.add(strap); rig.add(g);
+      const pouch = new T.Mesh(new T.BoxGeometry(.3, .26, .12), mat(c, .6)); pouch.position.set(.62, -.32, .48); pouch.rotation.y = .7; pouch.castShadow = true; rig.add(pouch);
+    } else if (id === 'ryukku') {
+      const bg = new T.Mesh(new T.BoxGeometry(.64, .72, .32), mat(c, .7)); bg.position.set(0, -.02, -.84); bg.castShadow = true; rig.add(bg);
+      const fl = new T.Mesh(new T.BoxGeometry(.66, .24, .36), mat(c, .5)); fl.position.set(0, .28, -.84); rig.add(fl);
+      for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.07, .6, .03), mat(c, .7)); st.position.set(s * .3, .12, .67); st.rotation.x = -.2; rig.add(st); }
+    } else if (id === 'kago') {
+      const b = new T.Mesh(new T.CylinderGeometry(.21, .16, .26, 16), mat(c, .95)); b.position.set(0, -.58, .2); b.castShadow = true; arms[0].add(b);
+      const h = new T.Mesh(new T.TorusGeometry(.16, .022, 6, 20, PI), mat(c, .95)); h.position.set(0, -.45, .2); arms[0].add(h);
+    } else if (id === 'tanebukuro') {
+      rig.add(at(sph(.42, c, 1, 1.1, .8, 1), 0, -.08, -.86)); rig.add(at(sph(.1, 0x6b4320, 1, .6, 1, .9), 0, .38, -.82));
     }
   }
 
@@ -878,6 +1044,8 @@ function initThree() {
     if (look.acc) addAcc(look.acc, head, rig);
     if (look.outfit) { addOutfit(look.outfit, rig, arms); belt.visible = false; flap.visible = false; tsuna.visible = false; }
     if (look.hat) addHat(look.hat, head);
+    if (look.shoes) addShoes(look.shoes, feet);
+    if (look.bag) addBag(look.bag, rig, arms);
     H.fat = 1 + Math.min(look.body || 10, STAT_MAX) / 500;
     scene.add(root);
     return H;
@@ -1322,9 +1490,10 @@ function sayLine(text) { sayEl.innerHTML = `<span>${esc(text)}</span>`; logLine(
 const speedV = () => SPEEDS.find(x => x.id === ui.speed).v;
 function setSpeed(id) { ui.speed = id; try { localStorage.setItem('hamsumo.speed', id); } catch (e) { /* noop */ } if (three) three.speed = speedV(); }
 const speedHtml = () => `<div class="speed"><span class="lbl">進行スピード</span><div class="seg">${SPEEDS.map(x => `<button data-speed="${x.id}" aria-pressed="${x.id === ui.speed}">${x.label}</button>`).join('')}</div></div>`;
-function bindSpeed() { panel.querySelectorAll('[data-speed]').forEach(b => { b.onclick = () => { setSpeed(b.dataset.speed); panel.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', x.dataset.speed === ui.speed)); }; }); }
+const segHtml = () => `<div class="seg" role="group" aria-label="進行スピード">${SPEEDS.map(x => `<button data-speed="${x.id}" aria-pressed="${x.id === ui.speed}">${x.label}</button>`).join('')}</div>`;
+function bindSpeed() { document.querySelectorAll('[data-speed]').forEach(b => { b.onclick = () => { setSpeed(b.dataset.speed); document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', x.dataset.speed === ui.speed)); }; }); }
 let logEl = null;
-function logLine(text, cls) { if (!logEl) return; const li = document.createElement('li'); li.textContent = text; if (cls) li.className = cls; logEl.appendChild(li); logEl.scrollTop = logEl.scrollHeight; }
+function logLine(text, cls) { if (!logEl) return; const li = document.createElement('li'); li.textContent = text; if (cls) li.className = cls; logEl.appendChild(li); const pb = $('#pbody'); if (pb) pb.scrollTop = pb.scrollHeight; }
 
 async function animateBout(res, m, opp) {
   if (!three) return;
@@ -1486,60 +1655,72 @@ function banzukeHtml(showDelta) {
 function render() {
   logEl = null;
   const ph = state ? state.phase : 'select';
-  $('#mastInfo').textContent = state ? `優勝 ${state.yusho}回 ・ 最高位 ${rankInfo(state.best).short}` : '';
+  $('#mastInfo').textContent = state ? `優勝${state.yusho}回・最高位 ${rankInfo(state.best).short}` : '';
   tagEl.hidden = !state || ph === 'banzuke';
   if (state) tagEl.textContent = state.off > 0 ? `${bashoName(state.basho)}まで あと${state.off}日・休み` : `${bashoName(state.basho)} ${DAYS[state.day - 1]}`;
   if (ph !== 'result') bigEl.hidden = true;
   if (ph !== 'result' && ph !== 'match') sayEl.textContent = '';
   if (ui.outing && ph === 'home') renderOuting();
   else ({ select: renderSelect, home: renderHome, result: renderResult, banzuke: renderBanzuke })[ph]();
-  renderReset();
+  bindSpeed(); renderMenu();
 }
-function renderReset() {
-  const box = $('#resetBox');
-  if (!state) { box.innerHTML = ''; return; }
-  box.innerHTML = ui.resetAsk
-    ? '<span>セーブを消して最初から始めますか？</span> <button class="linkbtn" id="resetYes">消して始める</button> <button class="linkbtn" id="resetNo">やめる</button>'
-    : '<button class="linkbtn" id="resetAsk">はじめからやりなおす</button>';
+function statusHtml() {
+  const m = me(), info = rankInfo(posOf(m));
+  return `<div class="status">
+    <div class="st-top"><div class="st-name"><span class="rank">${info.label}</span><b class="shikona">${esc(m.name)}</b></div><div class="st-rec">${m.w}勝${m.l}敗 <span class="stars">${starsHtml(state.marks)}</span></div></div>
+    <div class="st-mid">${meter('元気', state.energy, 100, 'energy')}<span class="purse">種 ${state.money}粒</span></div>
+    <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${m.stats[k]}</b><i><u style="width:${clamp(m.stats[k] / STAT_MAX * 100, 0, 100)}%"></u></i></div>`).join('')}</div>
+  </div>`;
+}
+function shell({ status = true, tabs = '', body = '', dock = '' }) {
+  const key = [state && state.phase, ui.tab, ui.shopGroup, ui.shopCat, !!ui.outing].join('|');
+  const pb = $('#pbody'), keep = pb && ui.lastKey === key ? pb.scrollTop : 0; ui.lastKey = key;
+  panel.innerHTML = (status && state ? statusHtml() : '') + tabs + `<div class="pbody" id="pbody">${body}</div>` + (dock ? `<div class="dock">${dock}</div>` : '');
+  const nb = $('#pbody'); if (nb) nb.scrollTop = keep;
+}
+function renderMenu() {
+  const pop = $('#menuPop'); pop.hidden = !ui.menu; $('#menuBtn').setAttribute('aria-expanded', String(!!ui.menu));
+  if (!ui.menu) return;
+  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<p class="sub" style="margin:0">セーブはこのブラウザに自動で保存されます。土俵のハムスターはドラッグで回せて、タップすると反応します。</p>
+    ${state ? (ui.resetAsk ? '<div class="row"><span>セーブを消して最初から始めますか？</span><button class="btn small" id="resetYes">消して始める</button><button class="btn small" id="resetNo">やめる</button></div>' : '<button class="linkbtn" id="resetAsk" style="align-self:flex-start">はじめからやりなおす</button>') : ''}
+    <button class="btn small" id="menuClose">閉じる</button>`;
+  bindSpeed();
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
-  on('resetAsk', () => { ui.resetAsk = true; renderReset(); });
-  on('resetNo', () => { ui.resetAsk = false; renderReset(); });
-  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; showSolo(selectLook(), 'select'); render(); });
+  on('menuClose', () => { ui.menu = false; ui.resetAsk = false; renderMenu(); });
+  on('resetAsk', () => { ui.resetAsk = true; renderMenu(); });
+  on('resetNo', () => { ui.resetAsk = false; renderMenu(); });
+  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.menu = false; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; ui.preview = null; showSolo(selectLook(), 'select'); render(); });
 }
 
 function renderSelect() {
   const K = kindOf(ui.kind);
-  panel.innerHTML = `
-  <div class="card stack">
+  const body = `<div class="card stack grow">
     <h2>入門するハムスターをえらぶ</h2>
-    <div class="kinds">${KINDS.map(k => `<button class="kind" data-kind="${k.id}" aria-pressed="${k.id === ui.kind}"><b><i class="dot" style="background:#${k.fur.toString(16).padStart(6, '0')}"></i>${k.name}</b><span>${k.desc}</span></button>`).join('')}</div>
-    <div class="stats">${STAT.map(([k, l]) => meter(l, K.stats[k], 20)).join('')}</div>
+    <div class="kinds">${KINDS.map(k => `<button class="kind" data-kind="${k.id}" aria-pressed="${k.id === ui.kind}"><b><i class="dot" style="background:${hex(k.fur)}"></i>${k.name}</b></button>`).join('')}</div>
+    <p class="kind-desc">${K.desc}</p>
+    <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${K.stats[k]}</b><i><u style="width:${K.stats[k] / 20 * 100}%"></u></i></div>`).join('')}</div>
     <div class="field"><label for="shikona">四股名（8文字まで）</label>
       <div class="row"><input id="shikona" maxlength="8" value="${esc(ui.name)}" autocomplete="off"><button class="btn small" id="dice">おまかせ</button></div></div>
-    <button class="btn primary wide" id="start">この子で入門する</button>
-    <p class="sub">幕下からスタート。1場所は7日間。毎日3回の稽古のあと、取組は自動で進みます。勝ち越して番付を上げ、横綱をめざしましょう。土俵のハムスターはドラッグで回せます。</p>
+    <p class="sub tip">幕下から横綱をめざそう。1場所は7日間、場所のあいだは休みの日。</p>
   </div>`;
+  shell({ status: false, body, dock: '<button class="btn primary wide" id="start">この子で入門する</button>' });
   panel.querySelectorAll('.kind').forEach(b => { b.onclick = () => { ui.kind = b.dataset.kind; ui.name = $('#shikona').value; showSolo(selectLook(), 'select'); render(); }; });
   $('#dice').onclick = () => { ui.name = pick(MY_NAMES.filter(n => n !== $('#shikona').value)); $('#shikona').value = ui.name; };
-  $('#start').onclick = () => { const name = $('#shikona').value.trim() || pick(MY_NAMES); newGame(ui.kind, name); showHome(); render(); };
+  $('#start').onclick = () => { const name = $('#shikona').value.trim() || pick(MY_NAMES); newGame(ui.kind, name); ui.tab = 'train'; showHome(); render(); };
 }
 
-function whoCard() {
-  const m = me(), info = rankInfo(posOf(m));
-  return `<div class="card who">
-    <div class="who-top"><div style="min-width:0"><div class="rank">${info.label}・${kindOf(m.kind).name}</div><div class="shikona">${esc(m.name)}</div></div>
-      <div class="rec">${m.w}勝${m.l}敗<br><span class="stars">${starsHtml(state.marks)}</span><br><span class="purse">種 ${state.money}粒</span></div></div>
-    ${meter('元気', state.energy, 100, 'energy')}
-    <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${m.stats[k]}</b><i><u style="width:${clamp(m.stats[k] / STAT_MAX * 100, 0, 100)}%"></u></i></div>`).join('')}</div>
-  </div>`;
+function wearText() {
+  const e = state.equip;
+  return [findIn(OUTFITS, e.outfit).name, ...[[HATS, 'hat'], [ACCS, 'acc'], [SHOES, 'shoes'], [BAGS, 'bag']].map(([L, k]) => (e[k] === 'none' ? '' : findIn(L, e[k]).name))].filter(Boolean).join('・');
 }
-function outingCardHtml() {
-  const e = state.equip, wear = [findIn(OUTFITS, e.outfit).name, findIn(HATS, e.hat).id === 'none' ? '' : findIn(HATS, e.hat).name, findIn(ACCS, e.acc).id === 'none' ? '' : findIn(ACCS, e.acc).name].filter(Boolean).join('・');
+function outingHtml() {
+  const e = state.equip;
+  if (state.off <= 0) return `<div class="card stack grow"><h2>お出かけ</h2><p>お出かけは、場所と場所のあいだの<b>休みの日</b>にできます。</p><p class="sub">千秋楽のあと、休みが${OFF_DAYS}日あります。それまでに「着せ替え」→「お出かけ用」で服をそろえておこう。</p></div>`;
   return `<div class="card stack">
-    <div class="row between"><h2 style="margin:0">お出かけ</h2><span class="sub">${state.outed ? 'きょうはもう出かけた' : '休みの日に1回'}</span></div>
-    <div class="outs">${OUTINGS.map(O => { const liked = [e.outfit, e.hat, e.acc].some(id => O.likes.includes(id));
+    <div class="row between"><h2 style="margin:0">どこへ行く？</h2><span class="sub">${state.outed ? 'きょうはもう出かけた' : '休みの日に1回'}</span></div>
+    <div class="outs">${OUTINGS.map(O => { const liked = [e.outfit, e.hat, e.acc, e.shoes, e.bag].some(id => O.likes.includes(id));
       return `<button class="btn out" data-out="${O.id}" ${state.outed || ui.busy || state.money < O.cost ? 'disabled' : ''}><b>${O.name}</b><span>${O.desc}</span><span class="${O.cost ? 'price' : ''}">${O.cost ? `${O.cost}粒` : '無料'}${liked ? '<span class="good"> ・服がぴったり</span>' : ''}</span></button>`; }).join('')}</div>
-    <p class="sub">いまの服装：${esc(wear)}。行き先に合う服・帽子・小物で行くとボーナス。お出かけするとその日の稽古はおしまいです。</p>
+    <p class="sub" style="margin:0">服装：${esc(wearText())}<span class="tip">。行き先に合うものを身につけるとボーナス。お出かけするとその日の稽古はおしまい。</span></p>
   </div>`;
 }
 async function startOuting(O) {
@@ -1551,16 +1732,15 @@ async function startOuting(O) {
 function renderOuting() {
   const { O, r, done } = ui.outing;
   tagEl.hidden = false; tagEl.textContent = `お出かけ：${O.name}`;
-  panel.innerHTML = whoCard() + (done ? `<div class="card stack">
+  if (done) shell({ body: `<div class="card stack grow">
       <h2>${O.name}で楽しんだ！</h2>
       ${r.omikuji ? `<div class="omikuji">${r.omikuji}</div>` : ''}
       ${r.liked ? '<p class="purse">服が行き先にぴったり！ボーナス</p>' : ''}
       <div class="chips">${r.lines.map(l => `<span>${esc(l)}</span>`).join('')}</div>
       <p class="sub">ハムスターをタップすると反応します。</p>
-    </div><div class="dock"><button class="btn primary wide" id="goHome">部屋に帰る</button></div>`
-    : `<div class="card stack"><h2>${O.name}へお出かけ中…</h2><ul class="log" id="log" aria-live="polite"></ul>${speedHtml()}</div>`);
-  if (!done) { logEl = $('#log'); bindSpeed(); }
-  const gh = $('#goHome'); if (gh) gh.onclick = () => { ui.outing = null; if (three) showHome(); render(); };
+    </div>`, dock: '<button class="btn primary wide" id="goHome">部屋に帰る</button>' });
+  else { shell({ body: `<div class="card stack grow"><h2>${O.name}へお出かけ中…</h2><ul class="log" id="log" aria-live="polite"></ul></div>`, dock: segHtml() }); logEl = $('#log'); }
+  const gh = $('#goHome'); if (gh) gh.onclick = () => { ui.outing = null; ui.tab = 'outing'; if (three) showHome(); render(); };
 }
 async function animateOuting(O, r) {
   if (!three) return;
@@ -1610,28 +1790,30 @@ async function animateOuting(O, r) {
   await wait(1.2);
   H.anim = 'idle'; three.solo = H; three.yaw = 0;
 }
-function renderHome() {
-  const m = me(), opp = byId(state.oppId), oi = rankInfo(posOf(opp));
-  const tabs = `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="train" aria-selected="${ui.tab === 'train'}">稽古と取組</button><button class="tab" role="tab" data-tab="banzuke" aria-selected="${ui.tab === 'banzuke'}">番付表</button><button class="tab" role="tab" data-tab="shop" aria-selected="${ui.tab === 'shop'}">着せ替え</button></div>`;
-  let body;
-  if (ui.tab === 'shop') body = shopHtml();
-  else if (ui.tab === 'banzuke') body = `<div class="card stack"><h2>${bashoName(state.basho)} 番付</h2>${banzukeHtml(false)}</div>`;
-  else body = `
-  <div class="card stack">
+function trainHtml() {
+  return `<div class="card stack">
     <div class="row between"><h2 style="margin:0">きょうの稽古</h2><span class="sub">のこり <b>${state.actions}</b> / ${ACTIONS} 回</span></div>
     <div class="trains">${TRAININGS.map(T => `<button class="btn train" data-train="${T.id}" ${state.actions <= 0 || ui.busy || state.energy < T.cost ? 'disabled' : ''}><b>${T.name}</b><span>${T.note}</span><span>${T.cost ? `元気-${T.cost}` : '元気回復'}</span></button>`).join('')}</div>
-    <p class="sub">元気が30を切ると稽古の効果が半分に。取組の調子にもひびきます。</p>
-    ${speedHtml()}
-  </div>${state.off > 0 ? outingCardHtml() : ''}`;
-  const dock = state.off > 0 ? `<div class="dock">
-    <div class="dock-vs"><span class="offday">休みの日</span><span>${bashoName(state.basho)}まで あと${state.off}日</span></div>
-    <button class="btn primary wide" id="nextDayBtn" ${ui.busy ? 'disabled' : ''}>${state.off > 1 ? '次の日へ' : `${BASHO[(state.basho - 1) % 6]}の初日へ`}</button>
-  </div>` : `<div class="dock">
-    <div class="dock-vs"><span>${DAYS[state.day - 1]}の取組</span><span>${esc(m.name)} 対 ${esc(opp.name)}</span><span class="sub">（${oi.label}・${opp.w}勝${opp.l}敗）</span></div>
-    <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>
+    <p class="sub tip" style="margin:0">元気が30未満だと稽古の効果は半分。${state.off > 0 ? '休みの日はお出かけもできます。' : ''}</p>
   </div>`;
-  panel.innerHTML = whoCard() + tabs + body + dock;
-  bindSpeed();
+}
+function dayDock() {
+  if (state.off > 0) return `<div class="dock-vs"><span class="offday">休みの日</span><span>${bashoName(state.basho)}まで あと${state.off}日</span></div>
+    <button class="btn primary wide" id="nextDayBtn" ${ui.busy ? 'disabled' : ''}>${state.off > 1 ? '次の日へ' : `${BASHO[(state.basho - 1) % 6]}の初日へ`}</button>`;
+  const m = me(), opp = byId(state.oppId), oi = rankInfo(posOf(opp));
+  return `<div class="dock-vs"><b>${DAYS[state.day - 1]}の取組</b><span>${esc(m.name)} 対 ${esc(opp.name)}</span><span class="sub">${oi.label}・${opp.w}勝${opp.l}敗</span></div>
+    <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>`;
+}
+function renderHome() {
+  const off = state.off > 0;
+  const TABS = [['train', '稽古'], ['outing', 'お出かけ'], ['banzuke', '番付'], ['shop', '着せ替え']];
+  const tabs = `<div class="tabs" role="tablist">${TABS.map(([id, l]) => `<button class="tab" role="tab" data-tab="${id}" aria-selected="${ui.tab === id}">${l}${id === 'outing' && off && !state.outed ? '<span class="dotn"> ●</span>' : ''}</button>`).join('')}</div>`;
+  let body, dock = '';
+  if (ui.tab === 'shop') { body = shopHtml(); dock = shopDock(); }
+  else if (ui.tab === 'banzuke') body = `<div class="card stack"><h2>${bashoName(state.basho)} 番付</h2>${banzukeHtml(false)}</div>`;
+  else if (ui.tab === 'outing') body = outingHtml();
+  else body = trainHtml();
+  shell({ tabs, body, dock: dock || dayDock() });
   panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; ui.preview = null; showHome(); render(); }; });
   if (ui.tab === 'shop') bindShop();
   panel.querySelectorAll('.train').forEach(b => {
@@ -1639,11 +1821,11 @@ function renderHome() {
       const T = TRAININGS.find(x => x.id === b.dataset.train); if (!T || ui.busy) return;
       const msg = train(T); ui.busy = true; const dur = playTraining(T.id, msg.startsWith('大成功')); toast(`${T.name}！ ${msg}`);
       if (three && three.solo) three.solo.fat = 1 + me().stats.body / 500;
-      render(); setTimeout(() => { ui.busy = false; if (state && state.phase === 'home') render(); }, dur);
+      render(); setTimeout(() => { ui.busy = false; if (state && state.phase === 'home' && !ui.outing) render(); }, dur);
     };
   });
   const go = $('#goBout'); if (go) go.onclick = startBout;
-  const nd = $('#nextDayBtn'); if (nd) nd.onclick = () => { nextDay(); if (three) showHome(); render(); };
+  const nd = $('#nextDayBtn'); if (nd) nd.onclick = () => { nextDay(); if (state.off <= 0 && ui.tab === 'outing') ui.tab = 'train'; if (three) showHome(); render(); };
   panel.querySelectorAll('[data-out]').forEach(b => { b.onclick = () => startOuting(OUTINGS.find(o => o.id === b.dataset.out)); });
 }
 
@@ -1659,31 +1841,35 @@ function swatchHtml(cat, it) {
   if (cat === 'fur') return `<span class="sw" style="background:${hex(it.color ?? kindOf(m.kind).fur)}"></span>`;
   if (cat === 'mawashi') return `<span class="sw belt" style="background:${hex(it.color)}"></span>`;
   if (cat === 'kesho') return it.id === 'none' ? '<span class="sw apron empty"></span>' : `<span class="sw apron" style="background-image:url(${keshoThumb(it.id, m.name)})"></span>`;
-  if (cat === 'acc' || cat === 'outfit' || cat === 'hat') { if (it.id === 'none') return '<span class="sw empty"></span>'; return `<span class="sw" style="background:${typeof it.color === 'string' ? it.color : hex(it.color)}"></span>`; }
+  if (OUT_CATS.includes(cat)) { if (it.id === 'none') return '<span class="sw empty"></span>'; return `<span class="sw" style="background:${typeof it.color === 'string' ? it.color : hex(it.color)}"></span>`; }
   if (it.id === 'auto') return '<span class="sw empty">番</span>';
   if (it.id === 'none') return '<span class="sw empty"></span>';
   return `<span class="sw" style="background:${hex(0x1c1420)};box-shadow:inset 0 0 0 ${it.pins ? 7 : 5}px ${hex(it.tie || 0x1c1420)}"></span>`;
 }
+function shopGroup() { return SHOP_GROUPS.find(g => g.id === ui.shopGroup) || SHOP_GROUPS[0]; }
 function shopHtml() {
-  const S = SHOP.find(x => x.cat === (ui.shopCat || 'fur')), P = ui.preview;
-  let tryon = '';
-  if (P) {
-    const it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id), st = itemStatus(P.cat, it);
-    const act = st.locked ? `<span class="sub">${it.note}に昇進すると着られます</span>`
-      : `<button class="btn primary small" id="buy" ${state.money < it.price ? 'disabled' : ''}>${state.money < it.price ? `あと${it.price - state.money}粒` : `${it.price}粒で買って着る`}</button>`;
-    tryon = `<div class="tryon"><span>試着中：<b>${esc(it.name)}</b></span><div class="acts"><button class="btn small" id="untry">もどす</button>${act}</div></div>`;
-  }
+  const G = shopGroup(); if (!G.cats.includes(ui.shopCat)) ui.shopCat = G.cats[0];
+  const S = SHOP.find(x => x.cat === ui.shopCat), P = ui.preview;
+  const NOTE = { wig: 'カツラは番付が上がるたびに解禁。', kesho: '化粧まわしは土俵入りで着けます。' };
   return `<div class="card stack">
-    <div class="row between"><h2 style="margin:0">着せ替え</h2><span class="purse">ひまわりの種 ${state.money}粒</span></div>
-    <div class="cats" role="tablist">${SHOP.map(x => `<button class="cat" role="tab" data-cat="${x.cat}" aria-selected="${x.cat === S.cat}">${x.label}</button>`).join('')}</div>
+    <div class="row between"><h2 style="margin:0">着せ替え</h2><span class="purse">種 ${state.money}粒</span></div>
+    <div class="groups">${SHOP_GROUPS.map(g => `<button data-group="${g.id}" aria-pressed="${g.id === G.id}">${g.label}</button>`).join('')}</div>
+    <div class="cats" role="tablist">${G.cats.map(c => `<button class="cat" role="tab" data-cat="${c}" aria-selected="${c === S.cat}">${SHOP.find(x => x.cat === c).label}</button>`).join('')}</div>
     <div class="items">${S.items.map(it => { const st = itemStatus(S.cat, it), on = P ? P.cat === S.cat && P.id === it.id : state.equip[S.cat] === it.id;
       return `<button class="item${st.locked ? ' locked' : ''}" data-id="${it.id}" aria-pressed="${on}">${swatchHtml(S.cat, it)}<b>${esc(it.name)}</b><span class="st ${st.cls}">${st.t}</span></button>`; }).join('')}</div>
-    ${tryon}
-    <p class="sub">${({ wig: 'カツラは番付が上がるたびに解禁されます。一度解禁したものはいつでも着られます。', acc: '小物は取組でもお出かけでも身につけます。', outfit: 'お出かけ服は休みの日のお出かけで着ます。行き先に合う服だとボーナスがもらえます。', hat: '帽子はお出かけのときにかぶります（カツラの上から）。' })[S.cat] || '取組に勝つと懸賞としてひまわりの種がもらえます。持っていないものはタップで試着できます。'}</p>
+    <p class="sub" style="margin:0">${G.note}${NOTE[S.cat] || ''}持っていないものはタップで試着。</p>
   </div>`;
 }
+function shopDock() {
+  const P = ui.preview; if (!P) return '';
+  const it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id), st = itemStatus(P.cat, it);
+  const act = st.locked ? `<span class="sub">${it.note}に昇進で解禁</span>`
+    : `<button class="btn primary small" id="buy" ${state.money < it.price ? 'disabled' : ''}>${state.money < it.price ? `あと${it.price - state.money}粒` : `${it.price}粒で買う`}</button>`;
+  return `<div class="tryon"><span>試着中：<b>${esc(it.name)}</b></span><div class="acts"><button class="btn small" id="untry">もどす</button>${act}</div></div>`;
+}
 function bindShop() {
-  const cat = ui.shopCat || 'fur', S = SHOP.find(x => x.cat === cat);
+  const cat = ui.shopCat, S = SHOP.find(x => x.cat === cat);
+  panel.querySelectorAll('[data-group]').forEach(b => { b.onclick = () => { ui.shopGroup = b.dataset.group; ui.shopCat = shopGroup().cats[0]; ui.preview = null; showHome(); render(); }; });
   panel.querySelectorAll('.cat').forEach(b => { b.onclick = () => { ui.shopCat = b.dataset.cat; ui.preview = null; showHome(); render(); }; });
   panel.querySelectorAll('.item').forEach(b => {
     b.onclick = () => {
@@ -1706,9 +1892,9 @@ function bindShop() {
 async function startBout() {
   const m = me(), opp = byId(state.oppId);
   const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100), effStats(opp.stats, .9));
-  state.phase = 'match'; ui.tab = 'train'; ui.preview = null;
-  panel.innerHTML = `<div class="card stack"><div class="match-head"><h2 style="margin:0">${DAYS[state.day - 1]} 結びの一番</h2><button class="btn small" id="skip">結果まで飛ばす</button></div>
-    ${speedHtml()}<ul class="log" id="log" aria-live="polite"></ul></div>`;
+  state.phase = 'match'; ui.preview = null; if (ui.tab !== 'banzuke') ui.tab = 'train';
+  shell({ status: false, body: `<div class="card stack grow"><h2>${DAYS[state.day - 1]} 結びの一番　${esc(m.name)} 対 ${esc(opp.name)}</h2><ul class="log" id="log" aria-live="polite"></ul></div>`,
+    dock: `${segHtml()}<button class="btn" id="skip">結果へ飛ばす</button>` });
   logEl = $('#log'); tagEl.hidden = false; bindSpeed();
   $('#skip').onclick = () => { if (three) three.skip = true; };
   await animateBout(res, m, opp);
@@ -1717,27 +1903,27 @@ async function startBout() {
 }
 function renderResult() {
   const L = ui.last || { win: state.marks[state.marks.length - 1] === 1, kimarite: '', opp: '', oppRank: '' }, m = me();
-  panel.innerHTML = whoCard() + `<div class="card stack">
+  shell({ body: `<div class="card stack grow">
     <div class="verdict ${L.win ? 'win' : ''}">${L.win ? '白星！' : '黒星…'}</div>
-    ${L.kimarite ? `<p>決まり手は <b>${esc(L.kimarite)}</b>。${L.win ? '○' : '●'} ${esc(m.name)} ― ${L.win ? '●' : '○'} ${esc(L.opp)}（${L.oppRank}）</p>` : ''}
-    ${L.prize ? `<p class="purse">${L.win ? '懸賞' : '出場手当'} +${L.prize}粒</p>` : ''}
-  </div><div class="dock"><button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button></div>`;
+    ${L.kimarite ? `<p style="margin:0">決まり手は <b>${esc(L.kimarite)}</b>。${L.win ? '○' : '●'} ${esc(m.name)} ― ${L.win ? '●' : '○'} ${esc(L.opp)}（${L.oppRank}）</p>` : ''}
+    ${L.prize ? `<p class="purse" style="margin:0">${L.win ? '懸賞' : '出場手当'} +${L.prize}粒</p>` : ''}
+  </div>`, dock: `<button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button>` });
   $('#next').onclick = () => { nextDay(); if (three) showHome(); render(); };
 }
 function renderBanzuke() {
   const news = ui.news || [];
-  panel.innerHTML = `<div class="card stack"><h2>${ui.finished ? esc(ui.finished) + ' おわり' : '場所おわり'}</h2>
-    <div class="news">${news.map(n => `<div class="${n.gold ? 'gold' : ''}">${esc(n.t)}</div>`).join('')}</div>
-    </div>
-  <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>
-  <div class="dock"><button class="btn primary wide" id="nextBasho">${bashoName(state.basho)}へ</button></div>`;
+  shell({ status: false, body: `<div class="card stack"><h2>${ui.finished ? esc(ui.finished) + ' おわり' : '場所おわり'}</h2>
+    <div class="news">${news.map(n => `<div class="${n.gold ? 'gold' : ''}">${esc(n.t)}</div>`).join('')}</div></div>
+    <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>`,
+    dock: `<div class="dock-vs"><b>休みの日が${OFF_DAYS}日あります</b><span class="sub">お出かけもできます</span></div><button class="btn primary wide" id="nextBasho">休みの日へ</button>` });
   if (three) { showHome(); if (three.solo) three.solo.anim = 'win'; }
-  $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); if (three) showHome(); render(); };
+  $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); ui.tab = 'train'; if (three) showHome(); render(); };
 }
 
 /* ================= 起動 ================= */
 window.__sumo = { simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function boot() {
+  $('#menuBtn').onclick = () => { ui.menu = !ui.menu; ui.resetAsk = false; renderMenu(); };
   three = initThree(); if (three) three.speed = speedV();
   if (!three) sayEl.textContent = '3D表示を使えない環境です。文字だけで進行します。';
   state = load();
