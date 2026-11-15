@@ -1036,44 +1036,12 @@ const SPEEDS = [{ id: 'slow', label: 'ゆっくり', v: .5 }, { id: 'normal', la
 let savedSpeed = 'normal'; try { savedSpeed = localStorage.getItem('hamsumo.speed') || 'normal'; } catch (e) { /* noop */ }
 let ui = { speed: SPEEDS.some(x => x.id === savedSpeed) ? savedSpeed : 'normal', tab: 'train', kind: 'golden', name: pick(MY_NAMES), busy: false, last: null, news: null, resetAsk: false };
 
-/* セーブ：アカウントごとの保存領域（artifact の db）に保存し、ブラウザにも控えを置く */
-const Cloud = (() => {
-  let ref = null, ready = false, pending = null, writing = false;
-  async function init() {
-    const C = window.claude; if (!C || typeof C.use !== 'function') return null;
-    try {
-      const [db, user] = await Promise.all([C.use('db'), C.use('user')]); if (!db || !user) return null;
-      const id = await user.id(); if (!id) return null;
-      ref = db.doc('data/users/' + id + '/save');
-      const snap = await Promise.race([ref.get(), new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout' }), 10000))]);
-      ready = true;
-      const d = snap.exists ? snap.data() : null;
-      return { json: d && typeof d.json === 'string' ? d.json : null };
-    } catch (e) { return null; }
-  }
-  function flush() {
-    if (writing || !pending || !ready) return;
-    writing = true; const body = pending; pending = null;
-    const done = delay => { writing = false; if (pending) setTimeout(flush, delay); };
-    (body.del ? ref.delete() : ref.set(body)).then(() => done(1000)).catch(e => {
-      const code = e && e.code;
-      if (code === 'unavailable' || code === 'resource_exhausted') { pending = pending || body; writing = false; setTimeout(flush, 2000 + Math.random() * 1500); return; }
-      ready = false; writing = false; // 書けない閲覧者など：ブラウザ保存のみで続ける
-    });
-  }
-  return {
-    init,
-    save(json, savedAt) { if (!ready) return; pending = { v: 1, json, savedAt }; flush(); },
-    clear() { if (!ready) return; pending = { del: true }; flush(); },
-    get on() { return ready; },
-  };
-})();
+/* セーブ：ブラウザに保存（控えはメニューのセーブコード） */
 function save() {
   if (!state) return;
   state.savedAt = Date.now();
   const json = JSON.stringify(state);
   try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* 保存できない環境でも遊べる */ }
-  Cloud.save(json, state.savedAt);
 }
 function parseSave(json) {
   try { const s = JSON.parse(json || 'null'); if (s && s.v === 1 && Array.isArray(s.roster) && s.roster.length === N) return migrate(s); } catch (e) { /* noop */ }
@@ -2450,7 +2418,7 @@ function renderMenu() {
   });
   on('resetAsk', () => { ui.resetAsk = true; renderMenu(); });
   on('resetNo', () => { ui.resetAsk = false; renderMenu(); });
-  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } Cloud.clear(); state = null; ui.menu = false; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; ui.preview = null; showSolo(selectLook(), 'select'); render(); });
+  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.menu = false; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; ui.preview = null; showSolo(selectLook(), 'select'); render(); });
 }
 
 function renderSelect() {
@@ -2711,13 +2679,6 @@ function boot() {
   const local = load();
   state = fromHot && (!local || (fromHot.savedAt || 0) >= (local.savedAt || 0)) ? fromHot : local;
   adoptState();
-  // アカウントの保存領域から読み込み（こちらが新しければ置きかえ）
-  Cloud.init().then(r => {
-    if (!r) return;
-    const remote = parseSave(r.json);
-    if (remote && (!state || (remote.savedAt || 0) > (state.savedAt || 0))) { state = remote; ui.outing = null; ui.preview = null; ui.tab = 'train'; adoptState(); try { localStorage.setItem(SAVE_KEY, r.json); } catch (e) { /* noop */ } }
-    else if (state) save();
-  });
   try { const h = window.claude && window.claude.hot; if (h && typeof h.snapshot === 'function') h.snapshot(() => ({ save: state ? JSON.stringify(state) : null })); } catch (e) { /* noop */ }
 }
 function adoptState() {
