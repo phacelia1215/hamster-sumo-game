@@ -1646,6 +1646,8 @@ function initThree() {
     const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(2, 2); furShellCache.set(fur, t); return t;
   }
 
+  const HAT_EARS = { nekomimi: 'hide', kumamimi: 'hide', knit: 'hide', cap: 'hide', mugiwara: 'side', beret: 'side', bucket: 'side', silk: 'side', witch: 'side', amigasa: 'side' };
+
   function makeHamster(look) {
     const K = kindOf(look.kind), PINK = 0xf6aeb0, FUR = look.fur ?? K.fur, FR = look.furRough, MW = look.mawashi, MR = look.mawashiRough ?? .6;
     const root = new T.Group(), rig = new T.Group(); root.add(rig);
@@ -1662,12 +1664,12 @@ function initThree() {
     head.add(furSph(.66, 1.08, .95, 1, true));
     if (K.pattern === 'stripe') head.add(at(sph(.67, K.stripe, .15, .96, 1), 0, 0, -.05));
     head.add(at(sph(.3, K.belly, 1.25, .8, .7), 0, -.14, .5));
-    const cheeks = [], eyes = [];
+    const cheeks = [], eyes = [], ears = [];
     for (const s of [-1, 1]) {
       const ch = at(sph(.24, K.belly), s * .36, -.16, .38); head.add(ch); cheeks.push(ch);
       head.add(at(sph(.09, 0xff9aa8, 1, .7, .35), s * .45, -.1, .585));
       const eye = new T.Group(); eye.position.set(s * .25, .1, .56); eye.add(sph(.085, 0x1c1420, 1, 1, 1, .15)); eye.add(at(sph(.028, 0xffffff, 1, 1, 1, .3), .03, .035, .07)); head.add(eye); eyes.push(eye);
-      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : FUR, 1, 1, .4, furR)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear);
+      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : FUR, 1, 1, .4, furR)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear); ears.push(ear);
       if (K.pattern === 'brow') head.add(at(sph(.07, 0xffffff, 1.3, .8, .4), s * .25, .27, .54));
     }
     head.add(at(sph(.05, 0xe8838c), 0, -.04, .7));
@@ -1711,7 +1713,12 @@ function initThree() {
     H.setWig(look.hat ? 'none' : (look.wig || 'none')); tsuna.visible = !!look.yokozuna;
     if (look.acc) addAcc(look.acc, head, rig);
     if (look.outfit) { addOutfit(look.outfit, rig, arms); belt.visible = false; flap.visible = false; tsuna.visible = false; }
-    if (look.hat) addHat(look.hat, head);
+    if (look.hat) {
+      addHat(look.hat, head);
+      const mode = HAT_EARS[look.hat] || 'keep';
+      if (mode === 'hide') ears.forEach(e => { e.visible = false; });
+      else if (mode === 'side') ears.forEach((e, i) => { const s = i ? 1 : -1; e.position.set(s * .6, .3, .04); e.rotation.set(0, s * .25, -s * 1.15); e.scale.setScalar(.9); });
+    }
     if (look.shoes) addShoes(look.shoes, feet);
     if (look.bag) addBag(look.bag, rig, arms);
     H.fat = 1 + Math.min(look.body || 10, STAT_MAX) / 500;
@@ -2593,7 +2600,11 @@ function shopHtml() {
   </div>`;
 }
 function shopDock() {
-  const P = ui.preview; if (!P) return '';
+  const P = ui.preview;
+  if (!P) {
+    const S = SHOP.find(x => x.cat === ui.shopCat) || SHOP[0], cur = findIn(S.items, state.equip[S.cat]);
+    return `<div class="dock-vs"><b>${S.label}</b><span>着用中：${esc(cur.name)}</span></div><button class="btn wide" id="shopDone">着せ替えをおわる</button>`;
+  }
   const it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id), st = itemStatus(P.cat, it);
   const act = st.locked ? `<span class="sub">${it.note}に昇進で解禁</span>`
     : `<button class="btn primary small" id="buy" ${state.money < it.price ? 'disabled' : ''}>${state.money < it.price ? `あと${it.price - state.money}粒` : `${it.price}粒で買う`}</button>`;
@@ -2612,6 +2623,7 @@ function bindShop() {
     };
   });
   const un = $('#untry'); if (un) un.onclick = () => { ui.preview = null; showHome(); render(); };
+  const sd = $('#shopDone'); if (sd) sd.onclick = () => { ui.tab = state.off > 0 ? 'outing' : 'train'; ui.preview = null; showHome(); render(); };
   const buy = $('#buy');
   if (buy) buy.onclick = () => {
     const P = ui.preview, it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id);
