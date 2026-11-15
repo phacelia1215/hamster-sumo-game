@@ -47,7 +47,7 @@ body {
   font-family: var(--font-body); font-size: 15px; line-height: 1.6; font-weight: 500;
 }
 button, input { font: inherit; color: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid var(--murasaki); outline-offset: 2px; }
 
 .app {
@@ -70,7 +70,7 @@ button { cursor: pointer; }
 
 /* ---------- 土俵 ---------- */
 .stage {
-  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; box-shadow: 0 -12px 0 var(--bg);
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; box-shadow: 0 -12px 0 var(--bg), 0 8px 0 var(--bg);
   width: 100%; max-width: 100%; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden;
   background: linear-gradient(var(--stage-top), var(--stage-bot)); border: 2px solid var(--ink);
 }
@@ -80,9 +80,12 @@ button { cursor: pointer; }
   border: 2px solid var(--ink); border-radius: 6px; padding: 1px 10px; font-weight: 700; font-size: 13px;
 }
 .stage-say {
-  position: absolute; left: 10px; right: 10px; bottom: 10px; text-align: center; pointer-events: none;
-  font-weight: 900; font-size: clamp(14px, 2.6vw, 18px); color: var(--ink);
-  text-shadow: 0 0 6px var(--surface), 0 0 6px var(--surface), 0 0 2px var(--surface);
+  position: absolute; left: 8px; right: 8px; bottom: 8px; text-align: center; pointer-events: none;
+  font-weight: 900; font-size: clamp(15px, 3.4vw, 19px); line-height: 1.4; color: var(--ink);
+}
+.stage-say span {
+  display: inline-block; max-width: 100%; background: var(--surface); border: 2px solid var(--ink); border-radius: 12px;
+  padding: 3px 12px; box-shadow: 0 2px 0 var(--ink); animation: pop .25s ease-out;
 }
 .stage-big {
   position: absolute; inset: 12% 0 auto; text-align: center; pointer-events: none;
@@ -93,7 +96,7 @@ button { cursor: pointer; }
 .stage-big .s { font-size: clamp(15px, 3vw, 20px); font-family: var(--font-body); font-weight: 900; }
 .stage-big.win .k { color: var(--aka); }
 .toast {
-  position: absolute; top: 14%; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  position: absolute; top: 14%; left: 50%; transform: translateX(-50%); width: max-content; max-width: 92%; text-align: center; pointer-events: none;
   background: var(--ink); color: var(--bg); border-radius: 999px; padding: 4px 16px; font-weight: 900;
   animation: rise 1.9s ease-out forwards;
 }
@@ -148,11 +151,13 @@ button { cursor: pointer; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 16px; }
 
 .tabs { display: flex; gap: 6px; }
-.tab { flex: 1; border: 2px solid var(--ink); background: var(--surface); border-radius: 10px 10px 0 0; padding: 7px 8px; font-weight: 900; border-bottom-width: 2px; }
+.tab { flex: 1; min-height: 44px; border: 2px solid var(--ink); background: var(--surface); border-radius: 10px 10px 0 0; padding: 6px 4px; font-weight: 900; }
 .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
 
-.trains { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 8px; }
-.train { text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; }
+.trains { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.train { text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 1px; padding: 8px; min-height: 64px; min-width: 0; }
+.train b { overflow-wrap: anywhere; line-height: 1.25; }
+@media (max-width: 879px) { .train b { font-size: 14px; } .train span { font-size: 11px; } }
 .train b { font-size: 15px; }
 .train span { font-size: 12px; font-weight: 700; color: var(--muted); }
 .vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; text-align: center; }
@@ -202,6 +207,40 @@ button { cursor: pointer; }
 .sw.empty { border-style: dashed; background: transparent; }
 .tryon { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
 .tryon .acts { display: flex; gap: 8px; margin-left: auto; }
+/* 力士カード（コンパクト） */
+.who { display: flex; flex-direction: column; gap: 8px; }
+.who-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.stat5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.st5 { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--surface-2); border-radius: 8px; padding: 4px 2px 6px; font-variant-numeric: tabular-nums; }
+.st5 span { font-size: 12px; font-weight: 900; color: var(--muted); }
+.st5 b { font-size: 17px; line-height: 1.1; }
+.st5 i { display: block; width: 80%; height: 4px; border-radius: 9px; background: var(--line); overflow: hidden; }
+.st5 i u { display: block; height: 100%; background: var(--murasaki); text-decoration: none; }
+/* 画面下のアクション */
+.dock {
+  position: sticky; bottom: 0; z-index: 6; display: flex; flex-direction: column; gap: 6px;
+  padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); margin-top: -4px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 22%);
+}
+.dock-vs { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; font-weight: 900; font-size: 14px; text-align: center; }
+.dock-vs .sub { font-weight: 700; }
+/* 進行スピード */
+.speed { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.speed .lbl { font-size: 13px; font-weight: 900; color: var(--muted); }
+.seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 0 12px; min-height: 40px; font-weight: 900; font-size: 14px; }
+.seg button + button { border-left: 2px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.match-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.log { font-size: 15px; }
+@media (max-width: 879px) {
+  .app { gap: 10px; padding-block: 8px 0; }
+  .mast .t1 { font-size: 20px; } .mast .t2 { font-size: 14px; } .mast-info { font-size: 12px; }
+  .card { padding: 12px; border-radius: 10px; }
+  .panel { gap: 10px; }
+  .shikona { font-size: 21px; }
+  .log { max-height: 34vh; }
+}
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
 </style>
 <!--/ARTIFACT-HEAD-->
@@ -261,8 +300,8 @@ const TRAININGS = [
   { id: 'teppo', name: 'てっぽう', cost: 25, gain: { pow: 3, tec: 1 }, note: '力+ 技+' },
   { id: 'butsukari', name: 'ぶつかり稽古', cost: 35, gain: { tec: 2, guts: 2, pow: 1 }, note: '技+ 心+ 力+' },
   { id: 'wheel', name: '回し車ダッシュ', cost: 25, gain: { spd: 3, guts: 1 }, note: '速+ 心+' },
-  { id: 'eat', name: 'ひまわりの種', cost: 0, gain: { body: 1 }, energy: 35, note: '元気+35 体+' },
-  { id: 'nap', name: 'おひるね', cost: 0, gain: { guts: 1 }, energy: 60, note: '元気+60 心+' },
+  { id: 'eat', name: 'ひまわりの種', cost: 0, gain: { body: 1 }, energy: 35, note: '体+ 元気+35' },
+  { id: 'nap', name: 'おひるね', cost: 0, gain: { guts: 1 }, energy: 60, note: '心+ 元気+60' },
 ];
 const THROWS = ['上手投げ', '下手投げ', 'すくい投げ', 'ころりん投げ'];
 const SLAPS = ['はたき込み', '突き落とし', '引き落とし'];
@@ -410,7 +449,9 @@ const effStats = (s, cond) => ({ pow: s.pow * cond, tec: s.tec * cond, body: s.b
 /* ================= 状態 ================= */
 const SAVE_KEY = 'hamsumo.v1';
 let state = null;
-let ui = { tab: 'train', kind: 'golden', name: pick(MY_NAMES), busy: false, last: null, news: null, resetAsk: false };
+const SPEEDS = [{ id: 'slow', label: 'ゆっくり', v: .5 }, { id: 'normal', label: 'ふつう', v: .75 }, { id: 'fast', label: 'はやい', v: 1.15 }];
+let savedSpeed = 'normal'; try { savedSpeed = localStorage.getItem('hamsumo.speed') || 'normal'; } catch (e) { /* noop */ }
+let ui = { speed: SPEEDS.some(x => x.id === savedSpeed) ? savedSpeed : 'normal', tab: 'train', kind: 'golden', name: pick(MY_NAMES), busy: false, last: null, news: null, resetAsk: false };
 
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* 保存できない環境でも遊べる */ } }
 function load() {
@@ -935,7 +976,7 @@ function initThree() {
     if (tr.t >= tr.def.dur) endTraining();
   }
   const cam = { pos: new T.Vector3(0, 2.7, 8.6), look: new T.Vector3(0, 1.25, 0), tp: new T.Vector3(0, 2.7, 8.6), tl: new T.Vector3(0, 1.25, 0) };
-  const api = { makeHamster, actors, pole, wheel, cam, mode: 'home', yaw: 0, shake: 0, solo: null, tweens: [], skip: false, training: null, spawn, say3d, dustRing, starBurst, sweat };
+  const api = { speed: 1, makeHamster, actors, pole, wheel, cam, mode: 'home', yaw: 0, shake: 0, solo: null, tweens: [], skip: false, training: null, spawn, say3d, dustRing, starBurst, sweat };
   api.startTraining = startTraining; api.makeGyoji = makeGyoji; api.follow = null;
   api.camTo = (p, l) => { cam.tp.set(...p); cam.tl.set(...l); };
   api.clear = () => { endTraining(); api.follow = null; actors.splice(0).forEach(h => scene.remove(h.root)); api.solo = null; pole.visible = false; wheel.visible = false; };
@@ -957,7 +998,7 @@ function initThree() {
 
   let last = performance.now(), time = 0;
   function frame(now) {
-    const dt = Math.min(.05, (now - last) / 1000); last = now; time += dt;
+    const dt = Math.min(.05, (now - last) / 1000) * api.speed; last = now; time += dt;
     for (let i = api.tweens.length - 1; i >= 0; i--) {
       const tw = api.tweens[i]; tw.t += dt; const k = api.skip ? 1 : Math.min(1, tw.t / tw.dur); tw.fn(k);
       if (k >= 1) { api.tweens.splice(i, 1); tw.res(); }
@@ -986,9 +1027,13 @@ function showSolo(look, mode) {
   three.actors.push(H); three.solo = H; three.setCam('home');
 }
 function showHome() { showSolo(lookOf(me(), ui.preview ? { [ui.preview.cat]: ui.preview.id } : null), 'home'); }
-function playTraining(id, great) { if (!three || !three.solo) return 300; return Math.round(three.startTraining(id, great) * 1000) || 300; }
+function playTraining(id, great) { if (!three || !three.solo) return 300; return Math.round(three.startTraining(id, great) * 1000 / three.speed) || 300; }
 function toast(text) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = text; stageEl.appendChild(d); setTimeout(() => d.remove(), 2000); }
-function say(text) { sayEl.textContent = text; logLine(text); }
+function sayLine(text) { sayEl.innerHTML = `<span>${esc(text)}</span>`; logLine(text); }
+const speedV = () => SPEEDS.find(x => x.id === ui.speed).v;
+function setSpeed(id) { ui.speed = id; try { localStorage.setItem('hamsumo.speed', id); } catch (e) { /* noop */ } if (three) three.speed = speedV(); }
+const speedHtml = () => `<div class="speed"><span class="lbl">進行スピード</span><div class="seg">${SPEEDS.map(x => `<button data-speed="${x.id}" aria-pressed="${x.id === ui.speed}">${x.label}</button>`).join('')}</div></div>`;
+function bindSpeed() { panel.querySelectorAll('[data-speed]').forEach(b => { b.onclick = () => { setSpeed(b.dataset.speed); panel.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', x.dataset.speed === ui.speed)); }; }); }
 let logEl = null;
 function logLine(text, cls) { if (!logEl) return; const li = document.createElement('li'); li.textContent = text; if (cls) li.className = cls; logEl.appendChild(li); logEl.scrollTop = logEl.scrollHeight; }
 
@@ -996,6 +1041,7 @@ async function animateBout(res, m, opp) {
   if (!three) return;
   const PI = Math.PI, east = posOf(m) % 2 === 0, s = east ? 1 : -1; // 東は正面から見て左
   three.clear(); three.mode = 'match'; three.skip = false;
+  let said = 0; const say = t => { sayLine(t); said++; };
   const A = three.makeHamster(lookOf(m)), B = three.makeHamster(lookOf(opp)), G = three.makeGyoji();
   three.actors.push(A, B, G);
   const H = [A, B], names = [m.name, opp.name], X = RING - 1.0, d = .84, start = 1.7, entry = 4.4;
@@ -1055,6 +1101,7 @@ async function animateBout(res, m, opp) {
   follow(.9);
   let nok = 0;
   for (const e of res.events) {
+    said = 0;
     if (e.t === 'tachiai') { await moveTo(e.x, .5); if (Math.abs(e.x) > .15) { const w = e.x > 0 ? 0 : 1; say(`${names[w]}、するどい立合い！`); fx(() => say3d('速い!', H[w].root.position.x, 2.5, .3, '#1f5fa8')); } }
     else if (e.t === 'push') {
       const w = e.dx > 0 ? 0 : 1, dir = w === 0 ? s : -s;
@@ -1080,6 +1127,7 @@ async function animateBout(res, m, opp) {
       h.anim = 'push'; follow(.9);
       await moveTo(e.x, .45);
     }
+    if (said && e.t !== 'end') await wait(.55);
     else if (e.t === 'end') {
       const W = H[e.winner], L = H[1 - e.winner];
       const dirL = e.winner === 0 ? s : -s; // 負けた側の土俵際の向き
@@ -1188,11 +1236,11 @@ function renderSelect() {
 
 function whoCard() {
   const m = me(), info = rankInfo(posOf(m));
-  return `<div class="card stack">
-    <div class="row between"><div><div class="rank">${info.label}・${kindOf(m.kind).name}</div><div class="shikona">${esc(m.name)}</div></div>
+  return `<div class="card who">
+    <div class="who-top"><div style="min-width:0"><div class="rank">${info.label}・${kindOf(m.kind).name}</div><div class="shikona">${esc(m.name)}</div></div>
       <div class="rec">${m.w}勝${m.l}敗<br><span class="stars">${starsHtml(state.marks)}</span><br><span class="purse">種 ${state.money}粒</span></div></div>
     ${meter('元気', state.energy, 100, 'energy')}
-    <div class="stats">${STAT.map(([k, l]) => meter(l, m.stats[k], STAT_MAX)).join('')}</div>
+    <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${m.stats[k]}</b><i><u style="width:${clamp(m.stats[k] / STAT_MAX * 100, 0, 100)}%"></u></i></div>`).join('')}</div>
   </div>`;
 }
 function renderHome() {
@@ -1204,16 +1252,16 @@ function renderHome() {
   else body = `
   <div class="card stack">
     <div class="row between"><h2 style="margin:0">きょうの稽古</h2><span class="sub">のこり <b>${state.actions}</b> / ${ACTIONS} 回</span></div>
-    <div class="trains">${TRAININGS.map(T => `<button class="btn train" data-train="${T.id}" ${state.actions <= 0 || ui.busy || state.energy < T.cost ? 'disabled' : ''}><b>${T.name}</b><span>${T.note}${T.cost ? `／元気-${T.cost}` : ''}</span></button>`).join('')}</div>
+    <div class="trains">${TRAININGS.map(T => `<button class="btn train" data-train="${T.id}" ${state.actions <= 0 || ui.busy || state.energy < T.cost ? 'disabled' : ''}><b>${T.name}</b><span>${T.note}</span><span>${T.cost ? `元気-${T.cost}` : '元気回復'}</span></button>`).join('')}</div>
     <p class="sub">元気が30を切ると稽古の効果が半分に。取組の調子にもひびきます。</p>
-  </div>
-  <div class="card stack">
-    <h2>${DAYS[state.day - 1]}の取組</h2>
-    <div class="vs"><div><div class="sub">${rankInfo(posOf(m)).label}</div><div class="n">${esc(m.name)}</div><div class="sub">${m.w}勝${m.l}敗</div></div><div class="mid">対</div>
-      <div><div class="sub">${oi.label}</div><div class="n">${esc(opp.name)}</div><div class="sub">${opp.w}勝${opp.l}敗・${kindOf(opp.kind).name}</div></div></div>
+    ${speedHtml()}
+  </div>`;
+  const dock = `<div class="dock">
+    <div class="dock-vs"><span>${DAYS[state.day - 1]}の取組</span><span>${esc(m.name)} 対 ${esc(opp.name)}</span><span class="sub">（${oi.label}・${opp.w}勝${opp.l}敗）</span></div>
     <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>
   </div>`;
-  panel.innerHTML = whoCard() + tabs + body;
+  panel.innerHTML = whoCard() + tabs + body + dock;
+  bindSpeed();
   panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; if (ui.preview) { ui.preview = null; showHome(); } render(); }; });
   if (ui.tab === 'shop') bindShop();
   panel.querySelectorAll('.train').forEach(b => {
@@ -1286,8 +1334,9 @@ async function startBout() {
   const m = me(), opp = byId(state.oppId);
   const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100), effStats(opp.stats, .9));
   state.phase = 'match'; ui.tab = 'train'; ui.preview = null;
-  panel.innerHTML = `<div class="card stack"><div class="row between"><h2 style="margin:0">${DAYS[state.day - 1]} 結びの一番</h2><button class="btn small" id="skip">早送り</button></div><ul class="log" id="log" aria-live="polite"></ul></div>`;
-  logEl = $('#log'); tagEl.hidden = false;
+  panel.innerHTML = `<div class="card stack"><div class="match-head"><h2 style="margin:0">${DAYS[state.day - 1]} 結びの一番</h2><button class="btn small" id="skip">結果まで飛ばす</button></div>
+    ${speedHtml()}<ul class="log" id="log" aria-live="polite"></ul></div>`;
+  logEl = $('#log'); tagEl.hidden = false; bindSpeed();
   $('#skip').onclick = () => { if (three) three.skip = true; };
   await animateBout(res, m, opp);
   finishBout(res, opp);
@@ -1299,16 +1348,16 @@ function renderResult() {
     <div class="verdict ${L.win ? 'win' : ''}">${L.win ? '白星！' : '黒星…'}</div>
     ${L.kimarite ? `<p>決まり手は <b>${esc(L.kimarite)}</b>。${L.win ? '○' : '●'} ${esc(m.name)} ― ${L.win ? '●' : '○'} ${esc(L.opp)}（${L.oppRank}）</p>` : ''}
     ${L.prize ? `<p class="purse">${L.win ? '懸賞' : '出場手当'} +${L.prize}粒</p>` : ''}
-    <button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button>
-  </div>`;
+  </div><div class="dock"><button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button></div>`;
   $('#next').onclick = () => { nextDay(); if (three) showHome(); render(); };
 }
 function renderBanzuke() {
   const news = ui.news || [];
   panel.innerHTML = `<div class="card stack"><h2>${ui.finished ? esc(ui.finished) + ' おわり' : '場所おわり'}</h2>
     <div class="news">${news.map(n => `<div class="${n.gold ? 'gold' : ''}">${esc(n.t)}</div>`).join('')}</div>
-    <button class="btn primary wide" id="nextBasho">${bashoName(state.basho)}へ</button></div>
-  <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>`;
+    </div>
+  <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>
+  <div class="dock"><button class="btn primary wide" id="nextBasho">${bashoName(state.basho)}へ</button></div>`;
   if (three) { showHome(); if (three.solo) three.solo.anim = 'win'; }
   $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); if (three) showHome(); render(); };
 }
@@ -1316,7 +1365,7 @@ function renderBanzuke() {
 /* ================= 起動 ================= */
 window.__sumo = { simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function boot() {
-  three = initThree();
+  three = initThree(); if (three) three.speed = speedV();
   if (!three) sayEl.textContent = '3D表示を使えない環境です。文字だけで進行します。';
   state = load();
   if (state) { if (state.phase === 'match') state.phase = 'home'; showHome(); }
