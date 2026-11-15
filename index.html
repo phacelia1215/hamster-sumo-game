@@ -230,6 +230,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .stage[data-place="umi"] { background: linear-gradient(#4fb0ec, #d9f2ff); }
 .stage[data-place="cafe"] { background: linear-gradient(#ffd3a1, #fff1dc); }
 .stage[data-place="jinja"] { background: linear-gradient(#ffaa80, #ffe7c9); }
+.stage[data-place="room"] { background: #f6eadb; }
 .outs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .out { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 10px; min-height: 76px; min-width: 0; }
 .out b { font-size: 15px; }
@@ -515,6 +516,36 @@ const BAGS = [
 ];
 const MORE_LIKES = { park: ['sneaker', 'ryukku', 'jersey'], himawari: ['kago', 'tanebukuro', 'boots'], umi: ['sandal', 'jinbei'], cafe: ['pochette', 'onepiece', 'silk', 'pearl'], jinja: ['geta', 'amigasa', 'jinbei', 'suzu'] };
 OUTINGS.forEach(o => o.likes.push(...(MORE_LIKES[o.id] || [])));
+const COATS = [
+  { id: 'natural', name: '生まれつき', price: 0 },
+  { id: 'tsuya', name: 'つやつや', price: 120 },
+  { id: 'fluffy', name: 'ふわふわ長毛', price: 180 },
+  { id: 'buchi', name: 'ぶち', price: 160 },
+  { id: 'tora', name: 'トラじま', price: 200 },
+  { id: 'panda', name: 'パンダ', price: 240 },
+  { id: 'hoshi', name: '星もよう', price: 260 },
+  { id: 'heart', name: 'ハートもよう', price: 260 },
+];
+const TEX_COATS = ['buchi', 'tora', 'hoshi', 'heart'];
+const mixHex = (c, t, k) => '#' + [16, 8, 0].map(sh => { const a = (c >> sh) & 255, b = (t >> sh) & 255; return Math.round(a + (b - a) * k).toString(16).padStart(2, '0'); }).join('');
+function drawCoat(g, id, w, h, fur) {
+  const P2 = Math.PI * 2, dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, P2); g.fill(); };
+  g.fillStyle = hex(fur); g.fillRect(0, 0, w, h);
+  const k = w / 256;
+  if (id === 'buchi') { g.fillStyle = mixHex(fur, 0x2a1a10, .55); [[30, 40, 26], [110, 90, 30], [190, 30, 22], [240, 100, 20], [70, 110, 16], [160, 70, 14]].forEach(([x, y, r]) => { g.beginPath(); g.ellipse(x * k, y * k * (h / w) * 2, r * k * 1.3, r * k, .4, 0, P2); g.fill(); }); }
+  else if (id === 'tora') { g.strokeStyle = mixHex(fur, 0x2a1a10, .6); g.lineWidth = 9 * k; g.lineCap = 'round'; for (let x = 10; x < 256; x += 32) { g.beginPath(); g.moveTo(x * k, 4 * k); g.quadraticCurveTo((x + 12) * k, h * .3, (x - 4) * k, h * .55); g.stroke(); } }
+  else if (id === 'hoshi') { g.fillStyle = '#fff6c4'; [[24, 20], [80, 60], [140, 24], [200, 70], [240, 20], [40, 100], [120, 104], [180, 112], [100, 30]].forEach(([x, y]) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = (i % 2 ? 7 : 17) * k; g.lineTo(x * k + Math.cos(a) * r, y * k * (h / w) * 2 + Math.sin(a) * r); } g.fill(); }); }
+  else if (id === 'heart') { g.fillStyle = '#ff8fb1'; [[24, 24], [84, 64], [144, 20], [204, 72], [44, 104], [124, 100], [190, 116], [244, 34]].forEach(([x, y]) => { const X = x * k, Y = y * k * (h / w) * 2, s = 13 * k; g.beginPath(); g.moveTo(X, Y + s); g.bezierCurveTo(X - s * 1.6, Y, X - s * .6, Y - s * 1.2, X, Y - s * .3); g.bezierCurveTo(X + s * .6, Y - s * 1.2, X + s * 1.6, Y, X, Y + s); g.fill(); }); }
+  else if (id === 'tsuya') { const gr = g.createRadialGradient(w * .35, h * .3, 2, w * .35, h * .3, w * .45); gr.addColorStop(0, 'rgba(255,255,255,.75)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+  else if (id === 'panda') { g.fillStyle = '#1c1420'; g.beginPath(); g.ellipse(w * .32, h * .5, w * .12, h * .16, .4, 0, P2); g.ellipse(w * .68, h * .5, w * .12, h * .16, -.4, 0, P2); g.fill(); dot(w * .2, h * .12, w * .12); dot(w * .8, h * .12, w * .12); }
+  else if (id === 'fluffy') { g.fillStyle = mixHex(fur, 0xffffff, .35); for (let i = 0; i < 14; i++) { const a = i / 14 * P2; dot(w / 2 + Math.cos(a) * w * .42, h / 2 + Math.sin(a) * h * .42, w * .1); } g.fillStyle = hex(fur); dot(w / 2, h / 2, w * .36); }
+}
+const coatThumbCache = new Map();
+function coatThumb(id, fur) {
+  const key = id + fur; if (coatThumbCache.has(key)) return coatThumbCache.get(key);
+  const c = document.createElement('canvas'); c.width = c.height = 64; drawCoat(c.getContext('2d'), id, 64, 64, fur);
+  const u = c.toDataURL(); coatThumbCache.set(key, u); return u;
+}
 const OFF_DAYS = 3;
 const WIGS = [
   { id: 'auto', name: '番付どおり', tier: 0, note: 'いまの番付' },
@@ -530,6 +561,7 @@ const WIGS = [
 const WIG_BY_TIER = ['chonmage', 'oicho', 'tsuya', 'komusubi', 'sekiwake', 'ozeki', 'yokozuna'];
 const SHOP = [
   { cat: 'fur', label: '毛色', items: FURS },
+  { cat: 'coat', label: '毛並み', items: COATS },
   { cat: 'mawashi', label: 'まわし', items: MAWASHIS },
   { cat: 'kesho', label: '化粧まわし', items: KESHO },
   { cat: 'wig', label: 'カツラ', items: WIGS },
@@ -540,7 +572,7 @@ const SHOP = [
   { cat: 'bag', label: 'バッグ', items: BAGS },
 ];
 const SHOP_GROUPS = [
-  { id: 'sumo', label: '相撲用', cats: ['fur', 'mawashi', 'kesho', 'wig'], note: '土俵や取組での姿です。毛色はお出かけでもそのまま。' },
+  { id: 'sumo', label: '相撲用', cats: ['fur', 'coat', 'mawashi', 'kesho', 'wig'], note: '土俵や取組での姿です。毛色と毛並みはお出かけでもそのまま。' },
   { id: 'out', label: 'お出かけ用', cats: ['outfit', 'hat', 'acc', 'shoes', 'bag'], note: '休みの日のお出かけで身につけます。行き先に合うとボーナス。' },
 ];
 const OUT_CATS = SHOP_GROUPS[1].cats;
@@ -665,9 +697,9 @@ function load() {
 }
 function migrate(s) {
   if (typeof s.money !== 'number') s.money = 120;
-  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'], shoes: ['none'], bag: ['none'] }, s.owned || {});
+  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'], shoes: ['none'], bag: ['none'], coat: ['natural'] }, s.owned || {});
   if (typeof s.off !== 'number') s.off = 0; if (typeof s.outed !== 'boolean') s.outed = false;
-  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none', shoes: 'none', bag: 'none' }, s.equip || {});
+  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none', shoes: 'none', bag: 'none', coat: 'natural' }, s.equip || {});
   s.roster.forEach(r => { if (!r.me && !r.kesho) r.kesho = pick(KESHO.slice(1)).id; });
   return s;
 }
@@ -678,7 +710,7 @@ function lookOf(r, preview, outing) {
   if (!r.me) return { kind: r.kind, mawashi: r.mawashi, wig: WIG_BY_TIER[tier], kesho: pos < 24 ? r.kesho : null, name: r.name, yokozuna: pos < 2, body: r.stats.body };
   const e = Object.assign({}, state.equip, preview || {});
   const F = findIn(FURS, e.fur), M = findIn(MAWASHIS, e.mawashi);
-  const L = { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body };
+  const L = { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body, coat: e.coat === 'natural' ? null : e.coat };
   if (outing) { L.kesho = null; L.yokozuna = false; const v = k => (e[k] === 'none' ? null : e[k]); L.outfit = v('outfit'); L.hat = v('hat'); L.acc = v('acc'); L.shoes = v('shoes'); L.bag = v('bag'); }
   return L;
 }
@@ -697,7 +729,7 @@ function newGame(kindId, name) {
     const j = Math.floor(Math.random() * (i + 1)); const t = roster[i].name; roster[i].name = roster[j].name; roster[j].name = t;
   }
   roster.push({ id: 0, me: true, name, kind: K.id, mawashi: MAWASHI[0], stats: { ...K.stats }, w: 0, l: 0, delta: 0 });
-  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1, off: 2, outed: false });
+  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1, off: 0, outed: false });
   pickOpponent(); save();
 }
 function pickOpponent() {
@@ -999,15 +1031,25 @@ function initThree() {
     }
   }
 
+  const coatTexCache = new Map();
+  function coatTex(id, fur) {
+    const key = id + fur; if (coatTexCache.has(key)) return coatTexCache.get(key);
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128; drawCoat(c.getContext('2d'), id, 256, 128, fur);
+    const t = new T.CanvasTexture(c); coatTexCache.set(key, t); return t;
+  }
+
   function makeHamster(look) {
     const K = kindOf(look.kind), PINK = 0xf6aeb0, FUR = look.fur ?? K.fur, FR = look.furRough, MW = look.mawashi, MR = look.mawashiRough ?? .6;
     const root = new T.Group(), rig = new T.Group(); root.add(rig);
-    rig.add(sph(.8, FUR, 1, .95, .92, FR));
+    const coat = look.coat, coatMat = coat && TEX_COATS.includes(coat) ? new T.MeshStandardMaterial({ map: coatTex(coat, FUR), roughness: .85 }) : null;
+    const furR = coat === 'tsuya' ? .28 : FR;
+    const furSph = (r, sx, sy, sz) => { if (!coatMat) return sph(r, FUR, sx, sy, sz, furR); const m = new T.Mesh(SPH, coatMat); m.scale.set(r * sx, r * sy, r * sz); m.castShadow = true; return m; };
+    rig.add(furSph(.8, 1, .95, .92));
     rig.add(at(sph(.64, K.belly, 1, 1, .62), 0, -.06, .36));
     rig.add(at(sph(.11, K.belly), 0, -.45, -.68));
     if (K.pattern === 'stripe') rig.add(at(sph(.81, K.stripe, .14, .97, .93), 0, 0, -.06));
     const head = new T.Group(); head.position.set(0, .82, .1); rig.add(head);
-    head.add(sph(.66, FUR, 1.08, .95, 1, FR));
+    head.add(furSph(.66, 1.08, .95, 1));
     if (K.pattern === 'stripe') head.add(at(sph(.67, K.stripe, .15, .96, 1), 0, 0, -.05));
     head.add(at(sph(.3, K.belly, 1.25, .8, .7), 0, -.14, .5));
     const cheeks = [], eyes = [];
@@ -1015,10 +1057,20 @@ function initThree() {
       const ch = at(sph(.24, K.belly), s * .36, -.16, .38); head.add(ch); cheeks.push(ch);
       head.add(at(sph(.09, 0xff9aa8, 1, .7, .35), s * .45, -.1, .585));
       const eye = new T.Group(); eye.position.set(s * .25, .1, .56); eye.add(sph(.085, 0x1c1420, 1, 1, 1, .15)); eye.add(at(sph(.028, 0xffffff, 1, 1, 1, .3), .03, .035, .07)); head.add(eye); eyes.push(eye);
-      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : FUR, 1, 1, .4, FR)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear);
+      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : FUR, 1, 1, .4, furR)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear);
       if (K.pattern === 'brow') head.add(at(sph(.07, 0xffffff, 1.3, .8, .4), s * .25, .27, .54));
     }
     head.add(at(sph(.05, 0xe8838c), 0, -.04, .7));
+    if (coat === 'panda') {
+      for (const s of [-1, 1]) { const p = sph(.15, 0x1c1420, 1.1, 1.3, .45, .8); p.position.set(s * .25, .1, .5); p.rotation.z = s * .5; head.add(p); }
+      head.children.filter(o => o.isGroup && Math.abs(o.position.y - .5) < .01).forEach(ear => ear.children[0].material = mat(0x1c1420, .8));
+    }
+    if (coat === 'fluffy') {
+      const light = new T.Color(mixHex(FUR, 0xffffff, .25)).getHex();
+      for (let i = 0; i < 12; i++) { const a = PI * (.85 + i / 11 * 1.3); rig.add(at(sph(.2, light, .8, 1.1, .8, 1), Math.cos(a) * .76, -.1 + Math.sin(i * 1.7) * .25, Math.sin(a) * .68)); }
+      for (let i = 0; i < 5; i++) head.add(at(sph(.13, light, 1, 1, 1, 1), (i - 2) * .12, .6, -.05 + Math.abs(i - 2) * -.05));
+      for (const s of [-1, 1]) head.add(at(sph(.14, light, 1, 1, 1, 1), s * .62, -.12, .2));
+    }
     const arms = [], feet = [];
     for (const s of [-1, 1]) {
       const arm = new T.Group(); arm.position.set(s * .6, .2, .3); arm.add(at(sph(.17, FUR, 1, 1.5, 1, FR), 0, -.14, .08)); arm.add(at(sph(.08, PINK), 0, -.37, .1)); rig.add(arm); arms.push(arm);
@@ -1377,6 +1429,19 @@ function initThree() {
       const sign = new T.Mesh(new T.PlaneGeometry(2.4, .9), new T.MeshStandardMaterial({ map: new T.CanvasTexture(sc) })); sign.position.set(0, 4.2, -3.9); g.add(sign);
       cyl(.08, .9, 0x4a4048, 1.7, .45, .6); const top = new T.Mesh(new T.CylinderGeometry(.7, .7, .06, 24), mat(0xffffff, .5)); top.position.set(1.7, .92, .6); top.castShadow = true; g.add(top);
       cyl(.26, .14, 0xfff3dc, 1.7, 1.02, .6); cyl(.26, .12, 0xf2a0b8, 1.7, 1.15, .6); g.add(at(sph(.08, 0xe8413a, 1, 1, 1, .4), 1.7, 1.28, .6));
+    } else if (id === 'room') {
+      ground(0xd9b98c); for (let x = -20; x < 20; x += 1.2) box(.03, .01, 44, 0xc3a072, x, .006, 0, 1);
+      box(16, 7, .2, 0xf6eadb, 0, 3.5, -4.6); box(.2, 7, 12, 0xf0e2cf, -7, 3.5, 1); box(.2, 7, 12, 0xf0e2cf, 7, 3.5, 1);
+      box(16, .3, .3, 0xc3a072, 0, .15, -4.4);
+      box(2.8, 2.0, .1, 0xbfe6ff, -2.8, 3.6, -4.45, .2); box(2.9, .12, .14, 0xffffff, -2.8, 4.6, -4.4); box(2.9, .12, .14, 0xffffff, -2.8, 2.6, -4.4); box(.12, 2.1, .14, 0xffffff, -2.8, 3.6, -4.4); box(.12, 2.1, .14, 0xffffff, -4.2, 3.6, -4.4); box(.12, 2.1, .14, 0xffffff, -1.4, 3.6, -4.4);
+      const kc = document.createElement('canvas'); kc.width = 96; kc.height = 256; const kg = kc.getContext('2d'); kg.fillStyle = '#fbf3df'; kg.fillRect(0, 0, 96, 256); kg.fillStyle = '#5b3a9e'; kg.fillRect(0, 0, 96, 18); kg.fillRect(0, 238, 96, 18); kg.fillStyle = '#2a2140'; kg.font = '900 52px "Zen Maru Gothic", sans-serif'; kg.textAlign = 'center'; kg.textBaseline = 'middle'; ['横', '綱'].forEach((ch, i) => kg.fillText(ch, 48, 80 + i * 76));
+      const kak = new T.Mesh(new T.PlaneGeometry(.9, 2.3), new T.MeshStandardMaterial({ map: new T.CanvasTexture(kc), roughness: .9 })); kak.position.set(2.2, 3.7, -4.45); g.add(kak);
+      const rug = new T.Mesh(new T.CylinderGeometry(2.6, 2.6, .03, 40), mat(0xf7c6d6, 1)); rug.position.y = .016; rug.receiveShadow = true; g.add(rug);
+      box(3.2, .6, 2.1, 0xc9a676, 4.6, .3, -2.9); box(3.1, .25, 2.0, 0xffffff, 4.6, .72, -2.9); box(3.1, .22, 1.3, 0x8fb8f0, 4.6, .92, -2.5); g.add(at(sph(.45, 0xffffff, 1.3, .45, .8, .9), 4.6, 1.0, -3.5));
+      cyl(.85, .08, 0xa0703f, -3.4, .62, -.6); cyl(.1, .6, 0x8a5a3a, -3.4, .3, -.6);
+      cyl(.32, .16, 0xffffff, -3.4, .74, -.6); for (let i = 0; i < 6; i++) g.add(at(sph(.08, 0x2a2430, .7, .5, 1.2, .8), -3.4 + Math.cos(i) * .15, .84, -.6 + Math.sin(i) * .15));
+      box(1.7, 3.2, 1.0, 0xb08a5a, -5.6, 1.6, -3.7); box(.05, 3.0, .05, 0x8a5a3a, -5.6, 1.6, -3.18); g.add(at(sph(.06, 0xe2b23a, 1, 1, 1, .3), -5.75, 1.7, -3.15)); g.add(at(sph(.06, 0xe2b23a, 1, 1, 1, .3), -5.45, 1.7, -3.15));
+      cyl(.35, .6, 0xcf6a3a, 6.0, .3, .4); g.add(at(sph(.6, 0x5fae4f, 1, 1.1, 1, 1), 6.0, 1.1, .4));
     } else if (id === 'jinja') {
       ground(0xd8d2c4); ground(0xbfb7a6, 2.2, 44, 0, .01);
       for (const x of [-1.7, 1.7]) cyl(.16, 3.3, 0xd8343a, x, 1.65, -3.2);
@@ -1483,7 +1548,13 @@ function showSolo(look, mode) {
   const H = three.makeHamster(look);
   three.actors.push(H); three.solo = H; three.setCam('home');
 }
-function showHome() { const outView = ui.tab === 'shop' && OUT_CATS.includes(ui.shopCat); showSolo(lookOf(me(), ui.preview ? { [ui.preview.cat]: ui.preview.id } : null, outView), 'home'); }
+function showHome() {
+  const offHome = state && state.off > 0 && state.phase === 'home';
+  const sumoShop = ui.tab === 'shop' && !OUT_CATS.includes(ui.shopCat);
+  const outView = ui.tab === 'shop' ? OUT_CATS.includes(ui.shopCat) : offHome;
+  showSolo(lookOf(me(), ui.preview ? { [ui.preview.cat]: ui.preview.id } : null, outView && !sumoShop), 'home');
+  if (three && offHome) three.showPlace('room');
+}
 function playTraining(id, great) { if (!three || !three.solo) return 300; return Math.round(three.startTraining(id, great) * 1000 / three.speed) || 300; }
 function toast(text) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = text; stageEl.appendChild(d); setTimeout(() => d.remove(), 2000); }
 function sayLine(text) { sayEl.innerHTML = `<span>${esc(text)}</span>`; logLine(text); }
@@ -1701,7 +1772,7 @@ function renderSelect() {
     <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${K.stats[k]}</b><i><u style="width:${K.stats[k] / 20 * 100}%"></u></i></div>`).join('')}</div>
     <div class="field"><label for="shikona">四股名（8文字まで）</label>
       <div class="row"><input id="shikona" maxlength="8" value="${esc(ui.name)}" autocomplete="off"><button class="btn small" id="dice">おまかせ</button></div></div>
-    <p class="sub tip">幕下から横綱をめざそう。1場所は7日間、場所のあいだは休みの日。</p>
+    <p class="sub tip">幕下から横綱をめざそう。1場所は7日間。場所のあいだの休みの日は自分の部屋で過ごしたり、お出かけしたり。</p>
   </div>`;
   shell({ status: false, body, dock: '<button class="btn primary wide" id="start">この子で入門する</button>' });
   panel.querySelectorAll('.kind').forEach(b => { b.onclick = () => { ui.kind = b.dataset.kind; ui.name = $('#shikona').value; showSolo(selectLook(), 'select'); render(); }; });
@@ -1720,7 +1791,7 @@ function outingHtml() {
     <div class="row between"><h2 style="margin:0">どこへ行く？</h2><span class="sub">${state.outed ? 'きょうはもう出かけた' : '休みの日に1回'}</span></div>
     <div class="outs">${OUTINGS.map(O => { const liked = [e.outfit, e.hat, e.acc, e.shoes, e.bag].some(id => O.likes.includes(id));
       return `<button class="btn out" data-out="${O.id}" ${state.outed || ui.busy || state.money < O.cost ? 'disabled' : ''}><b>${O.name}</b><span>${O.desc}</span><span class="${O.cost ? 'price' : ''}">${O.cost ? `${O.cost}粒` : '無料'}${liked ? '<span class="good"> ・服がぴったり</span>' : ''}</span></button>`; }).join('')}</div>
-    <p class="sub" style="margin:0">服装：${esc(wearText())}<span class="tip">。行き先に合うものを身につけるとボーナス。お出かけするとその日の稽古はおしまい。</span></p>
+    <p class="sub" style="margin:0">服装：${esc(wearText())}<span class="tip">。休みの日は稽古はお休み。行き先に合うものを身につけるとボーナス。</span></p>
   </div>`;
 }
 async function startOuting(O) {
@@ -1794,7 +1865,7 @@ function trainHtml() {
   return `<div class="card stack">
     <div class="row between"><h2 style="margin:0">きょうの稽古</h2><span class="sub">のこり <b>${state.actions}</b> / ${ACTIONS} 回</span></div>
     <div class="trains">${TRAININGS.map(T => `<button class="btn train" data-train="${T.id}" ${state.actions <= 0 || ui.busy || state.energy < T.cost ? 'disabled' : ''}><b>${T.name}</b><span>${T.note}</span><span>${T.cost ? `元気-${T.cost}` : '元気回復'}</span></button>`).join('')}</div>
-    <p class="sub tip" style="margin:0">元気が30未満だと稽古の効果は半分。${state.off > 0 ? '休みの日はお出かけもできます。' : ''}</p>
+    <p class="sub tip" style="margin:0">元気が30未満だと稽古の効果は半分。</p>
   </div>`;
 }
 function dayDock() {
@@ -1806,7 +1877,9 @@ function dayDock() {
 }
 function renderHome() {
   const off = state.off > 0;
-  const TABS = [['train', '稽古'], ['outing', 'お出かけ'], ['banzuke', '番付'], ['shop', '着せ替え']];
+  if (off && ui.tab === 'train') ui.tab = 'outing';
+  if (!off && ui.tab === 'outing') ui.tab = 'train';
+  const TABS = [off ? ['outing', 'お出かけ'] : ['train', '稽古'], ['banzuke', '番付'], ['shop', '着せ替え']];
   const tabs = `<div class="tabs" role="tablist">${TABS.map(([id, l]) => `<button class="tab" role="tab" data-tab="${id}" aria-selected="${ui.tab === id}">${l}${id === 'outing' && off && !state.outed ? '<span class="dotn"> ●</span>' : ''}</button>`).join('')}</div>`;
   let body, dock = '';
   if (ui.tab === 'shop') { body = shopHtml(); dock = shopDock(); }
@@ -1818,14 +1891,14 @@ function renderHome() {
   if (ui.tab === 'shop') bindShop();
   panel.querySelectorAll('.train').forEach(b => {
     b.onclick = () => {
-      const T = TRAININGS.find(x => x.id === b.dataset.train); if (!T || ui.busy) return;
+      const T = TRAININGS.find(x => x.id === b.dataset.train); if (!T || ui.busy || state.off > 0) return;
       const msg = train(T); ui.busy = true; const dur = playTraining(T.id, msg.startsWith('大成功')); toast(`${T.name}！ ${msg}`);
       if (three && three.solo) three.solo.fat = 1 + me().stats.body / 500;
       render(); setTimeout(() => { ui.busy = false; if (state && state.phase === 'home' && !ui.outing) render(); }, dur);
     };
   });
   const go = $('#goBout'); if (go) go.onclick = startBout;
-  const nd = $('#nextDayBtn'); if (nd) nd.onclick = () => { nextDay(); if (state.off <= 0 && ui.tab === 'outing') ui.tab = 'train'; if (three) showHome(); render(); };
+  const nd = $('#nextDayBtn'); if (nd) nd.onclick = () => { nextDay(); if (state.off <= 0 && ui.tab === 'outing') ui.tab = 'train'; ui.preview = null; if (three) showHome(); render(); };
   panel.querySelectorAll('[data-out]').forEach(b => { b.onclick = () => startOuting(OUTINGS.find(o => o.id === b.dataset.out)); });
 }
 
@@ -1839,6 +1912,7 @@ function itemStatus(cat, it) {
 function swatchHtml(cat, it) {
   const m = me();
   if (cat === 'fur') return `<span class="sw" style="background:${hex(it.color ?? kindOf(m.kind).fur)}"></span>`;
+  if (cat === 'coat') return `<span class="sw" style="background-image:url(${coatThumb(it.id, findIn(FURS, state.equip.fur).color ?? kindOf(m.kind).fur)})"></span>`;
   if (cat === 'mawashi') return `<span class="sw belt" style="background:${hex(it.color)}"></span>`;
   if (cat === 'kesho') return it.id === 'none' ? '<span class="sw apron empty"></span>' : `<span class="sw apron" style="background-image:url(${keshoThumb(it.id, m.name)})"></span>`;
   if (OUT_CATS.includes(cat)) { if (it.id === 'none') return '<span class="sw empty"></span>'; return `<span class="sw" style="background:${typeof it.color === 'string' ? it.color : hex(it.color)}"></span>`; }
@@ -1917,7 +1991,7 @@ function renderBanzuke() {
     <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>`,
     dock: `<div class="dock-vs"><b>休みの日が${OFF_DAYS}日あります</b><span class="sub">お出かけもできます</span></div><button class="btn primary wide" id="nextBasho">休みの日へ</button>` });
   if (three) { showHome(); if (three.solo) three.solo.anim = 'win'; }
-  $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); ui.tab = 'train'; if (three) showHome(); render(); };
+  $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); ui.tab = 'outing'; if (three) showHome(); render(); };
 }
 
 /* ================= 起動 ================= */
