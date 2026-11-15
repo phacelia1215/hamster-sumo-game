@@ -183,6 +183,25 @@ button { cursor: pointer; }
 .news { display: flex; flex-direction: column; gap: 6px; }
 .news div { border-left: 0; background: var(--surface-2); border-radius: 8px; padding: 6px 12px; font-weight: 900; }
 .news div.gold { background: var(--kin); color: var(--surface); }
+/* 着せ替え */
+.purse { font-weight: 900; color: var(--kin); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 12px; font-weight: 900; font-size: 13px; }
+.cat[aria-selected="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px; border: 2px solid var(--line); background: var(--surface); border-radius: 10px; text-align: center; min-width: 0; }
+.item b { font-size: 13px; line-height: 1.3; }
+.item .st { font-size: 11px; font-weight: 900; color: var(--muted); }
+.item .st.on { color: var(--murasaki); }
+.item .st.price { color: var(--kin); }
+.item[aria-pressed="true"] { border-color: var(--ink); background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
+.item.locked { opacity: .6; }
+.sw { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--ink); background-size: cover; background-position: center; display: grid; place-items: center; font-weight: 900; font-size: 13px; }
+.sw.belt { border-radius: 6px; height: 22px; margin-block: 11px; width: 52px; }
+.sw.apron { border-radius: 4px; width: 58px; height: 44px; }
+.sw.empty { border-style: dashed; background: transparent; }
+.tryon { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
+.tryon .acts { display: flex; gap: 8px; margin-left: auto; }
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
 </style>
 <!--/ARTIFACT-HEAD-->
@@ -248,6 +267,93 @@ const TRAININGS = [
 const THROWS = ['上手投げ', '下手投げ', 'すくい投げ', 'ころりん投げ'];
 const SLAPS = ['はたき込み', '突き落とし', '引き落とし'];
 const N = 30, STAT_MAX = 120, ACTIONS = 3;
+const hex = c => '#' + c.toString(16).padStart(6, '0');
+const FURS = [
+  { id: 'natural', name: '生まれつき', price: 0 },
+  { id: 'milktea', name: 'ミルクティー', price: 80, color: 0xe8c9a0 },
+  { id: 'choco', name: 'チョコ', price: 120, color: 0x8a5a3a },
+  { id: 'silver', name: 'シルバー', price: 120, color: 0xc4c4cf },
+  { id: 'kuro', name: 'くろごま', price: 150, color: 0x4a4048 },
+  { id: 'ichigo', name: 'いちごミルク', price: 200, color: 0xf7bccb },
+  { id: 'mint', name: 'ミント', price: 200, color: 0xb2e4d2 },
+  { id: 'kinpika', name: '金ぴか', price: 320, color: 0xe7b53c, rough: .35 },
+];
+const MAWASHIS = [
+  { id: 'murasaki', name: '江戸紫', price: 0, color: 0x5b3a9e },
+  { id: 'kon', name: '紺', price: 60, color: 0x1f5fa8 },
+  { id: 'shu', name: '朱', price: 60, color: 0xb8322c },
+  { id: 'wakakusa', name: '若草', price: 60, color: 0x1d7a55 },
+  { id: 'sumi', name: '墨', price: 80, color: 0x2a2140 },
+  { id: 'sakura', name: '桜', price: 120, color: 0xf2a0b8 },
+  { id: 'sora', name: '空', price: 120, color: 0x6fc3e8 },
+  { id: 'kin', name: '金', price: 250, color: 0xd9a520, rough: .3 },
+];
+const KESHO = [
+  { id: 'none', name: 'つけない', price: 0 },
+  { id: 'himawari', name: 'ひまわり', price: 180, bg: '#1f2a5c' },
+  { id: 'sakura', name: '桜吹雪', price: 220, bg: '#6a1f3d' },
+  { id: 'tane', name: '種づくし', price: 260, bg: '#2f6b3a' },
+  { id: 'kin', name: '金の回し車', price: 400, bg: '#1b1626' },
+];
+const WIGS = [
+  { id: 'auto', name: '番付どおり', tier: 0, note: 'いまの番付' },
+  { id: 'none', name: 'カツラなし', tier: 0, note: 'ふわふわ地毛' },
+  { id: 'chonmage', name: 'ちょんまげ', tier: 0, note: '幕下' },
+  { id: 'oicho', name: '大銀杏', tier: 1, note: '十両', fan: .3, tie: 0xffffff },
+  { id: 'tsuya', name: '艶大銀杏', tier: 2, note: '前頭', fan: .34, tie: 0xffffff, gloss: true },
+  { id: 'komusubi', name: '紅元結', tier: 3, note: '小結', fan: .36, tie: 0xd8344a, gloss: true },
+  { id: 'sekiwake', name: '紅玉かんざし', tier: 4, note: '関脇', fan: .38, tie: 0xd8344a, gloss: true, pins: 1, pin: 0xd8344a },
+  { id: 'ozeki', name: '金元結', tier: 5, note: '大関', fan: .4, tie: 0xe2b23a, gloss: true, pins: 2, pin: 0xe2b23a },
+  { id: 'yokozuna', name: '綱大銀杏', tier: 6, note: '横綱', fan: .45, tie: 0xe2b23a, gloss: true, pins: 2, pin: 0xe2b23a, crest: true },
+];
+const WIG_BY_TIER = ['chonmage', 'oicho', 'tsuya', 'komusubi', 'sekiwake', 'ozeki', 'yokozuna'];
+const SHOP = [
+  { cat: 'fur', label: '毛色', items: FURS },
+  { cat: 'mawashi', label: 'まわし', items: MAWASHIS },
+  { cat: 'kesho', label: '化粧まわし', items: KESHO },
+  { cat: 'wig', label: 'カツラ', items: WIGS },
+];
+const KENSHO = [8, 12, 16, 20, 25, 32, 40];
+const findIn = (list, id) => list.find(x => x.id === id) || list[0];
+
+/* 化粧まわしの絵柄（2D canvas） */
+const keshoCache = new Map();
+function keshoCanvas(id, name) {
+  const key = id + '|' + name; if (keshoCache.has(key)) return keshoCache.get(key);
+  const D = findIn(KESHO, id), c = document.createElement('canvas'); c.width = 296; c.height = 220;
+  const g = c.getContext('2d'), PI2 = Math.PI * 2, cx = 112, cy = 94;
+  g.fillStyle = D.bg || '#333'; g.fillRect(0, 0, 296, 184);
+  const dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, PI2); g.fill(); };
+  if (id === 'himawari') {
+    g.fillStyle = '#f6c234';
+    for (let i = 0; i < 14; i++) { const a = i / 14 * PI2; g.beginPath(); g.ellipse(cx + Math.cos(a) * 46, cy + Math.sin(a) * 46, 24, 10, a, 0, PI2); g.fill(); }
+    g.fillStyle = '#6b4320'; dot(cx, cy, 32); g.fillStyle = '#3d2610';
+    for (let i = 1; i < 30; i++) { const a = i * 2.4, r = Math.sqrt(i) * 5.4; dot(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 2.4); }
+  } else if (id === 'sakura') {
+    const fl = (x, y, r) => { g.fillStyle = '#f7b6c8'; for (let i = 0; i < 5; i++) { const a = i / 5 * PI2 - Math.PI / 2; dot(x + Math.cos(a) * r * .55, y + Math.sin(a) * r * .55, r * .5); } g.fillStyle = '#fff3a0'; dot(x, y, r * .22); };
+    [[60, 50, 30], [150, 110, 40], [50, 140, 22], [190, 40, 20], [110, 160, 16], [200, 150, 14], [20, 90, 12]].forEach(a => fl(...a));
+  } else if (id === 'tane') {
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) {
+      const x = 22 + i * 40, y = 28 + j * 44 + (i % 2) * 20; if (y > 176) continue;
+      g.save(); g.translate(x, y); g.rotate(.5); g.fillStyle = '#2a2430'; g.beginPath(); g.ellipse(0, 0, 9, 17, 0, 0, PI2); g.fill();
+      g.strokeStyle = '#e9e4ef'; g.lineWidth = 2; g.beginPath(); g.moveTo(-4, -11); g.lineTo(-4, 11); g.moveTo(4, -11); g.lineTo(4, 11); g.stroke(); g.restore();
+    }
+  } else if (id === 'kin') {
+    g.strokeStyle = '#e2b23a'; g.lineWidth = 9; g.beginPath(); g.arc(cx, cy, 64, 0, PI2); g.stroke();
+    g.lineWidth = 4; for (let i = 0; i < 12; i++) { const a = i / 12 * PI2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * 62, cy + Math.sin(a) * 62); g.stroke(); }
+    g.fillStyle = '#f3d27a'; dot(cx, cy, 14);
+  }
+  g.strokeStyle = '#e2b23a'; g.lineWidth = 8; g.strokeRect(4, 4, 288, 180);
+  if (name) {
+    const ch = [...name], sz = Math.min(28, 156 / ch.length);
+    g.fillStyle = '#ffffff'; g.font = `900 ${sz}px "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    ch.forEach((t, i) => g.fillText(t, 258, 16 + sz * (i + .5)));
+  }
+  for (let x = 6; x < 292; x += 6) { g.fillStyle = (x / 6) % 2 ? '#e2b23a' : '#f3d27a'; g.fillRect(x, 184, 4, 34); }
+  keshoCache.set(key, c); return c;
+}
+const keshoUrl = new Map();
+function keshoThumb(id, name) { const k = id + '|' + name; if (!keshoUrl.has(k)) keshoUrl.set(k, keshoCanvas(id, name).toDataURL()); return keshoUrl.get(k); }
 
 function rankInfo(pos) {
   const side = pos % 2 === 0 ? '東' : '西';
@@ -308,10 +414,26 @@ let ui = { tab: 'train', kind: 'golden', name: pick(MY_NAMES), busy: false, last
 
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* 保存できない環境でも遊べる */ } }
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && s.v === 1 && Array.isArray(s.roster) && s.roster.length === N) return s; } catch (e) { /* noop */ }
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && s.v === 1 && Array.isArray(s.roster) && s.roster.length === N) return migrate(s); } catch (e) { /* noop */ }
   return null;
 }
+function migrate(s) {
+  if (typeof s.money !== 'number') s.money = 120;
+  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'] }, s.owned || {});
+  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto' }, s.equip || {});
+  s.roster.forEach(r => { if (!r.me && !r.kesho) r.kesho = pick(KESHO.slice(1)).id; });
+  return s;
+}
 const me = () => state.roster.find(r => r.me);
+const wigUnlocked = W => W.id === 'auto' || W.id === 'none' || W.tier <= rankInfo(state.best).tier;
+function lookOf(r, preview) {
+  const K = kindOf(r.kind), pos = posOf(r), tier = rankInfo(pos).tier;
+  if (!r.me) return { kind: r.kind, mawashi: r.mawashi, wig: WIG_BY_TIER[tier], kesho: pos < 24 ? r.kesho : null, name: r.name, yokozuna: pos < 2, body: r.stats.body };
+  const e = Object.assign({}, state.equip, preview || {});
+  const F = findIn(FURS, e.fur), M = findIn(MAWASHIS, e.mawashi);
+  return { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body };
+}
+const selectLook = () => ({ kind: ui.kind, mawashi: MAWASHIS[0].color, wig: 'chonmage', body: 12 });
 const posOf = r => state.roster.indexOf(r);
 const byId = id => state.roster.find(r => r.id === id);
 
@@ -320,13 +442,13 @@ function newGame(kindId, name) {
   for (let i = 0; i < N - 1; i++) {
     const base = 9 + (N - 1 - i) * 2.3, st = {};
     STAT.forEach(([k]) => { st[k] = Math.round(base * rnd(.8, 1.2)); });
-    roster.push({ id: i + 1, name: NPC_NAMES[i], kind: pick(KINDS).id, mawashi: pick(MAWASHI), stats: st, w: 0, l: 0, delta: 0 });
+    roster.push({ id: i + 1, name: NPC_NAMES[i], kind: pick(KINDS).id, mawashi: pick(MAWASHI), kesho: pick(KESHO.slice(1)).id, stats: st, w: 0, l: 0, delta: 0 });
   }
   for (let i = roster.length - 1; i > 0; i--) { // 四股名だけシャッフル
     const j = Math.floor(Math.random() * (i + 1)); const t = roster[i].name; roster[i].name = roster[j].name; roster[j].name = t;
   }
   roster.push({ id: 0, me: true, name, kind: K.id, mawashi: MAWASHI[0], stats: { ...K.stats }, w: 0, l: 0, delta: 0 });
-  state = { v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1 };
+  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1 });
   pickOpponent(); save();
 }
 function pickOpponent() {
@@ -363,7 +485,8 @@ function finishBout(res, opp) {
   simulateOthers(opp.id);
   state.energy = Math.max(0, state.energy - 15);
   state.phase = 'result';
-  ui.last = { win, kimarite: res.kimarite, opp: opp.name, oppRank: rankInfo(posOf(opp)).label };
+  const prize = win ? KENSHO[rankInfo(posOf(m)).tier] : 3; state.money += prize;
+  ui.last = { win, kimarite: res.kimarite, opp: opp.name, oppRank: rankInfo(posOf(opp)).label, prize };
   save();
 }
 function nextDay() {
@@ -380,7 +503,7 @@ function endBasho() {
     const rivals = div.filter(r => !r.me && r.w === top);
     let won = true;
     for (const r of rivals) { if (simulateBout(effStats(m.stats, .95), effStats(r.stats, .9)).winner !== 0) { won = false; news.push({ t: `優勝決定戦で${r.name}に敗れる…あと一歩！` }); break; } }
-    if (won) { state.yusho++; news.push({ t: `${oldInfo.division}優勝！（${m.w}勝${m.l}敗${rivals.length ? '・決定戦を制す' : ''}）`, gold: true }); }
+    if (won) { const bonus = 100 + oldInfo.tier * 50; state.yusho++; state.money += bonus; news.push({ t: `${oldInfo.division}優勝！（${m.w}勝${m.l}敗${rivals.length ? '・決定戦を制す' : ''}）賞金 +${bonus}粒`, gold: true }); }
   }
   // 番付編成
   const order = state.roster.map((r, i) => ({ r, i, s: i - (r.w - r.l) * 1.3 }));
@@ -391,7 +514,10 @@ function endBasho() {
   news.push({ t: `${m.w}勝${m.l}敗で${m.w > m.l ? '勝ち越し' : '負け越し'}。新番付は ${ni.label}。` });
   if (ni.tier > oldInfo.tier) news.push({ t: ['', '新十両！関取の仲間入り。大銀杏が結えます', '新入幕！幕内力士に昇進', '新三役！小結に昇進', '関脇に昇進！', '大関昇進！', '横綱昇進！！ 綱を締めて土俵入り'][ni.tier], gold: ni.tier >= 5 });
   else if (ni.tier < oldInfo.tier) news.push({ t: `${ni.base}に陥落…稽古で出直し。` });
+  if (m.w > m.l) { state.money += 30; news.push({ t: '勝ち越しボーナス +30粒' }); }
+  const prevBest = rankInfo(state.best).tier;
   if (newPos < state.best) state.best = newPos;
+  if (ni.tier > prevBest) { const W = WIGS.find(w => w.tier === ni.tier && w.fan); if (W) news.push({ t: `新しいカツラ「${W.name}」を解禁！着せ替えで選べます`, gold: true }); }
   // 来場所の準備
   state.roster.forEach(r => { r.w = 0; r.l = 0; if (!r.me) STAT.forEach(([k]) => { r.stats[k] = clamp(Math.round(r.stats[k] + rnd(-1.5, 2.2)), 5, STAT_MAX); }); });
   ui.news = news; ui.finished = bashoName(state.basho);
@@ -444,15 +570,44 @@ function initThree() {
   for (const z of [-.6, .6]) { const r = new T.Mesh(new T.TorusGeometry(1.62, .06, 8, 40), mat(0x8a7fb0)); r.position.z = z; wheel.add(r); }
   for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; const b = new T.Mesh(new T.CylinderGeometry(.035, .035, 1.2, 6), mat(0xb9b0d6)); b.rotation.x = Math.PI / 2; b.position.set(Math.cos(a) * 1.62, Math.sin(a) * 1.62, 0); wheel.add(b); }
 
-  function makeHamster(kindId, mawashi, opts = {}) {
-    const K = kindOf(kindId), PINK = 0xf6aeb0;
+  const HAIR = 0x1c1420, PI = Math.PI;
+  const CYL = new T.CylinderGeometry(1, 1, 1, 14);
+  const FAN = new T.CylinderGeometry(1, 1, .1, 28, 1, false, -PI * .4, PI * .8);
+  const PLANE = new T.PlaneGeometry(1.02, .76);
+  const texCache = new Map();
+  const keshoTex = (id, name) => { const k = id + '|' + name; if (!texCache.has(k)) texCache.set(k, new T.CanvasTexture(keshoCanvas(id, name))); return texCache.get(k); };
+  function buildWig(id) {
+    const W = findIn(WIGS, id), g = new T.Group();
+    if (id === 'none' || id === 'auto') return g;
+    const r = W.gloss ? .28 : .6;
+    if (id === 'chonmage') { g.add(at(sph(.17, HAIR, 1, .55, 1.35, r), 0, .62, -.1)); g.add(at(sph(.08, HAIR, 1, .8, 1.3, r), 0, .7, .08)); return g; }
+    g.add(at(sph(.21, HAIR, 1.2, .9, 1, r), 0, .42, -.52));
+    const stem = new T.Mesh(CYL, mat(HAIR, r)); stem.scale.set(.085, .5, .085); stem.rotation.x = PI / 2 - .37; stem.position.set(0, .51, -.29); g.add(stem);
+    const tie = new T.Mesh(CYL, mat(W.tie, .45)); tie.scale.set(.105, .07, .105); tie.rotation.x = PI / 2 - .37; tie.position.set(0, .47, -.4); g.add(tie);
+    const fan = new T.Mesh(FAN, mat(HAIR, r)); fan.scale.set(W.fan * 1.45, 1, W.fan * 1.1); fan.position.set(0, .6, -.06); fan.rotation.x = -1.1; fan.castShadow = true; g.add(fan);
+    for (let i = 1; i < 6; i++) { // 毛筋
+      const ln = new T.Mesh(CYL, mat(0x3a3040, r)); ln.scale.set(.012, 1, .012); const th = -PI * .4 + i * PI * .8 / 6;
+      ln.rotation.set(PI / 2, 0, 0); const holder = new T.Group(); holder.rotation.y = th; ln.position.set(0, .05, .55); holder.add(ln); fan.add(holder);
+    }
+    if (W.tier >= 5) { const rimG = new T.Group(); rimG.rotation.y = -PI * .1; const rim = new T.Mesh(new T.TorusGeometry(1, .05, 6, 28, PI * .8), mat(W.tie, .25)); rim.rotation.x = PI / 2; rimG.add(rim); fan.add(rimG); }
+    for (let i = 0; i < (W.pins || 0); i++) {
+      const tilt = W.pins > 1 ? (i ? -.28 : .28) : 0;
+      const pin = new T.Mesh(CYL, mat(W.pin, .3)); pin.scale.set(.022, .82, .022); pin.rotation.z = PI / 2 + tilt; pin.position.set(0, .6, -.08); g.add(pin);
+      for (const sx of [-1, 1]) g.add(at(sph(.06, W.pin, 1, 1, 1, .25), sx * .41 * Math.cos(tilt), .6 + sx * .41 * Math.sin(tilt), -.08));
+    }
+    if (W.crest) { const c = new T.Mesh(new T.TorusGeometry(.075, .025, 8, 20), mat(W.tie, .25)); c.position.set(0, .64, .06); c.rotation.x = -.3; g.add(c); }
+    return g;
+  }
+
+  function makeHamster(look) {
+    const K = kindOf(look.kind), PINK = 0xf6aeb0, FUR = look.fur ?? K.fur, FR = look.furRough, MW = look.mawashi, MR = look.mawashiRough ?? .6;
     const root = new T.Group(), rig = new T.Group(); root.add(rig);
-    rig.add(sph(.8, K.fur, 1, .95, .92));
+    rig.add(sph(.8, FUR, 1, .95, .92, FR));
     rig.add(at(sph(.64, K.belly, 1, 1, .62), 0, -.06, .36));
     rig.add(at(sph(.11, K.belly), 0, -.45, -.68));
     if (K.pattern === 'stripe') rig.add(at(sph(.81, K.stripe, .14, .97, .93), 0, 0, -.06));
     const head = new T.Group(); head.position.set(0, .82, .1); rig.add(head);
-    head.add(sph(.66, K.fur, 1.08, .95, 1));
+    head.add(sph(.66, FUR, 1.08, .95, 1, FR));
     if (K.pattern === 'stripe') head.add(at(sph(.67, K.stripe, .15, .96, 1), 0, 0, -.05));
     head.add(at(sph(.3, K.belly, 1.25, .8, .7), 0, -.14, .5));
     const cheeks = [], eyes = [];
@@ -460,27 +615,33 @@ function initThree() {
       const ch = at(sph(.24, K.belly), s * .36, -.16, .38); head.add(ch); cheeks.push(ch);
       head.add(at(sph(.09, 0xff9aa8, 1, .7, .35), s * .45, -.1, .585));
       const eye = new T.Group(); eye.position.set(s * .25, .1, .56); eye.add(sph(.085, 0x1c1420, 1, 1, 1, .15)); eye.add(at(sph(.028, 0xffffff, 1, 1, 1, .3), .03, .035, .07)); head.add(eye); eyes.push(eye);
-      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : K.fur, 1, 1, .4)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear);
+      const ear = new T.Group(); ear.position.set(s * .43, .5, 0); ear.rotation.z = -s * .25; ear.add(sph(.19, K.pattern === 'stripe' ? K.stripe : FUR, 1, 1, .4, FR)); ear.add(at(sph(.12, PINK, 1, 1, .3), 0, 0, .05)); head.add(ear);
       if (K.pattern === 'brow') head.add(at(sph(.07, 0xffffff, 1.3, .8, .4), s * .25, .27, .54));
     }
     head.add(at(sph(.05, 0xe8838c), 0, -.04, .7));
-    const mage = new T.Group(); mage.add(at(sph(.17, 0x1c1420, 1, .55, 1.35), 0, .62, -.1)); mage.add(at(sph(.08, 0x1c1420, 1, .8, 1.3), 0, .7, .08)); head.add(mage);
     const arms = [], feet = [];
     for (const s of [-1, 1]) {
-      const arm = new T.Group(); arm.position.set(s * .6, .2, .3); arm.add(at(sph(.17, K.fur, 1, 1.5, 1), 0, -.14, .08)); arm.add(at(sph(.08, PINK), 0, -.37, .1)); rig.add(arm); arms.push(arm);
+      const arm = new T.Group(); arm.position.set(s * .6, .2, .3); arm.add(at(sph(.17, FUR, 1, 1.5, 1, FR), 0, -.14, .08)); arm.add(at(sph(.08, PINK), 0, -.37, .1)); rig.add(arm); arms.push(arm);
       const foot = new T.Group(); foot.position.set(s * .36, -.78, .2); foot.add(sph(.2, PINK, 1, .5, 1.5)); rig.add(foot); feet.push(foot);
     }
-    const belt = new T.Mesh(new T.TorusGeometry(.71, .13, 10, 36), mat(mawashi, .6)); belt.rotation.x = Math.PI / 2; belt.scale.set(1, .92, 1); belt.position.y = -.36; belt.castShadow = true; rig.add(belt);
-    const flap = new T.Mesh(new T.BoxGeometry(.34, .34, .1), mat(mawashi, .6)); flap.position.set(0, -.55, .58); flap.rotation.x = .4; rig.add(flap);
+    const belt = new T.Mesh(new T.TorusGeometry(.71, .13, 10, 36), mat(MW, MR)); belt.rotation.x = Math.PI / 2; belt.scale.set(1, .92, 1); belt.position.y = -.36; belt.castShadow = true; rig.add(belt);
+    const flap = new T.Mesh(new T.BoxGeometry(.34, .34, .1), mat(MW, MR)); flap.position.set(0, -.55, .58); flap.rotation.x = .4; rig.add(flap);
     const tsuna = new T.Group(); const rope = new T.Mesh(new T.TorusGeometry(.76, .1, 10, 36), mat(0xffffff, 1)); rope.rotation.x = Math.PI / 2; rope.scale.set(1, .92, 1); rope.position.y = -.17; tsuna.add(rope);
     for (const sx of [-.3, 0, .3]) { const sh = new T.Mesh(new T.BoxGeometry(.12, .3, .03), mat(0xffffff, 1)); sh.position.set(sx, -.38, .82 - Math.abs(sx) * .25); tsuna.add(sh); }
     rig.add(tsuna);
     const seed = at(sph(.12, 0x3a3340, .7, 1.3, .4), 0, .42, .78); seed.visible = false; rig.add(seed);
     root.scale.setScalar(K.scale);
-    const H = { root, rig, head, arms, feet, eyes, cheeks, mage, tsuna, seed, anim: 'idle', t: Math.random() * 5, fat: 1, blink: rnd(1, 4), ex: { rx: 0, rz: 0, y: 0, z: 0 } };
-    H.dress = pos => { mage.visible = pos < 24; tsuna.visible = pos < 2; };
-    H.dress(opts.pos === undefined ? 29 : opts.pos);
-    H.fat = 1 + Math.min(opts.body || 10, STAT_MAX) / 500;
+    let kesho = null;
+    if (look.kesho) {
+      kesho = new T.Mesh(PLANE, new T.MeshStandardMaterial({ map: keshoTex(look.kesho, look.name || ''), roughness: .7, side: T.DoubleSide }));
+      kesho.position.set(0, -.5, .84); kesho.rotation.x = .12; kesho.castShadow = true; rig.add(kesho); flap.visible = false;
+    }
+    const H = { root, rig, head, arms, feet, eyes, cheeks, tsuna, seed, anim: 'idle', t: Math.random() * 5, fat: 1, blink: rnd(1, 4), ex: { rx: 0, rz: 0, y: 0, z: 0 } };
+    let wig = null;
+    H.setWig = id => { if (wig) head.remove(wig); wig = buildWig(id); head.add(wig); };
+    H.setKesho = v => { if (kesho) { kesho.visible = v; flap.visible = !v; } };
+    H.setWig(look.wig || 'none'); tsuna.visible = !!look.yokozuna;
+    H.fat = 1 + Math.min(look.body || 10, STAT_MAX) / 500;
     scene.add(root);
     return H;
   }
@@ -589,13 +750,13 @@ function initThree() {
 }
 
 /* ---------- 3D 場面 ---------- */
-function showSolo(kindId, mawashi, pos, body, mode) {
+function showSolo(look, mode) {
   if (!three) return;
   three.clear(); three.mode = mode; three.yaw = mode === 'select' ? .4 : 0;
-  const H = three.makeHamster(kindId, mawashi, { pos, body });
+  const H = three.makeHamster(look);
   three.actors.push(H); three.solo = H; three.setCam('home');
 }
-function showHome() { const m = me(); showSolo(m.kind, m.mawashi, posOf(m), m.stats.body, 'home'); }
+function showHome() { showSolo(lookOf(me(), ui.preview ? { [ui.preview.cat]: ui.preview.id } : null), 'home'); }
 let animTimer = 0;
 function playTraining(id) {
   if (!three || !three.solo) return;
@@ -614,8 +775,8 @@ async function animateBout(res, m, opp) {
   if (!three) return;
   const PI = Math.PI, east = posOf(m) % 2 === 0, s = east ? 1 : -1; // 東は正面から見て左
   three.clear(); three.mode = 'match'; three.skip = false; three.setCam('match');
-  const A = three.makeHamster(m.kind, m.mawashi, { pos: posOf(m), body: m.stats.body });
-  const B = three.makeHamster(opp.kind, opp.mawashi, { pos: posOf(opp), body: opp.stats.body });
+  const A = three.makeHamster(lookOf(m));
+  const B = three.makeHamster(lookOf(opp));
   three.actors.push(A, B);
   const H = [A, B], names = [m.name, opp.name], X = RING - 1.0, d = .84, start = 1.7;
   A.root.rotation.y = s * PI / 2; B.root.rotation.y = -s * PI / 2;
@@ -629,7 +790,7 @@ async function animateBout(res, m, opp) {
   await wait(1.2);
   A.anim = B.anim = 'shiko'; A.t = B.t = 0; await wait(2);
   A.anim = B.anim = 'shikiri'; say('はっけよ〜い…'); await wait(1);
-  say('のこった！'); A.anim = B.anim = 'push';
+  say('のこった！'); A.anim = B.anim = 'push'; A.setKesho(false); B.setKesho(false);
   await tween(.2, k => { A.root.position.x = -s * lerp(start, d, k); B.root.position.x = s * lerp(start, d, k); });
   three.shake = .25;
   for (const e of res.events) {
@@ -706,7 +867,7 @@ function renderReset() {
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
   on('resetAsk', () => { ui.resetAsk = true; renderReset(); });
   on('resetNo', () => { ui.resetAsk = false; renderReset(); });
-  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.resetAsk = false; ui.tab = 'train'; showSolo(ui.kind, MAWASHI[0], 29, 12, 'select'); render(); });
+  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.resetAsk = false; ui.tab = 'train'; showSolo(selectLook(), 'select'); render(); });
 }
 
 function renderSelect() {
@@ -721,7 +882,7 @@ function renderSelect() {
     <button class="btn primary wide" id="start">この子で入門する</button>
     <p class="sub">幕下からスタート。1場所は7日間。毎日3回の稽古のあと、取組は自動で進みます。勝ち越して番付を上げ、横綱をめざしましょう。土俵のハムスターはドラッグで回せます。</p>
   </div>`;
-  panel.querySelectorAll('.kind').forEach(b => { b.onclick = () => { ui.kind = b.dataset.kind; ui.name = $('#shikona').value; showSolo(ui.kind, MAWASHI[0], 29, 12, 'select'); render(); }; });
+  panel.querySelectorAll('.kind').forEach(b => { b.onclick = () => { ui.kind = b.dataset.kind; ui.name = $('#shikona').value; showSolo(selectLook(), 'select'); render(); }; });
   $('#dice').onclick = () => { ui.name = pick(MY_NAMES.filter(n => n !== $('#shikona').value)); $('#shikona').value = ui.name; };
   $('#start').onclick = () => { const name = $('#shikona').value.trim() || pick(MY_NAMES); newGame(ui.kind, name); showHome(); render(); };
 }
@@ -730,16 +891,17 @@ function whoCard() {
   const m = me(), info = rankInfo(posOf(m));
   return `<div class="card stack">
     <div class="row between"><div><div class="rank">${info.label}・${kindOf(m.kind).name}</div><div class="shikona">${esc(m.name)}</div></div>
-      <div class="rec">${m.w}勝${m.l}敗<br><span class="stars">${starsHtml(state.marks)}</span></div></div>
+      <div class="rec">${m.w}勝${m.l}敗<br><span class="stars">${starsHtml(state.marks)}</span><br><span class="purse">種 ${state.money}粒</span></div></div>
     ${meter('元気', state.energy, 100, 'energy')}
     <div class="stats">${STAT.map(([k, l]) => meter(l, m.stats[k], STAT_MAX)).join('')}</div>
   </div>`;
 }
 function renderHome() {
   const m = me(), opp = byId(state.oppId), oi = rankInfo(posOf(opp));
-  const tabs = `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="train" aria-selected="${ui.tab === 'train'}">稽古と取組</button><button class="tab" role="tab" data-tab="banzuke" aria-selected="${ui.tab === 'banzuke'}">番付表</button></div>`;
+  const tabs = `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="train" aria-selected="${ui.tab === 'train'}">稽古と取組</button><button class="tab" role="tab" data-tab="banzuke" aria-selected="${ui.tab === 'banzuke'}">番付表</button><button class="tab" role="tab" data-tab="shop" aria-selected="${ui.tab === 'shop'}">着せ替え</button></div>`;
   let body;
-  if (ui.tab === 'banzuke') body = `<div class="card stack"><h2>${bashoName(state.basho)} 番付</h2>${banzukeHtml(false)}</div>`;
+  if (ui.tab === 'shop') body = shopHtml();
+  else if (ui.tab === 'banzuke') body = `<div class="card stack"><h2>${bashoName(state.basho)} 番付</h2>${banzukeHtml(false)}</div>`;
   else body = `
   <div class="card stack">
     <div class="row between"><h2 style="margin:0">きょうの稽古</h2><span class="sub">のこり <b>${state.actions}</b> / ${ACTIONS} 回</span></div>
@@ -753,7 +915,8 @@ function renderHome() {
     <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>
   </div>`;
   panel.innerHTML = whoCard() + tabs + body;
-  panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; render(); }; });
+  panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; if (ui.preview) { ui.preview = null; showHome(); } render(); }; });
+  if (ui.tab === 'shop') bindShop();
   panel.querySelectorAll('.train').forEach(b => {
     b.onclick = () => {
       const T = TRAININGS.find(x => x.id === b.dataset.train); if (!T || ui.busy) return;
@@ -765,10 +928,65 @@ function renderHome() {
   const go = $('#goBout'); if (go) go.onclick = startBout;
 }
 
+function itemStatus(cat, it) {
+  const e = state.equip[cat];
+  if (cat === 'wig') { if (!wigUnlocked(it)) return { t: `${it.note}で解禁`, cls: '', locked: true }; return e === it.id ? { t: '着用中', cls: 'on' } : { t: it.note, cls: '' }; }
+  if (e === it.id) return { t: '着用中', cls: 'on' };
+  if (state.owned[cat].includes(it.id)) return { t: '持っている', cls: '' };
+  return { t: `${it.price}粒`, cls: 'price', buy: true };
+}
+function swatchHtml(cat, it) {
+  const m = me();
+  if (cat === 'fur') return `<span class="sw" style="background:${hex(it.color ?? kindOf(m.kind).fur)}"></span>`;
+  if (cat === 'mawashi') return `<span class="sw belt" style="background:${hex(it.color)}"></span>`;
+  if (cat === 'kesho') return it.id === 'none' ? '<span class="sw apron empty"></span>' : `<span class="sw apron" style="background-image:url(${keshoThumb(it.id, m.name)})"></span>`;
+  if (it.id === 'auto') return '<span class="sw empty">番</span>';
+  if (it.id === 'none') return '<span class="sw empty"></span>';
+  return `<span class="sw" style="background:${hex(0x1c1420)};box-shadow:inset 0 0 0 ${it.pins ? 7 : 5}px ${hex(it.tie || 0x1c1420)}"></span>`;
+}
+function shopHtml() {
+  const S = SHOP.find(x => x.cat === (ui.shopCat || 'fur')), P = ui.preview;
+  let tryon = '';
+  if (P) {
+    const it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id), st = itemStatus(P.cat, it);
+    const act = st.locked ? `<span class="sub">${it.note}に昇進すると着られます</span>`
+      : `<button class="btn primary small" id="buy" ${state.money < it.price ? 'disabled' : ''}>${state.money < it.price ? `あと${it.price - state.money}粒` : `${it.price}粒で買って着る`}</button>`;
+    tryon = `<div class="tryon"><span>試着中：<b>${esc(it.name)}</b></span><div class="acts"><button class="btn small" id="untry">もどす</button>${act}</div></div>`;
+  }
+  return `<div class="card stack">
+    <div class="row between"><h2 style="margin:0">着せ替え</h2><span class="purse">ひまわりの種 ${state.money}粒</span></div>
+    <div class="cats" role="tablist">${SHOP.map(x => `<button class="cat" role="tab" data-cat="${x.cat}" aria-selected="${x.cat === S.cat}">${x.label}</button>`).join('')}</div>
+    <div class="items">${S.items.map(it => { const st = itemStatus(S.cat, it), on = P ? P.cat === S.cat && P.id === it.id : state.equip[S.cat] === it.id;
+      return `<button class="item${st.locked ? ' locked' : ''}" data-id="${it.id}" aria-pressed="${on}">${swatchHtml(S.cat, it)}<b>${esc(it.name)}</b><span class="st ${st.cls}">${st.t}</span></button>`; }).join('')}</div>
+    ${tryon}
+    <p class="sub">${S.cat === 'wig' ? 'カツラは番付が上がるたびに解禁されます。一度解禁したものはいつでも着られます。' : '取組に勝つと懸賞としてひまわりの種がもらえます。持っていないものはタップで試着できます。'}</p>
+  </div>`;
+}
+function bindShop() {
+  const cat = ui.shopCat || 'fur', S = SHOP.find(x => x.cat === cat);
+  panel.querySelectorAll('.cat').forEach(b => { b.onclick = () => { ui.shopCat = b.dataset.cat; if (ui.preview) { ui.preview = null; showHome(); } render(); }; });
+  panel.querySelectorAll('.item').forEach(b => {
+    b.onclick = () => {
+      const it = findIn(S.items, b.dataset.id), st = itemStatus(cat, it);
+      if (st.buy || st.locked) ui.preview = { cat, id: it.id };
+      else { ui.preview = null; state.equip[cat] = it.id; save(); }
+      showHome(); render();
+    };
+  });
+  const un = $('#untry'); if (un) un.onclick = () => { ui.preview = null; showHome(); render(); };
+  const buy = $('#buy');
+  if (buy) buy.onclick = () => {
+    const P = ui.preview, it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id);
+    if (state.money < it.price) return;
+    state.money -= it.price; state.owned[P.cat].push(it.id); state.equip[P.cat] = it.id; ui.preview = null; save();
+    showHome(); toast(`お買い上げ！ ${it.name}`); render();
+  };
+}
+
 async function startBout() {
   const m = me(), opp = byId(state.oppId);
   const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100), effStats(opp.stats, .9));
-  state.phase = 'match'; ui.tab = 'train';
+  state.phase = 'match'; ui.tab = 'train'; ui.preview = null;
   panel.innerHTML = `<div class="card stack"><div class="row between"><h2 style="margin:0">${DAYS[state.day - 1]} 結びの一番</h2><button class="btn small" id="skip">早送り</button></div><ul class="log" id="log" aria-live="polite"></ul></div>`;
   logEl = $('#log'); tagEl.hidden = false;
   $('#skip').onclick = () => { if (three) three.skip = true; };
@@ -781,6 +999,7 @@ function renderResult() {
   panel.innerHTML = whoCard() + `<div class="card stack">
     <div class="verdict ${L.win ? 'win' : ''}">${L.win ? '白星！' : '黒星…'}</div>
     ${L.kimarite ? `<p>決まり手は <b>${esc(L.kimarite)}</b>。${L.win ? '○' : '●'} ${esc(m.name)} ― ${L.win ? '●' : '○'} ${esc(L.opp)}（${L.oppRank}）</p>` : ''}
+    ${L.prize ? `<p class="purse">${L.win ? '懸賞' : '出場手当'} +${L.prize}粒</p>` : ''}
     <button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button>
   </div>`;
   $('#next').onclick = () => { nextDay(); if (three) showHome(); render(); };
@@ -791,18 +1010,18 @@ function renderBanzuke() {
     <div class="news">${news.map(n => `<div class="${n.gold ? 'gold' : ''}">${esc(n.t)}</div>`).join('')}</div>
     <button class="btn primary wide" id="nextBasho">${bashoName(state.basho)}へ</button></div>
   <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>`;
-  if (three && three.solo) { three.solo.dress(posOf(me())); three.solo.anim = 'win'; }
+  if (three) { showHome(); if (three.solo) three.solo.anim = 'win'; }
   $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); if (three) showHome(); render(); };
 }
 
 /* ================= 起動 ================= */
-window.__sumo = { simulateBout, rankInfo };
+window.__sumo = { simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function boot() {
   three = initThree();
   if (!three) sayEl.textContent = '3D表示を使えない環境です。文字だけで進行します。';
   state = load();
   if (state) { if (state.phase === 'match') state.phase = 'home'; showHome(); }
-  else showSolo(ui.kind, MAWASHI[0], 29, 12, 'select');
+  else showSolo(selectLook(), 'select');
   render();
 }
 boot();
