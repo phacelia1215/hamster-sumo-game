@@ -2756,7 +2756,7 @@ function renderMenu() {
     <div class="row">${state && ui.canDownload ? '<button class="btn small" id="fileSave">ファイルに保存</button>' : ''}<label class="btn small" for="fileLoad" style="cursor:pointer">ファイルから読み込む</label><input type="file" id="fileLoad" accept=".txt,.json,text/plain,application/json" hidden></div>
     ${saveBoxHtml()}
     ${state ? (ui.resetAsk ? '<div class="row"><span>セーブを消して最初から始めますか？</span><button class="btn small" id="resetYes">消して始める</button><button class="btn small" id="resetNo">やめる</button></div>' : '<button class="linkbtn" id="resetAsk" style="align-self:flex-start">はじめからやりなおす</button>') : ''}
-    <button class="btn small" id="menuClose">閉じる</button>`;
+    <button class="btn small" id="menuClose">閉じる</button><p class="sub" style="margin:0;text-align:right">バージョン ${APP_VERSION}</p>`;
   bindSpeed();
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
   pop.querySelectorAll('[data-snd]').forEach(b => { b.onclick = () => { const k = b.dataset.snd; Sound.setPref(k, !Sound.pref[k]); Sound.unlock(); renderMenu(); syncSnd(); }; });
@@ -3089,6 +3089,7 @@ function renderBanzuke() {
 /* ================= 起動 ================= */
 window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
+const APP_VERSION = '2026.11.15-b';
 const ARTIFACT_URL = 'https://claude.ai/artifact/3qb1eHLG5rfxa5FXszc8zn';
 const UA = navigator.userAgent || '';
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
