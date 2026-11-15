@@ -3091,12 +3091,11 @@ window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, 
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
 const ARTIFACT_URL = 'https://claude.ai/artifact/3qb1eHLG5rfxa5FXszc8zn';
 const UA = navigator.userAgent || '';
-const IN_LINE = /\bLine\//i.test(UA);
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
 // Safari（iPhone のブラウザはすべて WebKit）は、ほかのサイトに埋め込まれたページの保存データをブラウザ終了時に消す
 const IS_WEBKIT = /(iPhone|iPad|iPod)/.test(UA) || (/AppleWebKit/.test(UA) && /Safari/.test(UA) && !/(Chrome|Chromium|Edg|OPR|Firefox|Android)/.test(UA));
 // GitHub Pages など単独ページなら LINE の中でもセーブが残る。消えるのは埋め込み表示のときだけ
-const EPHEMERAL = IN_FRAME && (IS_WEBKIT || IN_LINE);
+const EPHEMERAL = IN_FRAME && IS_WEBKIT;
 const PAGES_URL = 'https://phacelia1215.github.io/hamster-sumo-game/';
 const SELF_URL = IN_FRAME ? PAGES_URL : location.href.split('#')[0];
 const ON_CLOUD = IN_FRAME && !/github\.io$/.test(location.hostname);
@@ -3134,24 +3133,7 @@ function setupInApp() {
   if (ON_CLOUD) { setupMove(); return; }
   if (!EPHEMERAL) return;
   const box = $('#inApp'); box.hidden = false;
-  if (IN_LINE) {
-    // LINE の中では遊べない：閉じられない案内で外部ブラウザへ
-    const handoff = /[?&]openExternalBrowser=1/.test(location.search);
-    $('#inAppTitle').textContent = handoff ? 'Safari / Chrome に切り替えています…' : 'LINEの中では遊べません';
-    $('#inAppText').textContent = handoff ? '切り替わらないときは、下のボタンか、右上の「…」→「ブラウザで開く」を押してください。' : 'LINEの中のブラウザでは、LINEを終了するとセーブが消えてしまうため遊べません。Safari や Chrome で開いて遊んでください。';
-    $('#inAppClose').hidden = true; $('#inAppCode').hidden = !state;
-    ['.mast', '.layout', '#menuPop'].forEach(sel => { const el = document.querySelector(sel); if (el) { el.inert = true; el.setAttribute('aria-hidden', 'true'); } });
-    const base = SELF_URL.replace(/[?&]openExternalBrowser=1/, '').replace(/\?$/, '');
-    $('#openExt').hidden = false; $('#openExt').href = base + (base.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
-    $('#inAppNote').textContent = '開けないときは、右上の「…」から「ブラウザで開く」を選んでください。';
-    $('#inAppLoad').hidden = true;
-    $('#inAppCode').onclick = () => encodeSave(JSON.stringify(state)).then(code => {
-      let ta = $('#moveCode'); if (!ta) { ta = document.createElement('textarea'); ta.id = 'moveCode'; ta.readOnly = true; ta.className = 'movecode'; $('#inAppNote').before(ta); }
-      ta.value = code; ta.focus(); ta.select();
-      try { navigator.clipboard.writeText(code).then(() => { $('#inAppNote').textContent = 'コピーしました。Safari / Chrome で開いたら、メニュー →「セーブコードを読み込む」に貼り付けてください。'; }, () => {}); } catch (e) { /* noop */ }
-    });
-    return;
-  } else {
+  {
     $('#inAppTitle').textContent = 'ブラウザを閉じるとセーブが消えます';
     $('#inAppText').textContent = 'この表示（Safari などで claude.ai の中に表示されたゲーム）では、ブラウザを終了するとセーブが消えてしまいます。やめる前に「セーブコードを控える」で控えておき、次に遊ぶときに読み込んでください。';
     $('#openExt').hidden = false; $('#openExt').href = PAGES_URL; $('#openExt').textContent = 'セーブが消えないページで開く';
