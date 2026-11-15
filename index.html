@@ -297,6 +297,10 @@ body { overflow: hidden; }
 .savebox .msg { font-size: 13px; font-weight: 900; margin: 0; }
 .savebox .msg.err { color: var(--aka); }
 .snd-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.inapp { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(20, 14, 30, .55); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inapp-card { width: min(380px, 100%); background: var(--surface); color: var(--ink); border: 2px solid var(--ink); border-radius: 14px; padding: 16px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
+.inapp-card p { margin: 0; line-height: 1.6; }
+.inapp-card a.btn { text-align: center; text-decoration: none; display: block; }
 .menu-pop { max-height: calc(100% - 70px); overflow-y: auto; position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 12px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
 .layout { flex: 1; min-height: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 40%) minmax(0, 1fr); align-items: stretch; }
 .stage, .layout .stage { position: relative; top: auto; aspect-ratio: auto; height: 100%; box-shadow: none; }
@@ -381,6 +385,15 @@ body { overflow: hidden; }
     <div class="mast-right"><div class="mast-info" id="mastInfo"></div><button class="menu-btn snd" id="sndBtn" aria-pressed="true" aria-label="音のオン・オフ">♪</button><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuPop">メニュー</button></div>
   </header>
   <div class="menu-pop" id="menuPop" hidden></div>
+  <div class="inapp" id="inApp" hidden role="dialog" aria-modal="true" aria-labelledby="inAppTitle">
+    <div class="inapp-card">
+      <b id="inAppTitle">LINEのブラウザで開いています</b>
+      <p>LINEの中のブラウザでは、LINEを終了するとセーブが消えてしまいます。続きを残したいときは、Safari や Chrome で開いて遊んでください。</p>
+      <a class="btn primary wide" id="openExt" target="_blank" rel="noopener">Safari / Chrome で開く</a>
+      <div class="row"><button class="btn small" id="inAppCode">セーブコードを控える</button><button class="btn small" id="inAppClose">このまま遊ぶ</button></div>
+      <p class="sub" style="margin:0">開けないときは、右上の「…」から「ブラウザで開く」を選んでください。</p>
+    </div>
+  </div>
   <main class="layout">
     <section class="stage" id="stage" aria-label="土俵">
       <canvas id="cv"></canvas>
@@ -2736,7 +2749,7 @@ function saveBoxHtml() {
 function renderMenu() {
   const pop = $('#menuPop'); pop.hidden = !ui.menu; $('#menuBtn').setAttribute('aria-expanded', String(!!ui.menu));
   if (!ui.menu) return;
-  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div><p class="sub" style="margin:0">セーブはこのブラウザの2か所に自動で保存され、片方が消えてももう片方から戻ります。シークレットウィンドウ・ブラウザのデータ削除・別の端末では引き継げないので、大事なときはセーブコードかファイルに控えておきましょう。</p>
+  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div>${IN_LINE ? '<p class="sub" style="margin:0;color:var(--aka);font-weight:900">LINEのブラウザでは、LINEを終了するとセーブが消えます。セーブコードを控えるか、Safari / Chrome で開いてください。</p>' : ''}<p class="sub" style="margin:0">セーブはこのブラウザの2か所に自動で保存され、片方が消えてももう片方から戻ります。シークレットウィンドウ・ブラウザのデータ削除・別の端末では引き継げないので、大事なときはセーブコードかファイルに控えておきましょう。</p>
     <div class="row">${state ? '<button class="btn small" id="exportSave">セーブコードを書き出す</button>' : ''}<button class="btn small" id="importSave">セーブコードを読み込む</button></div>
     <div class="row">${state && ui.canDownload ? '<button class="btn small" id="fileSave">ファイルに保存</button>' : ''}<label class="btn small" for="fileLoad" style="cursor:pointer">ファイルから読み込む</label><input type="file" id="fileLoad" accept=".txt,.json,text/plain,application/json" hidden></div>
     ${saveBoxHtml()}
@@ -3073,7 +3086,17 @@ function renderBanzuke() {
 /* ================= 起動 ================= */
 window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
+const ARTIFACT_URL = 'https://claude.ai/artifact/3qb1eHLG5rfxa5FXszc8zn';
+const IN_LINE = /\bLine\//i.test(navigator.userAgent || '');
+function setupInApp() {
+  if (!IN_LINE) return;
+  const box = $('#inApp'); box.hidden = false;
+  $('#openExt').href = ARTIFACT_URL + '?openExternalBrowser=1';
+  $('#inAppClose').onclick = () => { box.hidden = true; };
+  $('#inAppCode').onclick = () => { box.hidden = true; if (!state) { toast('まだセーブがありません'); return; } ui.menu = true; ui.saveBox = { mode: 'export' }; renderMenu(); encodeSave(JSON.stringify(state)).then(code => { if (ui.saveBox && ui.saveBox.mode === 'export') { ui.saveBox.code = code; renderMenu(); } }); };
+}
 function boot() {
+  setupInApp();
   try { if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d => { ui.canDownload = !!d; if (ui.menu) renderMenu(); }, () => {}); } catch (e) { /* noop */ }
   syncSnd();
   $('#sndBtn').onclick = () => { const on = !(Sound.pref.bgm || Sound.pref.sfx); Sound.setPref('bgm', on); Sound.setPref('sfx', on); Sound.unlock(); syncSnd(); if (ui.menu) renderMenu(); };
