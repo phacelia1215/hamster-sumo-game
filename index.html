@@ -241,6 +241,12 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .offday { display: inline-block; background: var(--kin); color: var(--surface); border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 900; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips span { background: var(--surface-2); border-radius: 999px; padding: 2px 12px; font-weight: 900; }
+.care { display: flex; flex-direction: column; gap: 6px; border-top: 2px dashed var(--line); padding-top: 8px; }
+.cares { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.care-btn { padding: 6px 2px; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; }
+.care-btn span { font-size: 11px; color: var(--kin); }
+.care-say { margin: 0; font-weight: 900; font-size: 16px; }
+.bond { font-weight: 900; color: var(--aka); white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 14px; }
 .omikuji { font-family: var(--font-display); font-size: 40px; line-height: 1.1; color: var(--aka); }
 @media (max-width: 879px) { .outs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
 /* 進行スピード */
@@ -485,7 +491,7 @@ const OUTINGS = [
   { id: 'park', name: 'こうえん', desc: 'のんびり散歩。元気が回復', cost: 0, energy: 45, stat: ['guts', 1], seeds: [5, 15], likes: ['parka', 'cap', 'overall', 'scarf'] },
   { id: 'himawari', name: 'ひまわり畑', desc: '種ひろい。種がたくさん', cost: 0, energy: 20, seeds: [25, 45], likes: ['mugiwara', 'overall', 'hana'] },
   { id: 'umi', name: 'うみ', desc: '砂浜ダッシュ。速さアップ', cost: 0, energy: 25, stat: ['spd', 2], seeds: [0, 10], likes: ['aloha', 'mugiwara', 'sailor', 'sangura'] },
-  { id: 'cafe', name: 'カフェ', desc: '商店街で種ケーキ。体づくり', cost: 30, energy: 100, stat: ['body', 2], seeds: [0, 0], likes: ['beret', 'sailor', 'megane', 'chou'] },
+  { id: 'cafe', name: 'カフェ', desc: '商店街で種ケーキ。体づくり', cost: 20, energy: 100, stat: ['body', 2], seeds: [0, 0], likes: ['beret', 'sailor', 'megane', 'chou'] },
   { id: 'jinja', name: '神社', desc: 'お参りとおみくじ', cost: 5, energy: 20, omikuji: true, seeds: [0, 0], likes: ['yukata', 'haori', 'hanakanmuri'] },
 ];
 OUTFITS.push(
@@ -531,7 +537,16 @@ const COATS = [
   { id: 'hoshi', name: '星もよう', price: 260 },
   { id: 'heart', name: 'ハートもよう', price: 260 },
 ];
-const TEX_COATS = ['buchi', 'tora', 'hoshi', 'heart'];
+COATS.push(
+  { id: 'mizutama', name: '水玉', price: 200 },
+  { id: 'sakura', name: 'さくら', price: 240 },
+  { id: 'onpu', name: '音符', price: 240 },
+  { id: 'kumo', name: 'くも', price: 220 },
+  { id: 'hishi', name: 'ひし形', price: 200 },
+  { id: 'grad', name: 'グラデーション', price: 180 },
+  { id: 'kirakira', name: 'きらきら', price: 300 },
+);
+const TEX_COATS = ['buchi', 'tora', 'hoshi', 'heart', 'mizutama', 'sakura', 'onpu', 'kumo', 'hishi', 'grad', 'kirakira'];
 const mixHex = (c, t, k) => '#' + [16, 8, 0].map(sh => { const a = (c >> sh) & 255, b = (t >> sh) & 255; return Math.round(a + (b - a) * k).toString(16).padStart(2, '0'); }).join('');
 function drawCoat(g, id, w, h, fur) {
   const P2 = Math.PI * 2, dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, P2); g.fill(); };
@@ -543,6 +558,13 @@ function drawCoat(g, id, w, h, fur) {
   else if (id === 'heart') { g.fillStyle = '#ff8fb1'; [[24, 24], [84, 64], [144, 20], [204, 72], [44, 104], [124, 100], [190, 116], [244, 34]].forEach(([x, y]) => { const X = x * k, Y = y * k * (h / w) * 2, s = 13 * k; g.beginPath(); g.moveTo(X, Y + s); g.bezierCurveTo(X - s * 1.6, Y, X - s * .6, Y - s * 1.2, X, Y - s * .3); g.bezierCurveTo(X + s * .6, Y - s * 1.2, X + s * 1.6, Y, X, Y + s); g.fill(); }); }
   else if (id === 'tsuya') { const gr = g.createRadialGradient(w * .35, h * .3, 2, w * .35, h * .3, w * .45); gr.addColorStop(0, 'rgba(255,255,255,.75)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
   else if (id === 'panda') { g.fillStyle = '#1c1420'; g.beginPath(); g.ellipse(w * .32, h * .5, w * .12, h * .16, .4, 0, P2); g.ellipse(w * .68, h * .5, w * .12, h * .16, -.4, 0, P2); g.fill(); dot(w * .2, h * .12, w * .12); dot(w * .8, h * .12, w * .12); }
+  else if (id === 'mizutama') { g.fillStyle = 'rgba(255,255,255,.9)'; const st = w / 8; for (let y = st / 2, row = 0; y < h; y += st * .9, row++) for (let x = (row % 2) * st / 2; x < w + st; x += st) dot(x, y, st * .2); }
+  else if (id === 'sakura') { [[.1, .2], [.35, .55], [.6, .2], [.85, .6], [.2, .85], [.7, .9], [.48, .05], [.95, .15]].forEach(([fx, fy]) => { const X = fx * w, Y = fy * h, r = w / 26; g.fillStyle = '#ffb7cc'; for (let i = 0; i < 5; i++) { const a = i / 5 * P2 - Math.PI / 2; dot(X + Math.cos(a) * r, Y + Math.sin(a) * r, r * .75); } g.fillStyle = '#fff3a0'; dot(X, Y, r * .4); }); }
+  else if (id === 'onpu') { g.fillStyle = g.strokeStyle = mixHex(fur, 0x1c1420, .7); g.lineWidth = w / 120; [[.12, .3], [.4, .7], [.62, .25], [.88, .65], [.25, .9], [.75, .95]].forEach(([fx, fy]) => { const X = fx * w, Y = fy * h, r = w / 40; g.beginPath(); g.ellipse(X, Y, r * 1.2, r * .85, -.4, 0, P2); g.fill(); g.beginPath(); g.moveTo(X + r, Y); g.lineTo(X + r, Y - r * 4); g.quadraticCurveTo(X + r * 2.6, Y - r * 3, X + r * 2.2, Y - r * 1.8); g.stroke(); }); }
+  else if (id === 'kumo') { g.fillStyle = 'rgba(255,255,255,.92)'; [[.15, .3], [.5, .65], [.8, .25], [.3, .9], [.95, .8]].forEach(([fx, fy]) => { const X = fx * w, Y = fy * h, r = w / 22; dot(X - r, Y, r); dot(X + r, Y, r * .9); dot(X, Y - r * .7, r * 1.15); g.fillRect(X - r * 1.9, Y, r * 3.8, r * .9); }); }
+  else if (id === 'hishi') { g.fillStyle = mixHex(fur, 0xffffff, .45); const st = w / 8; for (let y = 0, row = 0; y < h + st; y += st / 2, row++) for (let x = (row % 2) * st / 2; x < w + st; x += st) { g.beginPath(); g.moveTo(x, y - st / 4); g.lineTo(x + st / 4, y); g.lineTo(x, y + st / 4); g.lineTo(x - st / 4, y); g.closePath(); g.fill(); } }
+  else if (id === 'grad') { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.45, 'rgba(255,255,255,.1)'); gr.addColorStop(1, 'rgba(255,255,255,.9)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); const g2 = g.createLinearGradient(0, 0, 0, h * .4); g2.addColorStop(0, mixHex(fur, 0x6b3a20, .35)); g2.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = g2; g.fillRect(0, 0, w, h * .4); }
+  else if (id === 'kirakira') { [[.1, .2], [.3, .7], [.55, .3], [.8, .75], [.92, .2], [.45, .9], [.2, .45], [.7, .05]].forEach(([fx, fy], i) => { const X = fx * w, Y = fy * h, r = w / (i % 2 ? 30 : 20); g.fillStyle = i % 3 ? '#ffffff' : '#fff1a8'; g.beginPath(); g.moveTo(X, Y - r * 2); g.quadraticCurveTo(X, Y, X + r * 2, Y); g.quadraticCurveTo(X, Y, X, Y + r * 2); g.quadraticCurveTo(X, Y, X - r * 2, Y); g.quadraticCurveTo(X, Y, X, Y - r * 2); g.fill(); }); g.fillStyle = 'rgba(255,255,255,.7)'; for (let i = 0; i < 30; i++) dot(((i * 37) % 100) / 100 * w, ((i * 61) % 100) / 100 * h, w / 200 + 1); }
   else if (id === 'fluffy') { g.fillStyle = mixHex(fur, 0xffffff, .35); for (let i = 0; i < 14; i++) { const a = i / 14 * P2; dot(w / 2 + Math.cos(a) * w * .42, h / 2 + Math.sin(a) * h * .42, w * .1); } g.fillStyle = hex(fur); dot(w / 2, h / 2, w * .36); }
 }
 const coatThumbCache = new Map();
@@ -630,6 +652,18 @@ function outIcon(cat, it) {
   }
   const u = c.toDataURL(); iconCache.set(key, u); return u;
 }
+FURS.push(
+  { id: 'milk', name: 'ミルク', price: 160, color: 0xf9f6f0 },
+  { id: 'lemon', name: 'レモン', price: 180, color: 0xf6e27a },
+  { id: 'sakurairo', name: 'さくら色', price: 200, color: 0xf6c1cf },
+  { id: 'wakaba', name: 'わかば', price: 200, color: 0xb9dc8a },
+  { id: 'yuyake', name: 'ゆうやけ', price: 200, color: 0xf49a6a },
+  { id: 'budou', name: 'ぶどう', price: 220, color: 0x9b7fc9 },
+  { id: 'azuki', name: 'あずき', price: 160, color: 0x8a4b52 },
+  { id: 'smoke', name: 'スモーク', price: 160, color: 0x8d8a96 },
+);
+// 値段の調整：全体を約半額（10粒単位、最低20粒）
+[FURS, COATS, MAWASHIS, KESHO, ACCS, OUTFITS, HATS, SHOES, BAGS].forEach(L => L.forEach(it => { if (it.price) it.price = Math.max(20, Math.round(it.price * .5 / 10) * 10); }));
 const OFF_DAYS = 3;
 const WIGS = [
   { id: 'auto', name: '番付どおり', tier: 0, note: 'いまの番付' },
@@ -781,6 +815,7 @@ function load() {
 }
 function migrate(s) {
   if (typeof s.money !== 'number') s.money = 120;
+  if (typeof s.bond !== 'number') s.bond = 30; if (typeof s.cared !== 'boolean') s.cared = true;
   s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'], shoes: ['none'], bag: ['none'], coat: ['natural'] }, s.owned || {});
   if (typeof s.off !== 'number') s.off = 0; if (typeof s.outed !== 'boolean') s.outed = false;
   s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none', shoes: 'none', bag: 'none', coat: 'natural' }, s.equip || {});
@@ -860,14 +895,44 @@ function doOuting(O) {
   state.actions = 0; state.outed = true; save();
   return r;
 }
+const CARES = [
+  { id: 'praise', name: '褒める' },
+  { id: 'scold', name: '叱る' },
+  { id: 'comfort', name: '慰める' },
+  { id: 'treat', name: 'おやつ', cost: 5 },
+];
+function doCare(id) {
+  const m = me(), win = state.marks[state.marks.length - 1] === 1, r = { lines: [] };
+  const sign = v => (v > 0 ? '+' : '') + v;
+  const st = (k, v) => { const b = m.stats[k]; m.stats[k] = clamp(b + v, 1, STAT_MAX); if (m.stats[k] !== b) r.lines.push(`${STAT.find(x => x[0] === k)[1]}${sign(m.stats[k] - b)}`); };
+  const en = v => { const b = state.energy; state.energy = clamp(b + v, 0, 100); if (state.energy !== b) r.lines.push(`元気${sign(state.energy - b)}`); };
+  const bd = v => { const b = state.bond; state.bond = clamp(b + v, 0, 100); if (state.bond !== b) r.lines.push(`なつき度${sign(state.bond - b)}`); };
+  if (id === 'praise') { if (win) { st('guts', 1); en(10); bd(5); r.react = 'happy'; r.say = 'えへへ！もっとがんばる！'; } else { en(5); bd(2); r.react = 'tickle'; r.say = 'まけたのに、ほめてくれるの…？'; } }
+  else if (id === 'scold') { if (win) { st('tec', 1); en(-5); bd(-3); r.react = 'shonbori'; r.say = 'ちょうしにのってました…'; } else { st('pow', 1); st('tec', 1); en(-10); bd(-2); r.react = 'shonbori'; r.say = 'くやしい…つぎこそ！'; } }
+  else if (id === 'comfort') { if (win) { en(5); bd(1); r.react = 'tickle'; r.say = '？ かったよ？'; } else { en(15); st('guts', 1); bd(5); r.react = 'hearts'; r.say = 'ぐすん…ありがとう'; } }
+  else if (id === 'treat') { state.money -= 5; r.lines.push('種 -5粒'); en(20); bd(3); r.react = 'eat'; r.say = 'もぐもぐ♪ おいしい！'; }
+  state.cared = true; save(); return r;
+}
+function reactBout(r) {
+  const H = three && three.boutMe; if (!H) return;
+  bigEl.hidden = true; H.ex = { rx: 0, rz: 0, y: 0, z: 0 }; H.root.rotation.y = 0; H.act = null;
+  const x = H.root.position.x, z = H.root.position.z;
+  three.follow = null; three.camTo([x * .7, 2.5, z + 8], [x, 1.3, z]);
+  if (r.react === 'happy') { H.anim = 'win'; H.t = 0; three.starBurst(x, 1.8, z + .4, 8); }
+  else if (r.react === 'shonbori') { H.anim = 'bow'; H.t = 0; three.sweat(x + .4, 2.0, z + .3); three.sweat(x - .3, 2.0, z + .3); }
+  else if (r.react === 'tickle') three.startAct(H, 'tickle');
+  else if (r.react === 'eat') { H.anim = 'eat'; H.t = 0; }
+  if (r.react === 'hearts' || r.react === 'happy' || r.react === 'eat') { H.anim = H.anim === 'eat' ? 'eat' : (r.react === 'hearts' ? 'idle' : H.anim); for (let i = 0; i < 3; i++) three.spawn('heart', x + (i - 1) * .5, 2.1 + i * .15, z + .4, { v: [(i - 1) * .3, .7, 0], life: 1.1, size: .3, pop: true }); }
+  three.say3d(r.say, x, 2.55, z + .3, r.react === 'shonbori' ? '#5b3a9e' : '#cf3f36');
+}
 function finishBout(res, opp) {
   const m = me(), win = res.winner === 0;
   if (win) { m.w++; opp.l++; } else { m.l++; opp.w++; }
   state.marks.push(win ? 1 : 0); state.faced.push(opp.id);
   simulateOthers(opp.id);
   state.energy = Math.max(0, state.energy - 15);
-  state.phase = 'result';
-  const prize = win ? KENSHO[rankInfo(posOf(m)).tier] : 3; state.money += prize;
+  state.phase = 'result'; state.cared = false;
+  const prize = win ? KENSHO[rankInfo(posOf(m)).tier] : 5; state.money += prize;
   ui.last = { win, kimarite: res.kimarite, opp: opp.name, oppRank: rankInfo(posOf(opp)).label, prize };
   save();
 }
@@ -1119,7 +1184,7 @@ function initThree() {
   function coatTex(id, fur) {
     const key = id + fur; if (coatTexCache.has(key)) return coatTexCache.get(key);
     const c = document.createElement('canvas'); c.width = 256; c.height = 128; drawCoat(c.getContext('2d'), id, 256, 128, fur);
-    const t = new T.CanvasTexture(c); coatTexCache.set(key, t); return t;
+    const t = new T.CanvasTexture(c); if (id !== 'grad') { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(.55, .7); } coatTexCache.set(key, t); return t;
   }
 
   // 顔・お腹の正面（+z方向）を抜いた球（phiは+zが π/2）
@@ -1141,8 +1206,8 @@ function initThree() {
   function makeHamster(look) {
     const K = kindOf(look.kind), PINK = 0xf6aeb0, FUR = look.fur ?? K.fur, FR = look.furRough, MW = look.mawashi, MR = look.mawashiRough ?? .6;
     const root = new T.Group(), rig = new T.Group(); root.add(rig);
-    const coat = look.coat, coatMat = coat && TEX_COATS.includes(coat) ? new T.MeshStandardMaterial({ map: coatTex(coat, FUR), roughness: .85 }) : null;
-    const furR = coat === 'tsuya' ? .28 : FR;
+    const coat = look.coat, coatMat = coat && TEX_COATS.includes(coat) ? new T.MeshStandardMaterial({ map: coatTex(coat, FUR), roughness: coat === 'kirakira' ? .3 : .85 }) : null;
+    const furR = coat === 'tsuya' || coat === 'kirakira' ? .28 : FR;
     const furSph = (r, sx, sy, sz) => { if (!coatMat) return sph(r, FUR, sx, sy, sz, furR); const m = new T.Mesh(SPH, coatMat); m.scale.set(r * sx, r * sy, r * sz); m.castShadow = true; return m; };
     rig.add(furSph(.8, 1, .95, .92));
     rig.add(at(sph(.64, K.belly, 1, 1, .62), 0, -.06, .36));
@@ -1677,7 +1742,7 @@ async function animateBout(res, m, opp) {
   const PI = Math.PI, east = posOf(m) % 2 === 0, s = east ? 1 : -1; // 東は正面から見て左
   three.clear(); three.mode = 'match'; three.skip = false;
   let said = 0; const say = t => { sayLine(t); said++; };
-  const A = three.makeHamster(lookOf(m)), B = three.makeHamster(lookOf(opp)), G = three.makeGyoji();
+  const A = three.makeHamster(lookOf(m)), B = three.makeHamster(lookOf(opp)), G = three.makeGyoji(); three.boutMe = A;
   three.actors.push(A, B, G);
   const H = [A, B], names = [m.name, opp.name], X = RING - 1.0, d = .84, start = 1.7, entry = 4.4;
   const tiers = [rankInfo(posOf(m)).tier, rankInfo(posOf(opp)).tier];
@@ -1846,7 +1911,7 @@ function statusHtml() {
   const m = me(), info = rankInfo(posOf(m));
   return `<div class="status">
     <div class="st-top"><div class="st-name"><span class="rank">${info.label}</span><b class="shikona">${esc(m.name)}</b></div><div class="st-rec">${m.w}勝${m.l}敗 <span class="stars">${starsHtml(state.marks)}</span></div></div>
-    <div class="st-mid">${meter('元気', state.energy, 100, 'energy')}<span class="purse">種 ${state.money}粒</span></div>
+    <div class="st-mid">${meter('元気', state.energy, 100, 'energy')}<span class="purse">種 ${state.money}粒</span><span class="bond">♥ ${state.bond}</span></div>
     <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${m.stats[k]}</b><i><u style="width:${clamp(m.stats[k] / STAT_MAX * 100, 0, 100)}%"></u></i></div>`).join('')}</div>
   </div>`;
 }
@@ -2072,7 +2137,7 @@ function bindShop() {
 
 async function startBout() {
   const m = me(), opp = byId(state.oppId);
-  const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100), effStats(opp.stats, .9));
+  const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100 + state.bond / 100 * .06), effStats(opp.stats, .9));
   state.phase = 'match'; ui.preview = null; if (ui.tab !== 'banzuke') ui.tab = 'train';
   shell({ status: false, body: `<div class="card stack grow"><h2>${DAYS[state.day - 1]} 結びの一番　${esc(m.name)} 対 ${esc(opp.name)}</h2><ul class="log" id="log" aria-live="polite"></ul></div>`,
     dock: `${segHtml()}<button class="btn" id="skip">結果へ飛ばす</button>` });
@@ -2088,8 +2153,14 @@ function renderResult() {
     <div class="verdict ${L.win ? 'win' : ''}">${L.win ? '白星！' : '黒星…'}</div>
     ${L.kimarite ? `<p style="margin:0">決まり手は <b>${esc(L.kimarite)}</b>。${L.win ? '○' : '●'} ${esc(m.name)} ― ${L.win ? '●' : '○'} ${esc(L.opp)}（${L.oppRank}）</p>` : ''}
     ${L.prize ? `<p class="purse" style="margin:0">${L.win ? '懸賞' : '出場手当'} +${L.prize}粒</p>` : ''}
+    <div class="care">
+      <div class="row between"><b>${esc(m.name)}に声をかける</b><span class="bond">なつき度 ♥ ${state.bond}</span></div>
+      ${state.cared ? (ui.care ? `<p class="care-say">「${esc(ui.care.say)}」</p><div class="chips">${ui.care.lines.map(l => `<span>${esc(l)}</span>`).join('')}</div>` : '<p class="sub" style="margin:0">声をかけました。</p>')
+        : `<div class="cares">${CARES.map(c => `<button class="btn care-btn" data-care="${c.id}" ${c.cost && state.money < c.cost ? 'disabled' : ''}>${c.name}${c.cost ? `<span>${c.cost}粒</span>` : ''}</button>`).join('')}</div>`}
+    </div>
   </div>`, dock: `<button class="btn primary wide" id="next">${state.day >= 7 ? '千秋楽おわり。番付発表へ' : '翌日へ'}</button>` });
-  $('#next').onclick = () => { nextDay(); if (three) showHome(); render(); };
+  $('#next').onclick = () => { ui.care = null; nextDay(); if (three) showHome(); render(); };
+  panel.querySelectorAll('[data-care]').forEach(b => { b.onclick = () => { if (state.cared) return; const r = doCare(b.dataset.care); ui.care = r; reactBout(r); render(); }; });
 }
 function renderBanzuke() {
   const news = ui.news || [];
