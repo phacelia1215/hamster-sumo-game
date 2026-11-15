@@ -283,8 +283,12 @@ body { overflow: hidden; }
 .menu-btn[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
 .menu-btn.snd { min-width: 40px; padding: 0 8px; font-size: 16px; }
 .menu-btn.snd[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+.savebox { display: flex; flex-direction: column; gap: 6px; border-top: 2px dashed var(--line); padding-top: 8px; }
+.savebox textarea { width: 100%; min-height: 84px; resize: vertical; border: 2px solid var(--ink); border-radius: 8px; padding: 6px 8px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); color: var(--ink); word-break: break-all; }
+.savebox .msg { font-size: 13px; font-weight: 900; margin: 0; }
+.savebox .msg.err { color: var(--aka); }
 .snd-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.menu-pop { position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 12px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
+.menu-pop { max-height: calc(100% - 70px); overflow-y: auto; position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 12px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
 .layout { flex: 1; min-height: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 40%) minmax(0, 1fr); align-items: stretch; }
 .stage, .layout .stage { position: relative; top: auto; aspect-ratio: auto; height: 100%; box-shadow: none; }
 .panel { min-height: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -2398,16 +2402,52 @@ function shell({ status = true, tabs = '', body = '', dock = '' }) {
   panel.innerHTML = (status && state ? statusHtml() : '') + tabs + `<div class="pbody" id="pbody">${body}</div>` + (dock ? `<div class="dock">${dock}</div>` : '');
   const nb = $('#pbody'); if (nb) nb.scrollTop = keep;
 }
+/* セーブコード（アカウントがなくても引き継げる控え） */
+const b64 = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = str => { const s = atob(str), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; };
+async function encodeSave(json) {
+  try { if (typeof CompressionStream === 'function') { const st = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip')); return 'HS1g:' + b64(new Uint8Array(await new Response(st).arrayBuffer())); } } catch (e) { /* 圧縮できない環境 */ }
+  return 'HS1j:' + b64(new TextEncoder().encode(json));
+}
+async function decodeSave(code) {
+  const c = String(code || '').replace(/\s+/g, ''), tag = c.slice(0, 5), bytes = unb64(c.slice(5));
+  if (tag === 'HS1g:') { const st = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')); return await new Response(st).text(); }
+  if (tag === 'HS1j:') return new TextDecoder().decode(bytes);
+  throw new Error('format');
+}
+function saveBoxHtml() {
+  const m = ui.saveBox; if (!m) return '';
+  if (m.mode === 'export') return `<div class="savebox"><b>セーブコード</b><p class="sub" style="margin:0">この文字列をメモなどに保存しておくと、別のブラウザや端末でも「読み込む」で続きから遊べます。</p>
+    <textarea id="saveCode" readonly>${esc(m.code || '作成中…')}</textarea><div class="row"><button class="btn small primary" id="copyCode">コピーする</button><button class="btn small" id="saveBoxClose">閉じる</button></div>${m.msg ? `<p class="msg">${esc(m.msg)}</p>` : ''}</div>`;
+  return `<div class="savebox"><b>セーブコードを読み込む</b><p class="sub" style="margin:0">書き出したセーブコードを貼り付けてください。今の進行は上書きされます。</p>
+    <textarea id="loadCode" placeholder="HS1g:…">${esc(m.input || '')}</textarea><div class="row"><button class="btn small primary" id="doLoad">読み込む</button><button class="btn small" id="saveBoxClose">やめる</button></div>${m.msg ? `<p class="msg ${m.err ? 'err' : ''}">${esc(m.msg)}</p>` : ''}</div>`;
+}
 function renderMenu() {
   const pop = $('#menuPop'); pop.hidden = !ui.menu; $('#menuBtn').setAttribute('aria-expanded', String(!!ui.menu));
   if (!ui.menu) return;
-  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div><p class="sub" style="margin:0">セーブはこのブラウザに自動で保存されます。土俵のハムスターはドラッグで回せて、タップすると反応します。</p>
+  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div><p class="sub" style="margin:0">セーブはこのブラウザに自動で保存されます。シークレットウィンドウやブラウザのデータ削除では消えるので、大事なときはセーブコードに書き出しておきましょう。</p>
+    <div class="row">${state ? '<button class="btn small" id="exportSave">セーブコードを書き出す</button>' : ''}<button class="btn small" id="importSave">セーブコードを読み込む</button></div>
+    ${saveBoxHtml()}
     ${state ? (ui.resetAsk ? '<div class="row"><span>セーブを消して最初から始めますか？</span><button class="btn small" id="resetYes">消して始める</button><button class="btn small" id="resetNo">やめる</button></div>' : '<button class="linkbtn" id="resetAsk" style="align-self:flex-start">はじめからやりなおす</button>') : ''}
     <button class="btn small" id="menuClose">閉じる</button>`;
   bindSpeed();
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
   pop.querySelectorAll('[data-snd]').forEach(b => { b.onclick = () => { const k = b.dataset.snd; Sound.setPref(k, !Sound.pref[k]); Sound.unlock(); renderMenu(); syncSnd(); }; });
-  on('menuClose', () => { ui.menu = false; ui.resetAsk = false; renderMenu(); });
+  on('menuClose', () => { ui.menu = false; ui.resetAsk = false; ui.saveBox = null; renderMenu(); });
+  on('exportSave', () => { ui.saveBox = { mode: 'export' }; renderMenu(); encodeSave(JSON.stringify(state)).then(code => { if (ui.saveBox && ui.saveBox.mode === 'export') { ui.saveBox.code = code; renderMenu(); } }); });
+  on('importSave', () => { ui.saveBox = { mode: 'import' }; renderMenu(); });
+  on('saveBoxClose', () => { ui.saveBox = null; renderMenu(); });
+  on('copyCode', () => {
+    const ta = $('#saveCode'), code = ui.saveBox && ui.saveBox.code; if (!code) return;
+    const fallback = () => { ta.focus(); ta.select(); ui.saveBox.msg = '選択しました。コピーしてください。'; const p2 = pop.querySelector('.savebox .msg'); if (p2) p2.textContent = ui.saveBox.msg; else ta.insertAdjacentHTML('afterend', `<p class="msg">${ui.saveBox.msg}</p>`); };
+    try { navigator.clipboard.writeText(code).then(() => { ui.saveBox.msg = 'コピーしました。'; renderMenu(); }, fallback); } catch (e) { fallback(); }
+  });
+  on('doLoad', async () => {
+    const input = $('#loadCode').value; ui.saveBox.input = input;
+    let next = null; try { next = parseSave(await decodeSave(input)); } catch (e) { next = null; }
+    if (!next) { ui.saveBox.msg = 'セーブコードを読み取れませんでした。最初から最後まで貼り付けたか確かめてください。'; ui.saveBox.err = true; renderMenu(); return; }
+    state = next; ui.saveBox = null; ui.menu = false; ui.outing = null; ui.preview = null; ui.tab = 'train'; save(); adoptState(); toast('セーブコードを読み込みました');
+  });
   on('resetAsk', () => { ui.resetAsk = true; renderMenu(); });
   on('resetNo', () => { ui.resetAsk = false; renderMenu(); });
   on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } Cloud.clear(); state = null; ui.menu = false; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; ui.preview = null; showSolo(selectLook(), 'select'); render(); });
