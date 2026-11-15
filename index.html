@@ -281,6 +281,9 @@ body { overflow: hidden; }
 .mast-info { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .menu-btn { flex: none; border: 2px solid var(--ink); background: var(--surface); border-radius: 10px; min-height: 36px; padding: 0 12px; font-weight: 900; box-shadow: 0 2px 0 var(--ink); }
 .menu-btn[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
+.menu-btn.snd { min-width: 40px; padding: 0 8px; font-size: 16px; }
+.menu-btn.snd[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+.snd-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .menu-pop { position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 12px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
 .layout { flex: 1; min-height: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 40%) minmax(0, 1fr); align-items: stretch; }
 .stage, .layout .stage { position: relative; top: auto; aspect-ratio: auto; height: 100%; box-shadow: none; }
@@ -362,7 +365,7 @@ body { overflow: hidden; }
 <div class="app">
   <header class="mast">
     <h1><span class="t1">ハムスター大相撲！</span><span class="t2">ころりん場所</span></h1>
-    <div class="mast-right"><div class="mast-info" id="mastInfo"></div><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuPop">メニュー</button></div>
+    <div class="mast-right"><div class="mast-info" id="mastInfo"></div><button class="menu-btn snd" id="sndBtn" aria-pressed="true" aria-label="音のオン・オフ">♪</button><button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menuPop">メニュー</button></div>
   </header>
   <div class="menu-pop" id="menuPop" hidden></div>
   <main class="layout">
@@ -918,6 +921,7 @@ function reactBout(r) {
   bigEl.hidden = true; H.ex = { rx: 0, rz: 0, y: 0, z: 0 }; H.root.rotation.y = 0; H.act = null;
   const x = H.root.position.x, z = H.root.position.z;
   three.follow = null; three.camTo([x * .7, 2.5, z + 8], [x, 1.3, z]);
+  Sound.sfx(r.react === 'shonbori' ? 'sad' : 'happy');
   if (r.react === 'happy') { H.anim = 'win'; H.t = 0; three.starBurst(x, 1.8, z + .4, 8); }
   else if (r.react === 'shonbori') { H.anim = 'bow'; H.t = 0; three.sweat(x + .4, 2.0, z + .3); three.sweat(x - .3, 2.0, z + .3); }
   else if (r.react === 'tickle') three.startAct(H, 'tickle');
@@ -974,6 +978,151 @@ function endBasho() {
   ui.news = news; ui.finished = bashoName(state.basho);
   state.basho++; state.day = 1; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 40);
   state.faced = []; state.marks = []; state.phase = 'banzuke'; state.off = OFF_DAYS; state.outed = false; pickOpponent(); save();
+}
+
+/* ================= 音（Web Audio で合成） ================= */
+const Sound = (() => {
+  let ctx = null, master, bgmBus, sfxBus, noiseBuf, analyser, timer = null, cur = null, want = null;
+  const pref = { bgm: true, sfx: true };
+  try { const v = JSON.parse(localStorage.getItem('hamsumo.sound') || 'null'); if (v) Object.assign(pref, v); } catch (e) { /* noop */ }
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  const _ = null;
+  const TRACKS = {
+    title: { bpm: 92, inst: 'musicbox', lead: [72, _, 76, _, 79, _, 76, _, 74, _, 72, _, 69, _, _, _, 72, _, 76, _, 79, _, 84, _, 81, _, 79, _, 76, _, _, _], bass: [48, _, _, _, 55, _, _, _, 53, _, _, _, 48, _, _, _, 48, _, _, _, 55, _, _, _, 57, _, _, _, 55, _, _, _], perc: '' },
+    home: { bpm: 112, inst: 'marimba', lead: [74, 76, 79, _, 76, 74, _, 71, 74, _, 76, 79, 81, _, 79, _, 79, 81, 83, _, 81, 79, 76, _, 74, 76, 74, 71, 74, _, _, _], bass: [50, _, 57, _, 50, _, 57, _, 55, _, 62, _, 55, _, 62, _, 52, _, 59, _, 52, _, 59, _, 50, _, 57, _, 50, _, _, _], perc: 'p.h.p.h.' },
+    room: { bpm: 80, inst: 'musicbox', lead: [77, _, _, 76, 74, _, 72, _, 74, _, _, 72, 69, _, _, _, 70, _, 72, _, 74, _, 77, _, 76, _, 74, _, 72, _, _, _], bass: [53, _, 60, _, 57, _, 60, _, 50, _, 57, _, 53, _, 57, _, 46, _, 53, _, 58, _, 53, _, 48, _, 55, _, 52, _, 55, _], perc: '' },
+    match: { bpm: 134, inst: 'pluck', lead: [69, _, 72, 74, _, 72, 69, _, 74, 76, 79, _, 76, 74, 72, _, 69, _, 72, 74, 76, _, 79, 81, 79, 76, 74, 72, 74, _, _, _], bass: [45, _, 45, _, 52, _, 45, _, 43, _, 43, _, 50, _, 43, _, 45, _, 45, _, 52, _, 45, _, 50, _, 48, _, 45, _, _, _], perc: 'T.k.T.kk' },
+    outing: { bpm: 120, inst: 'uke', lead: [72, 74, 76, _, 79, _, 76, _, 77, 76, 74, _, 72, _, _, _, 76, 77, 79, _, 84, _, 81, _, 79, 77, 76, 74, 72, _, _, _], bass: [48, _, 55, _, 52, _, 55, _, 53, _, 57, _, 48, _, 55, _, 48, _, 55, _, 57, _, 53, _, 55, _, 50, _, 48, _, _, _], perc: 'p.h.h.h.' },
+    banzuke: { bpm: 104, inst: 'brass', lead: [72, _, 72, 76, 79, _, _, _, 77, _, 76, _, 74, _, _, _, 76, _, 76, 79, 84, _, _, _, 83, _, 79, _, 84, _, _, _], bass: [48, _, 55, _, 48, _, 55, _, 53, _, 60, _, 55, _, 59, _, 48, _, 55, _, 52, _, 55, _, 55, _, 55, _, 48, _, _, _], perc: 'T...p...' },
+  };
+  const SCENES = {
+    title: { t: 'title' }, home: { t: 'home' }, room: { t: 'room' }, match: { t: 'match' }, banzuke: { t: 'banzuke' },
+    'outing:park': { t: 'outing' }, 'outing:himawari': { t: 'outing', tr: 2 }, 'outing:umi': { t: 'outing', tr: -3, inst: 'marimba' },
+    'outing:cafe': { t: 'room', tr: 2, bpm: 96, inst: 'uke' }, 'outing:jinja': { t: 'home', inst: 'pluck', bpm: 100 },
+  };
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    try { ctx = new AC(); } catch (e) { return null; }
+    master = ctx.createGain(); master.gain.value = .8;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+    analyser = ctx.createAnalyser(); analyser.fftSize = 512; master.connect(analyser);
+    bgmBus = ctx.createGain(); bgmBus.gain.value = pref.bgm ? .3 : 0; bgmBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = pref.sfx ? .6 : 0; sfxBus.connect(master);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
+    return ctx;
+  }
+  function env(g, t, a, peak, dur, curveEnd = .0001) { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(curveEnd, t + dur); }
+  function osc(dest, t, type, f, vol, dur, a = .005, f2) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    env(g, t, a, vol, dur); o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .05);
+  }
+  function noise(dest, t, vol, dur, type = 'highpass', freq = 6000, q = 1) {
+    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); src.buffer = noiseBuf; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    env(g, t, .003, vol, dur); src.connect(f); f.connect(g); g.connect(dest); src.start(t, Math.random() * .5); src.stop(t + dur + .05);
+  }
+  const INST = {
+    musicbox: (d, t, f, v) => { osc(d, t, 'sine', f, v * .5, 1.1); osc(d, t, 'sine', f * 2, v * .18, .5); osc(d, t, 'sine', f * 3.01, v * .07, .25); },
+    marimba: (d, t, f, v) => { osc(d, t, 'sine', f, v * .55, .45); osc(d, t, 'sine', f * 4, v * .08, .07); },
+    uke: (d, t, f, v) => { osc(d, t, 'triangle', f, v * .45, .5); osc(d, t, 'sine', f * 2, v * .12, .25); },
+    pluck: (d, t, f, v) => {
+      const o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = f;
+      lp.type = 'lowpass'; lp.frequency.setValueAtTime(f * 6, t); lp.frequency.exponentialRampToValueAtTime(f * 1.2, t + .25); env(g, t, .003, v * .35, .35);
+      o.connect(lp); lp.connect(g); g.connect(d); o.start(t); o.stop(t + .4);
+    },
+    brass: (d, t, f, v) => {
+      const o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = f * 3;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v * .22, t + .03); g.gain.setValueAtTime(v * .22, t + .18); g.gain.exponentialRampToValueAtTime(.0001, t + .32);
+      o.connect(lp); lp.connect(g); g.connect(d); o.start(t); o.stop(t + .36);
+    },
+    bass: (d, t, f, v) => osc(d, t, 'triangle', f, v * .5, .38, .01),
+  };
+  const PERC = {
+    T: (d, t) => osc(d, t, 'sine', 150, .55, .3, .003, 55),
+    p: (d, t) => osc(d, t, 'sine', 560, .18, .1, .002, 420),
+    k: (d, t) => noise(d, t, .12, .05, 'bandpass', 2500, 4),
+    h: (d, t) => noise(d, t, .06, .04, 'highpass', 8000),
+  };
+  function schedule() {
+    if (!cur || !ctx) return;
+    const T = cur.track, sd = 60 / cur.bpm / 2;
+    while (cur.next < ctx.currentTime + .15) {
+      const i = cur.step % T.lead.length, t = cur.next;
+      if (T.lead[i] != null) INST[cur.inst](cur.gain, t, mtof(T.lead[i] + cur.tr), .9);
+      if (T.bass[i] != null) INST.bass(cur.gain, t, mtof(T.bass[i] + cur.tr), .8);
+      const pc = T.perc && T.perc[i % T.perc.length]; if (pc && PERC[pc]) PERC[pc](cur.gain, t);
+      cur.next += sd; cur.step++;
+    }
+  }
+  function startScene(key) {
+    const S = SCENES[key]; if (!S || !ctx) return;
+    const old = cur, now = ctx.currentTime;
+    if (old) { old.gain.gain.cancelScheduledValues(now); old.gain.gain.setValueAtTime(old.gain.gain.value, now); old.gain.gain.linearRampToValueAtTime(0, now + .5); setTimeout(() => old.gain.disconnect(), 800); }
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(1, now + .6); g.connect(bgmBus);
+    const T = TRACKS[S.t];
+    cur = { key, track: T, gain: g, bpm: S.bpm || T.bpm, inst: S.inst || T.inst, tr: S.tr || 0, step: 0, next: now + .1 };
+    if (!timer) timer = setInterval(schedule, 30);
+  }
+  function setBgm(key) { if (want === key) return; want = key; if (ctx && ctx.state === 'running') startScene(key); }
+  function unlock() {
+    const c = ensure(); if (!c) return;
+    if (c.state === 'suspended') c.resume().then(() => { if (want && (!cur || cur.key !== want)) startScene(want); });
+    else if (want && (!cur || cur.key !== want)) startScene(want);
+  }
+  const last = {};
+  function sfx(name, vol = 1) {
+    if (!ctx || ctx.state !== 'running' || !pref.sfx) return;
+    const now = ctx.currentTime; if (last[name] && now - last[name] < .07) return; last[name] = now;
+    const d = sfxBus, t = now + .01, v = vol;
+    switch (name) {
+      case 'pop': osc(d, t, 'sine', 700, .35 * v, .09, .002, 1100); break;
+      case 'tab': osc(d, t, 'sine', 900, .25 * v, .07, .002, 1300); break;
+      case 'coin': osc(d, t, 'square', 988, .12 * v, .1); osc(d, t + .08, 'square', 1319, .12 * v, .35); osc(d, t + .08, 'sine', 2637, .08 * v, .3); break;
+      case 'squeak': osc(d, t, 'sine', 1300, .22 * v, .09, .004, 2000); osc(d, t + .11, 'sine', 1500, .2 * v, .1, .004, 2300); break;
+      case 'heart': [1568, 2093].forEach((f, i) => osc(d, t + i * .07, 'sine', f, .16 * v, .3)); break;
+      case 'twinkle': [1319, 1568, 1976, 2637].forEach((f, i) => osc(d, t + i * .05, 'sine', f, .12 * v, .35)); break;
+      case 'sparkle': for (let i = 0; i < 5; i++) osc(d, t + i * .03, 'sine', 2500 + Math.random() * 1500, .06 * v, .2); break;
+      case 'thump': osc(d, t, 'sine', 160, .6 * v, .32, .003, 50); noise(d, t, .15 * v, .12, 'lowpass', 600); break;
+      case 'impact': osc(d, t, 'sine', 200, .7 * v, .35, .002, 45); noise(d, t, .3 * v, .15, 'bandpass', 1500, 1); osc(d, t, 'triangle', 900, .15 * v, .06); break;
+      case 'pan': noise(d, t, .35 * v, .06, 'bandpass', 2200, 3); osc(d, t, 'triangle', 700, .2 * v, .08, .002, 500); break;
+      case 'drip': osc(d, t, 'sine', 1800, .1 * v, .12, .002, 700); break;
+      case 'crunch': for (let i = 0; i < 3; i++) noise(d, t + i * .035, .12 * v, .03, 'bandpass', 3500, 2); break;
+      case 'snore': osc(d, t, 'sine', 220, .12 * v, .6, .25, 180); break;
+      case 'whoosh': noise(d, t, .2 * v, .35, 'bandpass', 1200, .7); break;
+      case 'boing': osc(d, t, 'sine', 300, .3 * v, .25, .004, 700); break;
+      case 'whirl': osc(d, t, 'triangle', 500, .15 * v, .4, .01, 1200); break;
+      case 'yawn': osc(d, t, 'triangle', 500, .12 * v, .7, .1, 300); break;
+      case 'hyoshigi': [0, .22].forEach(dt => { noise(d, t + dt, .5 * v, .05, 'bandpass', 2800, 6); osc(d, t + dt, 'square', 1450, .1 * v, .05); }); break;
+      case 'sad': [523, 494, 466].forEach((f, i) => osc(d, t + i * .18, 'triangle', f, .2 * v, .3)); break;
+      case 'happy': [784, 988, 1175].forEach((f, i) => osc(d, t + i * .07, 'sine', f, .2 * v, .25)); break;
+    }
+  }
+  function jingle(name) {
+    if (!ctx || ctx.state !== 'running' || !pref.sfx) return;
+    const d = sfxBus, t = ctx.currentTime + .05;
+    const play = (notes, step, inst = 'musicbox', vol = 1) => notes.forEach((m, i) => { if (m != null) INST[inst](d, t + i * step, mtof(m), vol); });
+    if (name === 'win') { play([72, 76, 79, 84, null, 84], .1, 'marimba', 1.1); play([88], .1, 'musicbox'); sfx('twinkle'); }
+    else if (name === 'lose') { play([67, 66, 65, 64], .22, 'uke', 1); }
+    else if (name === 'fanfare') { play([67, 72, 76, 79, null, 76, 79, 84], .12, 'brass', 1.2); }
+    else if (name === 'good') { play([79, 84, 88, 91], .09, 'musicbox', 1); }
+    else if (name === 'bad') { play([60, 59, 58], .25, 'uke', .9); }
+  }
+  function setPref(k, v) {
+    pref[k] = v; try { localStorage.setItem('hamsumo.sound', JSON.stringify(pref)); } catch (e) { /* noop */ }
+    if (!ctx) return; const now = ctx.currentTime;
+    (k === 'bgm' ? bgmBus : sfxBus).gain.setTargetAtTime(v ? (k === 'bgm' ? .3 : .6) : 0, now, .05);
+  }
+  function level() { if (!analyser) return 0; const a = new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(a); return Math.sqrt(a.reduce((s, x) => s + x * x, 0) / a.length); }
+  return { unlock, setBgm, sfx, jingle, setPref, pref, level, state: () => (ctx ? ctx.state : 'none'), scene: () => (cur ? cur.key : null) };
+})();
+function sceneKey() {
+  if (!state) return 'title';
+  if (ui.outing) return 'outing:' + ui.outing.O.id;
+  if (state.phase === 'match') return 'match';
+  if (state.phase === 'banzuke') return 'banzuke';
+  if (state.phase === 'home' && state.off > 0) return 'room';
+  return 'home';
 }
 
 /* ================= 3D ================= */
@@ -1440,7 +1589,9 @@ function initThree() {
     const tex = new T.CanvasTexture(c); fxTex.set(kind, tex); return tex;
   }
   function sprite(kind) { const m = new T.Sprite(new T.SpriteMaterial({ map: fxTexture(kind), transparent: true, depthWrite: false, depthTest: !kind.startsWith('txt:') })); m.renderOrder = kind.startsWith('txt:') ? 10 : 5; return m; }
+  const KIND_SFX = { ring: 'impact', heart: 'heart', zabuton: 'whoosh', salt: 'sparkle', shell: 'crunch', sweat: 'drip', z: 'snore', spark: 'sparkle' };
   function spawn(kind, x, y, z, o = {}) {
+    if (KIND_SFX[kind]) Sound.sfx(KIND_SFX[kind], kind === 'sweat' || kind === 'shell' ? .6 : 1);
     const m = sprite(kind), size = o.size || .4, aspect = o.aspect || (kind.startsWith('txt:') ? 2 : 1);
     m.position.set(x, y, z); m.scale.set(size * aspect, size, 1); scene.add(m);
     fx.push({ m, v: new T.Vector3(...(o.v || [0, 0, 0])), life: o.life || 1, t: 0, grow: o.grow || 0, g: o.g || 0, size, aspect, spin: o.spin || 0, fade: o.fade ?? .6, pop: o.pop });
@@ -1456,8 +1607,8 @@ function initThree() {
     }
   }
   const say3d = (text, x, y, z, col) => spawn(`txt:${text}:${col || '#2a2140'}`, x, y, z, { v: [0, .45, 0], life: 1.2, size: .78, fade: .65, pop: true });
-  const dustRing = (x, z, n = 7, power = 1) => { for (let j = 0; j < n; j++) { const a = j / n * PI * 2; spawn('dust', x + Math.cos(a) * .2, .15, z + Math.sin(a) * .2, { v: [Math.cos(a) * rnd(.6, 1.3) * power, rnd(.15, .5), Math.sin(a) * rnd(.4, 1) * power], life: rnd(.6, .9), size: .42, grow: 1.5, fade: .2 }); } };
-  const starBurst = (x, y, z, n = 10) => { for (let j = 0; j < n; j++) { const a = j / n * PI * 2; spawn(j % 2 ? 'star' : 'spark', x, y, z, { v: [Math.cos(a) * 1.8, Math.sin(a) * 1.8 + .6, .4], g: 1.5, life: .9, size: .26, spin: 4, fade: .5 }); } };
+  const dustRing = (x, z, n = 7, power = 1) => { Sound.sfx('thump', Math.min(1, .5 + power * .4)); for (let j = 0; j < n; j++) { const a = j / n * PI * 2; spawn('dust', x + Math.cos(a) * .2, .15, z + Math.sin(a) * .2, { v: [Math.cos(a) * rnd(.6, 1.3) * power, rnd(.15, .5), Math.sin(a) * rnd(.4, 1) * power], life: rnd(.6, .9), size: .42, grow: 1.5, fade: .2 }); } };
+  const starBurst = (x, y, z, n = 10) => { Sound.sfx('twinkle'); for (let j = 0; j < n; j++) { const a = j / n * PI * 2; spawn(j % 2 ? 'star' : 'spark', x, y, z, { v: [Math.cos(a) * 1.8, Math.sin(a) * 1.8 + .6, .4], g: 1.5, life: .9, size: .26, spin: 4, fade: .5 }); } };
   const sweat = (x, y, z) => spawn('sweat', x, y, z, { v: [rnd(-.7, .7), rnd(.6, 1.1), rnd(0, .5)], g: 4, life: .8, size: .18, fade: .6 });
 
   /* 稽古の演出（時間はアニメ開始からの秒） */
@@ -1508,7 +1659,7 @@ function initThree() {
     },
     wheel: {
       dur: 3.5, cam: [[0, 2.5, 9.4], [0, 1.6, 0]], yaw: PI / 2,
-      setup: tr => { wheel.visible = true; tr.data.stars = [0, 1, 2].map(() => { const m = sprite('star'); m.scale.set(.22, .22, 1); m.visible = false; scene.add(m); return m; }); },
+      setup: tr => { wheel.visible = true; Sound.sfx('whirl'); setTimeout(() => Sound.sfx('whirl'), 900); setTimeout(() => Sound.sfx('whoosh'), 2200); tr.data.stars = [0, 1, 2].map(() => { const m = sprite('star'); m.scale.set(.22, .22, 1); m.visible = false; scene.add(m); return m; }); },
       update: (tr, dt) => {
         const t = tr.t, H = tr.H, w = t < 2.2 ? 3 + t * 6 : t < 3.0 ? 16.2 : 16.2 * Math.max(0, 1 - (t - 3.0) / .4);
         wheel.rotation.z -= w * dt;
@@ -1630,7 +1781,8 @@ function initThree() {
   function showDohyo() { dohyo.visible = true; Object.values(places).forEach(g => { g.visible = false; }); placeId = null; delete stageEl.dataset.place; }
   const ACT_DUR = { groom: 1.8, look: 2.0, stretch: 1.7, hop: 1.1, sniff: 1.4, scratch: 1.5, spin: 1.2, wave: 1.5, snack: 2.2, tickle: 1.0, clap: 1.6 };
   const IDLE_ACTS = ['groom', 'look', 'stretch', 'hop', 'sniff', 'scratch', 'spin', 'wave', 'snack'];
-  function startAct(H, id) { H.anim = 'idle'; H.act = { id, start: H.t, dur: ACT_DUR[id] }; }
+  const ACT_SFX = { tickle: 'squeak', hop: 'boing', spin: 'whirl', stretch: 'yawn', snack: 'crunch', wave: 'happy', clap: 'pan' };
+  function startAct(H, id) { H.anim = 'idle'; H.act = { id, start: H.t, dur: ACT_DUR[id] }; if (ACT_SFX[id] && api.solo === H || id === 'tickle' || id === 'clap') Sound.sfx(ACT_SFX[id], id === 'tickle' ? 1 : .55); }
 
   function endTraining() {
     const tr = api.training; if (!tr) return; api.training = null;
@@ -1793,7 +1945,7 @@ async function animateBout(res, m, opp) {
   fx(() => spawn('txt:バチバチ:#b9861a', 0, 1.9, .3, { life: 1, size: .55, pop: true, fade: .7 }));
   await tween(.9, k => { three.cam.tp.set(0, 1.7, 8.0 - k * .8); });
   // 立合い
-  say('はっけよい！'); gyoji('gyojiNokotta', 'はっけよい!');
+  Sound.sfx('hyoshigi'); say('はっけよい！'); gyoji('gyojiNokotta', 'はっけよい!');
   A.setKesho(false); B.setKesho(false); A.anim = B.anim = 'push';
   await tween(.16, k => { A.root.position.x = -s * lerp(start, d, k * k); B.root.position.x = s * lerp(start, d, k * k); });
   three.shake = .35;
@@ -1906,6 +2058,7 @@ function render() {
   else ({ select: renderSelect, home: renderHome, result: renderResult, banzuke: renderBanzuke })[ph]();
   $('.app').dataset.view = (ph === 'banzuke' || (ph === 'home' && !ui.outing && ui.tab === 'banzuke')) ? 'full' : '';
   bindSpeed(); renderMenu();
+  Sound.setBgm(sceneKey());
 }
 function statusHtml() {
   const m = me(), info = rankInfo(posOf(m));
@@ -1924,11 +2077,12 @@ function shell({ status = true, tabs = '', body = '', dock = '' }) {
 function renderMenu() {
   const pop = $('#menuPop'); pop.hidden = !ui.menu; $('#menuBtn').setAttribute('aria-expanded', String(!!ui.menu));
   if (!ui.menu) return;
-  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<p class="sub" style="margin:0">セーブはこのブラウザに自動で保存されます。土俵のハムスターはドラッグで回せて、タップすると反応します。</p>
+  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div><p class="sub" style="margin:0">セーブはこのブラウザに自動で保存されます。土俵のハムスターはドラッグで回せて、タップすると反応します。</p>
     ${state ? (ui.resetAsk ? '<div class="row"><span>セーブを消して最初から始めますか？</span><button class="btn small" id="resetYes">消して始める</button><button class="btn small" id="resetNo">やめる</button></div>' : '<button class="linkbtn" id="resetAsk" style="align-self:flex-start">はじめからやりなおす</button>') : ''}
     <button class="btn small" id="menuClose">閉じる</button>`;
   bindSpeed();
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  pop.querySelectorAll('[data-snd]').forEach(b => { b.onclick = () => { const k = b.dataset.snd; Sound.setPref(k, !Sound.pref[k]); Sound.unlock(); renderMenu(); syncSnd(); }; });
   on('menuClose', () => { ui.menu = false; ui.resetAsk = false; renderMenu(); });
   on('resetAsk', () => { ui.resetAsk = true; renderMenu(); });
   on('resetNo', () => { ui.resetAsk = false; renderMenu(); });
@@ -2023,7 +2177,7 @@ async function animateOuting(O, r) {
     say3d('パンパン!', 0, 2.8, .3); await act('clap', 1.6);
     H.anim = 'bow'; H.t = 0; await wait(.8); H.anim = 'idle';
     await tween(.4, k => { H.root.rotation.y = lerp(PI, 0, k); });
-    sayLine(`おみくじは…${r.omikuji}！`);
+    sayLine(`おみくじは…${r.omikuji}！`); Sound.jingle(r.omikuji === '凶' ? 'bad' : 'good');
     spawn(`txt:${r.omikuji}!:${r.omikuji === '凶' ? '#5b3a9e' : '#cf3f36'}`, 0, 3.0, .3, { life: 2.2, size: 1.1, pop: true, fade: .8 });
     if (r.omikuji === '凶') { H.anim = 'down'; await wait(1.0); H.anim = 'idle'; say3d('ころりん…', 0, 2.4, .3, '#5b3a9e'); }
     else { starBurst(0, 1.8, .4, 10); await wait(.6); }
@@ -2130,7 +2284,7 @@ function bindShop() {
   if (buy) buy.onclick = () => {
     const P = ui.preview, it = findIn(SHOP.find(x => x.cat === P.cat).items, P.id);
     if (state.money < it.price) return;
-    state.money -= it.price; state.owned[P.cat].push(it.id); state.equip[P.cat] = it.id; ui.preview = null; save();
+    state.money -= it.price; state.owned[P.cat].push(it.id); state.equip[P.cat] = it.id; ui.preview = null; save(); Sound.sfx('coin');
     showHome(); toast(`お買い上げ！ ${it.name}`); render();
   };
 }
@@ -2138,13 +2292,14 @@ function bindShop() {
 async function startBout() {
   const m = me(), opp = byId(state.oppId);
   const res = simulateBout(effStats(m.stats, .75 + .25 * state.energy / 100 + state.bond / 100 * .06), effStats(opp.stats, .9));
-  state.phase = 'match'; ui.preview = null; if (ui.tab !== 'banzuke') ui.tab = 'train';
+  state.phase = 'match'; ui.preview = null; Sound.setBgm('match'); if (ui.tab !== 'banzuke') ui.tab = 'train';
   shell({ status: false, body: `<div class="card stack grow"><h2>${DAYS[state.day - 1]} 結びの一番　${esc(m.name)} 対 ${esc(opp.name)}</h2><ul class="log" id="log" aria-live="polite"></ul></div>`,
     dock: `${segHtml()}<button class="btn" id="skip">結果へ飛ばす</button>` });
   logEl = $('#log'); tagEl.hidden = false; bindSpeed();
   $('#skip').onclick = () => { if (three) three.skip = true; };
   await animateBout(res, m, opp);
   finishBout(res, opp);
+  Sound.jingle(res.winner === 0 ? 'win' : 'lose');
   render();
 }
 function renderResult() {
@@ -2164,17 +2319,27 @@ function renderResult() {
 }
 function renderBanzuke() {
   const news = ui.news || [];
+  if (!ui.fanfared) { ui.fanfared = true; setTimeout(() => Sound.jingle(news.some(n => n.gold) ? 'fanfare' : 'good'), 200); }
   shell({ status: false, body: `<div class="card stack"><h2>${ui.finished ? esc(ui.finished) + ' おわり' : '場所おわり'}</h2>
     <div class="news">${news.map(n => `<div class="${n.gold ? 'gold' : ''}">${esc(n.t)}</div>`).join('')}</div></div>
     <div class="card stack"><h2>新番付（先場所の成績と昇降）</h2>${banzukeHtml(true)}</div>`,
     dock: `<div class="dock-vs"><b>休みの日が${OFF_DAYS}日あります</b><span class="sub">お出かけもできます</span></div><button class="btn primary wide" id="nextBasho">休みの日へ</button>` });
   if (three) { showHome(); if (three.solo) three.solo.anim = 'win'; }
-  $('#nextBasho').onclick = () => { state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); ui.tab = 'outing'; if (three) showHome(); render(); };
+  $('#nextBasho').onclick = () => { ui.fanfared = false; state.phase = 'home'; state.roster.forEach(r => { r.delta = 0; }); save(); ui.tab = 'outing'; if (three) showHome(); render(); };
 }
 
 /* ================= 起動 ================= */
-window.__sumo = { simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
+window.__sumo = { Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
+function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
 function boot() {
+  syncSnd();
+  $('#sndBtn').onclick = () => { const on = !(Sound.pref.bgm || Sound.pref.sfx); Sound.setPref('bgm', on); Sound.setPref('sfx', on); Sound.unlock(); syncSnd(); if (ui.menu) renderMenu(); };
+  document.addEventListener('pointerdown', () => Sound.unlock(), { capture: true });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.id === 'buy' || b.id === 'sndBtn') return;
+    Sound.sfx(b.classList.contains('tab') || b.classList.contains('cat') ? 'tab' : 'pop', .8);
+  }, { capture: true });
   $('#menuBtn').onclick = () => { ui.menu = !ui.menu; ui.resetAsk = false; renderMenu(); };
   three = initThree(); if (three) three.speed = speedV();
   if (!three) sayEl.textContent = '3D表示を使えない環境です。文字だけで進行します。';
