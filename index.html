@@ -461,6 +461,12 @@ KESHO.push(
   { id: 'fuji', name: '富士山', price: 240, bg: '#1f4f8a' },
   { id: 'nami', name: '青海波', price: 260, bg: '#14365e' },
   { id: 'mangetsu', name: '満月', price: 320, bg: '#151a33' },
+  { id: 'koi', name: '鯉の滝登り', price: 300, bg: '#123a5c' },
+  { id: 'tsuru', name: '鶴と日の出', price: 340, bg: '#f3ead6' },
+  { id: 'ryu', name: '昇り龍', price: 420, bg: '#14141f' },
+  { id: 'sensu', name: '扇', price: 280, bg: '#7a1f2b' },
+  { id: 'momiji', name: '紅葉', price: 260, bg: '#1f3d2b' },
+  { id: 'hammon', name: 'ハムスター紋', price: 360, bg: '#2a2140' },
 );
 const ACCS = [
   { id: 'none', name: 'つけない', price: 0 },
@@ -911,6 +917,46 @@ function keshoCanvas(id, name) {
       const x = i * 40 + (row % 2) * 20, y = 30 + row * 30;
       for (let r = 26, j = 0; r > 4; r -= 7, j++) { g.fillStyle = j % 2 ? '#14365e' : '#7fc6d8'; g.beginPath(); g.arc(x, y, r, Math.PI, 0); g.fill(); }
     }
+  } else if (id === 'koi') {
+    g.lineCap = 'round'; for (let x = 6; x < 236; x += 9) { g.strokeStyle = `rgba(160,215,255,${.15 + ((x * 7) % 10) / 30})`; g.lineWidth = 3 + (x % 4); g.beginPath(); g.moveTo(x, 4); g.bezierCurveTo(x + 4, 60, x - 4, 120, x + 2, 184); g.stroke(); }
+    g.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i < 14; i++) dot(20 + i * 15, 172 + (i % 3) * 4, 6 + (i % 2) * 3);
+    const fish = (x, y, sz, rot, base, patch) => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = base; g.beginPath(); g.moveTo(-sz * 1.1, 0); g.lineTo(-sz * 1.6, -sz * .45); g.lineTo(-sz * 1.5, 0); g.lineTo(-sz * 1.6, sz * .45); g.closePath(); g.fill(); g.beginPath(); g.ellipse(0, 0, sz, sz * .4, 0, 0, PI2); g.fill(); g.fillStyle = patch; dot(sz * .2, -sz * .08, sz * .26); dot(-sz * .4, sz * .06, sz * .2); g.beginPath(); g.ellipse(sz * .65, 0, sz * .28, sz * .3, 0, 0, PI2); g.fill(); g.fillStyle = '#1c1420'; dot(sz * .72, -sz * .14, sz * .06); g.fillStyle = base; g.beginPath(); g.ellipse(-sz * .1, sz * .42, sz * .3, sz * .1, .6, 0, PI2); g.fill(); g.restore(); };
+    fish(96, 124, 40, -1.25, '#ffffff', '#e8413a'); fish(160, 66, 30, -1.45, '#f3b23a', '#ffffff');
+  } else if (id === 'tsuru') {
+    g.fillStyle = '#e8413a'; dot(168, 66, 40); g.strokeStyle = 'rgba(232,65,58,.35)'; g.lineWidth = 3; for (let r = 50; r < 80; r += 10) { g.beginPath(); g.arc(168, 66, r, 0, PI2); g.stroke(); }
+    g.strokeStyle = '#2a2140'; g.lineWidth = 2.5; g.fillStyle = '#ffffff';
+    g.beginPath(); g.moveTo(92, 120); g.quadraticCurveTo(40, 70, 18, 30); g.quadraticCurveTo(70, 52, 104, 108); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(112, 112); g.quadraticCurveTo(150, 40, 214, 20); g.quadraticCurveTo(170, 80, 124, 122); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#1c1420'; g.beginPath(); g.moveTo(18, 30); g.quadraticCurveTo(30, 44, 44, 52); g.lineTo(34, 34); g.fill(); g.beginPath(); g.moveTo(214, 20); g.quadraticCurveTo(196, 30, 186, 42); g.lineTo(200, 22); g.fill();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.ellipse(106, 124, 30, 16, -.2, 0, PI2); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(126, 116); g.quadraticCurveTo(150, 96, 140, 70); g.lineWidth = 7; g.strokeStyle = '#1c1420'; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = '#2a2140';
+    g.fillStyle = '#ffffff'; dot(140, 66, 8); g.fillStyle = '#e8413a'; dot(140, 61, 4); g.fillStyle = '#d9a520'; g.beginPath(); g.moveTo(146, 66); g.lineTo(166, 70); g.lineTo(146, 70); g.fill();
+    g.strokeStyle = '#1c1420'; g.lineWidth = 2; g.beginPath(); g.moveTo(100, 138); g.lineTo(96, 176); g.moveTo(110, 138); g.lineTo(114, 176); g.stroke();
+  } else if (id === 'ryu') {
+    const pts = []; for (let i = 0; i <= 60; i++) { const t = i / 60; pts.push([20 + t * 190, 170 - t * 140 + Math.sin(t * 9) * 26]); }
+    g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#1e5e3a'; g.lineWidth = 26; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+    g.strokeStyle = '#2f9f5f'; g.lineWidth = 18; g.stroke();
+    g.fillStyle = '#7fd4a0'; pts.forEach(([x, y], i) => { if (i % 2 === 0 && i < 56) { g.beginPath(); g.arc(x, y + 2, 4, 0, Math.PI); g.fill(); } });
+    g.fillStyle = '#e2b23a'; pts.forEach(([x, y], i) => { if (i % 4 === 0 && i > 2 && i < 56) { g.beginPath(); g.moveTo(x - 4, y - 10); g.lineTo(x, y - 20); g.lineTo(x + 4, y - 10); g.fill(); } });
+    const [hx, hy] = pts[60]; g.fillStyle = '#2f9f5f'; g.beginPath(); g.ellipse(hx + 6, hy, 18, 13, -.4, 0, PI2); g.fill();
+    g.strokeStyle = '#e2b23a'; g.lineWidth = 3; g.beginPath(); g.moveTo(hx, hy - 10); g.quadraticCurveTo(hx - 6, hy - 30, hx - 18, hy - 32); g.moveTo(hx + 8, hy - 12); g.quadraticCurveTo(hx + 6, hy - 32, hx - 4, hy - 38); g.stroke();
+    g.strokeStyle = '#ffffff'; g.lineWidth = 2; g.beginPath(); g.moveTo(hx + 20, hy + 4); g.quadraticCurveTo(hx + 34, hy + 16, hx + 26, hy + 30); g.stroke();
+    g.fillStyle = '#ffd34d'; dot(hx + 10, hy - 4, 3.5);
+    const pg = g.createRadialGradient(60, 50, 2, 60, 50, 26); pg.addColorStop(0, '#fffbe0'); pg.addColorStop(.6, '#ffe9a0'); pg.addColorStop(1, 'rgba(255,233,160,0)'); g.fillStyle = pg; dot(60, 50, 26);
+  } else if (id === 'sensu') {
+    const fan = (x, y, r, a0, a1, base) => { const gr = g.createRadialGradient(x, y, r * .2, x, y, r); gr.addColorStop(0, '#fff3c4'); gr.addColorStop(1, base); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, a0, a1); g.arc(x, y, r * .25, a1, a0, true); g.closePath(); g.fill(); g.strokeStyle = '#8a5a1a'; g.lineWidth = 1.5; for (let k = 0; k <= 10; k++) { const a = a0 + (a1 - a0) * k / 10; g.beginPath(); g.moveTo(x + Math.cos(a) * r * .25, y + Math.sin(a) * r * .25); g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); g.stroke(); } g.strokeStyle = '#8a5a1a'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, r, a0, a1); g.stroke(); };
+    fan(70, 150, 70, -Math.PI * .95, -Math.PI * .3, '#e2b23a'); fan(170, 130, 62, -Math.PI * .75, -Math.PI * .1, '#f2a0b8'); fan(118, 96, 56, -Math.PI * .9, -Math.PI * .2, '#ffffff');
+    g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2; for (let i = 0; i < 5; i++) { g.beginPath(); g.arc(40 + i * 44, 176, 22, Math.PI, 0); g.stroke(); }
+  } else if (id === 'momiji') {
+    g.strokeStyle = 'rgba(140,200,230,.5)'; g.lineWidth = 4; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(0, 120 + i * 14); g.bezierCurveTo(70, 100 + i * 14, 150, 150 + i * 14, 236, 118 + i * 14); g.stroke(); }
+    const leaf = (x, y, r, rot, col) => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = col; g.beginPath(); for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + i * Math.PI / 7, rr = i % 2 ? r * .42 : r * (i === 0 ? 1 : i === 2 || i === 12 ? .95 : i === 4 || i === 10 ? .8 : .55); g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.closePath(); g.fill(); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1.2; for (const a of [-Math.PI / 2, -Math.PI / 2 - .9, -Math.PI / 2 + .9]) { g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * r * .8, Math.sin(a) * r * .8); g.stroke(); } g.restore(); };
+    [[60, 50, 30, .2, '#e8413a'], [130, 80, 36, -.4, '#f08a24'], [190, 40, 24, .8, '#f6c234'], [90, 140, 26, -.9, '#cf3f36'], [170, 150, 22, .5, '#e8413a'], [30, 110, 18, 1.2, '#f6c234'], [215, 105, 16, -.2, '#f08a24']].forEach(a => leaf(...a));
+  } else if (id === 'hammon') {
+    g.strokeStyle = 'rgba(226,178,58,.35)'; g.lineWidth = 2; for (let row = 0; row < 3; row++) for (let i = -1; i < 7; i++) { const x = i * 40 + (row % 2) * 20, y = 160 + row * 12; for (let r = 18; r > 4; r -= 6) { g.beginPath(); g.arc(x, y, r, Math.PI, 0); g.stroke(); } }
+    g.strokeStyle = '#e2b23a'; g.lineWidth = 6; g.beginPath(); g.arc(cx, 84, 62, 0, PI2); g.stroke(); g.lineWidth = 2; g.beginPath(); g.arc(cx, 84, 52, 0, PI2); g.stroke();
+    g.fillStyle = '#e2b23a'; dot(cx - 30, 52, 14); dot(cx + 30, 52, 14); dot(cx, 90, 40); g.fillStyle = '#f7c6d6'; dot(cx - 30, 52, 7); dot(cx + 30, 52, 7);
+    g.fillStyle = '#2a2140'; dot(cx - 14, 84, 5); dot(cx + 14, 84, 5); g.fillStyle = '#ff8fa8'; dot(cx - 24, 98, 6); dot(cx + 24, 98, 6); dot(cx, 94, 3);
+    g.strokeStyle = '#2a2140'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx - 6, 102); g.quadraticCurveTo(cx, 108, cx, 100); g.quadraticCurveTo(cx, 108, cx + 6, 102); g.stroke();
   } else if (id === 'mangetsu') {
     g.fillStyle = '#ffe9a0'; dot(cx, 84, 54); g.fillStyle = '#f3d27a'; dot(cx - 18, 70, 9); dot(cx + 14, 100, 6);
     g.fillStyle = '#0b0e1d'; for (let x = 4; x < 240; x += 9) { g.beginPath(); g.moveTo(x, 184); g.lineTo(x + 4, 140 - (x * 7) % 26); g.lineTo(x + 8, 184); g.fill(); }
@@ -1348,7 +1394,7 @@ function initThree() {
   const HAIR = 0x1c1420, PI = Math.PI;
   const CYL = new T.CylinderGeometry(1, 1, 1, 14);
   const FAN = new T.CylinderGeometry(1, 1, .1, 28, 1, false, -PI * .4, PI * .8);
-  const PLANE = new T.PlaneGeometry(1.02, .76);
+  const APRON = new T.CylinderGeometry(.86, .94, .72, 28, 1, true, -.68, 1.36);
   const texCache = new Map();
   const keshoTex = (id, name) => { const k = id + '|' + name; if (!texCache.has(k)) texCache.set(k, new T.CanvasTexture(keshoCanvas(id, name))); return texCache.get(k); };
   function buildWig(id) {
@@ -1644,8 +1690,8 @@ function initThree() {
     root.scale.setScalar(K.scale);
     let kesho = null;
     if (look.kesho) {
-      kesho = new T.Mesh(PLANE, new T.MeshStandardMaterial({ map: keshoTex(look.kesho, look.name || ''), roughness: .7, side: T.DoubleSide }));
-      kesho.position.set(0, -.5, .84); kesho.rotation.x = .12; kesho.castShadow = true; rig.add(kesho); flap.visible = false;
+      kesho = new T.Mesh(APRON, new T.MeshStandardMaterial({ map: keshoTex(look.kesho, look.name || ''), roughness: .7, side: T.DoubleSide }));
+      kesho.position.set(0, -.54, 0); kesho.scale.set(1, 1, .93); kesho.castShadow = true; rig.add(kesho); flap.visible = false;
     }
     const H = { seedBase: seed.scale.clone(), root, rig, head, arms, feet, eyes, cheeks, tsuna, seed, anim: 'idle', t: Math.random() * 5, fat: 1, blink: rnd(1, 4), ex: { rx: 0, rz: 0, y: 0, z: 0 } };
     let wig = null;
