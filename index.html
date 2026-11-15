@@ -300,6 +300,7 @@ body { overflow: hidden; }
 .inapp { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(20, 14, 30, .55); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .inapp-card { width: min(380px, 100%); background: var(--surface); color: var(--ink); border: 2px solid var(--ink); border-radius: 14px; padding: 16px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
 .inapp-card p { margin: 0; line-height: 1.6; }
+.movecode { width: 100%; min-height: 72px; border: 2px solid var(--ink); border-radius: 8px; padding: 6px 8px; font: 12px/1.4 ui-monospace, Menlo, monospace; background: var(--surface-2); color: var(--ink); word-break: break-all; }
 .inapp-card a.btn { text-align: center; text-decoration: none; display: block; }
 .menu-pop { max-height: calc(100% - 70px); overflow-y: auto; position: fixed; z-index: 30; top: calc(env(safe-area-inset-top, 0px) + 54px); right: max(16px, env(safe-area-inset-right, 0px)); width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 12px; box-shadow: 0 6px 0 var(--ink); display: flex; flex-direction: column; gap: 10px; }
 .layout { flex: 1; min-height: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 40%) minmax(0, 1fr); align-items: stretch; }
@@ -3105,10 +3106,19 @@ function setupMove() {
   $('#inAppText').textContent = '新しいページでは、ブラウザを閉じてもセーブが消えません。いまのセーブもそのまま持っていけます。';
   const a = $('#openExt'); a.hidden = false; a.textContent = state ? 'セーブを持って新しいページへ' : '新しいページで遊ぶ'; a.href = PAGES_URL;
   if (state) encodeSave(JSON.stringify(state)).then(code => { a.href = PAGES_URL + '#hs=' + code; });
-  $('#inAppLoad').hidden = true; $('#inAppCode').hidden = !state;
-  $('#inAppClose').textContent = 'このまま遊ぶ'; $('#inAppNote').textContent = 'うまく開けないときは、「セーブコードを控える」で控えて、新しいページのメニューから読み込んでください。';
-  $('#inAppClose').onclick = () => { box.hidden = true; };
-  $('#inAppCode').onclick = () => { box.hidden = true; ui.menu = true; ui.saveBox = { mode: 'export' }; renderMenu(); encodeSave(JSON.stringify(state)).then(code => { if (ui.saveBox && ui.saveBox.mode === 'export') { ui.saveBox.code = code; renderMenu(); } }); };
+  // このページでは遊べない：閉じるボタンなし。控えのセーブコードは案内の中で出す
+  $('#inAppLoad').hidden = true; $('#inAppClose').hidden = true; $('#inAppCode').hidden = !state;
+  $('#inAppText').textContent = 'このページでは遊べなくなりました。新しいページでは、ブラウザを閉じてもセーブが消えません。いまのセーブもそのまま持っていけます。';
+  $('#inAppNote').textContent = state ? 'うまく開けないときは、「セーブコードを控える」で控えて、新しいページのメニューから読み込んでください。' : '';
+  $('#inAppCode').onclick = () => {
+    encodeSave(JSON.stringify(state)).then(code => {
+      let ta = $('#moveCode'); if (!ta) { ta = document.createElement('textarea'); ta.id = 'moveCode'; ta.readOnly = true; ta.className = 'movecode'; $('#inAppNote').before(ta); }
+      ta.value = code; ta.focus(); ta.select();
+      try { navigator.clipboard.writeText(code).then(() => { $('#inAppNote').textContent = 'コピーしました。新しいページのメニュー →「セーブコードを読み込む」に貼り付けてください。'; }, () => { $('#inAppNote').textContent = '選択しました。コピーして、新しいページのメニューから読み込んでください。'; }); } catch (e) { /* noop */ }
+    });
+  };
+  // 下の画面を操作できないようにする
+  ['.mast', '.layout', '#menuPop'].forEach(sel => { const el = document.querySelector(sel); if (el) { el.inert = true; el.setAttribute('aria-hidden', 'true'); } });
 }
 // 新しいページ側：URL のセーブを受け取る
 async function importFromHash() {
