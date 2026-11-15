@@ -1276,7 +1276,7 @@ const Sound = (() => {
     bgmBus = ctx.createGain(); bgmBus.gain.value = pref.bgm ? .3 : 0; bgmBus.connect(master);
     sfxBus = ctx.createGain(); sfxBus.gain.value = pref.sfx ? .6 : 0; sfxBus.connect(master);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
+    document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) ctx.suspend().catch(() => {}); else resumeNow(); });
     return ctx;
   }
   function env(g, t, a, peak, dur, curveEnd = .0001) { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(curveEnd, t + dur); }
@@ -1313,6 +1313,7 @@ const Sound = (() => {
   function schedule() {
     if (!cur || !ctx) return;
     const T = cur.track, sd = 60 / cur.bpm / 2;
+    if (cur.next < ctx.currentTime - .25) { cur.next = ctx.currentTime + .05; } // 止まっていた間の音符は捨てる
     while (cur.next < ctx.currentTime + .15) {
       const i = cur.step % T.lead.length, t = cur.next;
       if (T.lead[i] != null) INST[cur.inst](cur.gain, t, mtof(T.lead[i] + cur.tr), .9);
@@ -1331,10 +1332,30 @@ const Sound = (() => {
     if (!timer) timer = setInterval(schedule, 30);
   }
   function setBgm(key) { if (want === key) return; want = key; if (ctx && ctx.state === 'running') startScene(key); }
+  // iOS のマナーモードでも鳴るように：再生用の音声セッション＋無音の <audio> を流しておく
+  let keepAlive = null;
+  function silentUrl() {
+    const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  function primeSession() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* 未対応 */ }
+    try {
+      if (!keepAlive) { keepAlive = document.createElement('audio'); keepAlive.src = silentUrl(); keepAlive.loop = true; keepAlive.setAttribute('playsinline', ''); keepAlive.volume = .01; }
+      if (keepAlive.paused && (pref.bgm || pref.sfx)) { const pr = keepAlive.play(); if (pr && pr.catch) pr.catch(() => {}); }
+    } catch (e) { /* noop */ }
+  }
+  function resumeNow() {
+    if (!ctx) return;
+    const go = () => { if (want && (!cur || cur.key !== want)) startScene(want); };
+    if (ctx.state !== 'running') { const pr = ctx.resume(); if (pr && pr.then) pr.then(go, () => {}); } else go();
+  }
   function unlock() {
     const c = ensure(); if (!c) return;
-    if (c.state === 'suspended') c.resume().then(() => { if (want && (!cur || cur.key !== want)) startScene(want); });
-    else if (want && (!cur || cur.key !== want)) startScene(want);
+    primeSession(); resumeNow();
   }
   const last = {};
   function sfx(name, vol = 1) {
@@ -3025,7 +3046,7 @@ function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').s
 function boot() {
   syncSnd();
   $('#sndBtn').onclick = () => { const on = !(Sound.pref.bgm || Sound.pref.sfx); Sound.setPref('bgm', on); Sound.setPref('sfx', on); Sound.unlock(); syncSnd(); if (ui.menu) renderMenu(); };
-  document.addEventListener('pointerdown', () => Sound.unlock(), { capture: true });
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => Sound.unlock(), { capture: true, passive: true }));
   document.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     if (b.id === 'buy' || b.id === 'sndBtn') return;
