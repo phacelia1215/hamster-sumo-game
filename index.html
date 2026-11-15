@@ -373,7 +373,13 @@ body { overflow: hidden; }
   .train span + span { display: none; }
   .tab { min-height: 36px; }
   .mast-info { display: none; }
-  .stat5 { display: none; }
+  /* 背の低い画面でも能力は隠さず、小さくまとめて出す */
+  .status { padding: 6px 8px; gap: 4px; }
+  .st-name .shikona { font-size: 17px; }
+  .stat5 { gap: 3px; }
+  .st5 { padding: 1px 2px 4px; }
+  .st5 span { font-size: 10px; }
+  .st5 b { font-size: 13px; }
 }
 </style>
 <!--/ARTIFACT-HEAD-->
@@ -3089,7 +3095,7 @@ function renderBanzuke() {
 /* ================= 起動 ================= */
 window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
-const APP_VERSION = '2026.11.15-b';
+const APP_VERSION = '2026.11.15-c';
 const ARTIFACT_URL = 'https://claude.ai/artifact/3qb1eHLG5rfxa5FXszc8zn';
 const UA = navigator.userAgent || '';
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
