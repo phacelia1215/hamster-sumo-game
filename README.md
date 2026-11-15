@@ -17,7 +17,7 @@
 
 ## 遊び方
 
-公開ページ: https://phacelia1215.github.io/hamster-sumo-game/ （Safari でもセーブが残る単独ページ。LINE で共有するときは末尾に `?openExternalBrowser=1` を付けると外部ブラウザで開きます）
+公開ページ: https://phacelia1215.github.io/hamster-sumo-game/ （Safari や LINE の中でもセーブが残る単独ページ）
 
 
 `index.html` をブラウザで開くだけです（Three.js は CDN から読み込みます）。セーブはブラウザの localStorage と IndexedDB の2か所に自動保存され（ひとつ前の控えも保持）、片方が消えても自動で復元します。ブラウザを移るときや控えを取りたいときは、メニューの「セーブコード」または「ファイルに保存／ファイルから読み込む」で引き継げます。
