@@ -2751,7 +2751,7 @@ function saveBoxHtml() {
 function renderMenu() {
   const pop = $('#menuPop'); pop.hidden = !ui.menu; $('#menuBtn').setAttribute('aria-expanded', String(!!ui.menu));
   if (!ui.menu) return;
-  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div>${IN_LINE ? '<p class="sub" style="margin:0;color:var(--aka);font-weight:900">LINEのブラウザでは、LINEを終了するとセーブが消えます。セーブコードを控えるか、Safari / Chrome で開いてください。</p>' : EPHEMERAL ? '<p class="sub" style="margin:0;color:var(--aka);font-weight:900">この表示では、ブラウザを終了するとセーブが消えます。やめる前にセーブコードを控えてください。</p>' : ''}<p class="sub" style="margin:0">セーブはこのブラウザの2か所に自動で保存され、片方が消えてももう片方から戻ります。シークレットウィンドウ・ブラウザのデータ削除・別の端末では引き継げないので、大事なときはセーブコードかファイルに控えておきましょう。</p>
+  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div>${EPHEMERAL ? '<p class="sub" style="margin:0;color:var(--aka);font-weight:900">この表示では、ブラウザを終了するとセーブが消えます。やめる前にセーブコードを控えてください。</p>' : ''}<p class="sub" style="margin:0">セーブはこのブラウザの2か所に自動で保存され、片方が消えてももう片方から戻ります。シークレットウィンドウ・ブラウザのデータ削除・別の端末では引き継げないので、大事なときはセーブコードかファイルに控えておきましょう。</p>
     <div class="row">${state ? '<button class="btn small" id="exportSave">セーブコードを書き出す</button>' : ''}<button class="btn small" id="importSave">セーブコードを読み込む</button></div>
     <div class="row">${state && ui.canDownload ? '<button class="btn small" id="fileSave">ファイルに保存</button>' : ''}<label class="btn small" for="fileLoad" style="cursor:pointer">ファイルから読み込む</label><input type="file" id="fileLoad" accept=".txt,.json,text/plain,application/json" hidden></div>
     ${saveBoxHtml()}
@@ -3095,7 +3095,8 @@ const IN_LINE = /\bLine\//i.test(UA);
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
 // Safari（iPhone のブラウザはすべて WebKit）は、ほかのサイトに埋め込まれたページの保存データをブラウザ終了時に消す
 const IS_WEBKIT = /(iPhone|iPad|iPod)/.test(UA) || (/AppleWebKit/.test(UA) && /Safari/.test(UA) && !/(Chrome|Chromium|Edg|OPR|Firefox|Android)/.test(UA));
-const EPHEMERAL = IN_LINE || (IN_FRAME && IS_WEBKIT);
+// GitHub Pages など単独ページなら LINE の中でもセーブが残る。消えるのは埋め込み表示のときだけ
+const EPHEMERAL = IN_FRAME && (IS_WEBKIT || IN_LINE);
 const PAGES_URL = 'https://phacelia1215.github.io/hamster-sumo-game/';
 const SELF_URL = IN_FRAME ? PAGES_URL : location.href.split('#')[0];
 const ON_CLOUD = IN_FRAME && !/github\.io$/.test(location.hostname);
