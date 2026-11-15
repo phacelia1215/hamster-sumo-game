@@ -261,6 +261,10 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 }
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
 /* ===== 1画面レイアウト ===== */
+.app[data-view="full"] .stage { display: none; }
+.app[data-view="full"] .layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.app[data-view="full"] .panel { width: 100%; max-width: 760px; margin-inline: auto; }
+.app[data-view="full"] .banzuke > div { padding-block: 6px; }
 html, body { height: 100%; }
 body { overflow: hidden; }
 .app { height: 100%; max-width: 1180px; padding-block: 8px; gap: 8px; display: flex; flex-direction: column; }
@@ -1733,6 +1737,7 @@ function render() {
   if (ph !== 'result' && ph !== 'match') sayEl.textContent = '';
   if (ui.outing && ph === 'home') renderOuting();
   else ({ select: renderSelect, home: renderHome, result: renderResult, banzuke: renderBanzuke })[ph]();
+  $('.app').dataset.view = (ph === 'banzuke' || (ph === 'home' && !ui.outing && ui.tab === 'banzuke')) ? 'full' : '';
   bindSpeed(); renderMenu();
 }
 function statusHtml() {
@@ -1886,7 +1891,7 @@ function renderHome() {
   else if (ui.tab === 'banzuke') body = `<div class="card stack"><h2>${bashoName(state.basho)} 番付</h2>${banzukeHtml(false)}</div>`;
   else if (ui.tab === 'outing') body = outingHtml();
   else body = trainHtml();
-  shell({ tabs, body, dock: dock || dayDock() });
+  shell({ status: ui.tab !== 'shop' && ui.tab !== 'banzuke', tabs, body, dock: dock || dayDock() });
   panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; ui.preview = null; showHome(); render(); }; });
   if (ui.tab === 'shop') bindShop();
   panel.querySelectorAll('.train').forEach(b => {
