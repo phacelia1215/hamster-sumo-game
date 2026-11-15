@@ -1065,18 +1065,37 @@ const SPEEDS = [{ id: 'slow', label: 'ゆっくり', v: .5 }, { id: 'normal', la
 let savedSpeed = 'normal'; try { savedSpeed = localStorage.getItem('hamsumo.speed') || 'normal'; } catch (e) { /* noop */ }
 let ui = { speed: SPEEDS.some(x => x.id === savedSpeed) ? savedSpeed : 'normal', tab: 'train', kind: 'golden', name: pick(MY_NAMES), busy: false, last: null, news: null, resetAsk: false };
 
-/* セーブ：ブラウザに保存（控えはメニューのセーブコード） */
+/* セーブ：ブラウザの2か所（localStorage と IndexedDB）に保存し、ひとつ前の控えも残す。
+   どちらかが消えても、新しいほうから自動で戻す。手動の控えはセーブコードとセーブファイル。 */
+const IDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => { try { const r = indexedDB.open('hamsumo', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }));
+  const run = (mode, fn) => open().then(db => new Promise((res, rej) => { const t = db.transaction('kv', mode), req = fn(t.objectStore('kv')); t.oncomplete = () => res(req ? req.result : null); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); }));
+  return {
+    get: k => run('readonly', st => st.get(k)).catch(() => null),
+    set: (k, v) => run('readwrite', st => st.put(v, k)).catch(() => null),
+    del: k => run('readwrite', st => st.delete(k)).catch(() => null),
+  };
+})();
+let idbTimer = 0, lastBak = 0, persistAsked = false;
 function save() {
   if (!state) return;
   state.savedAt = Date.now();
   const json = JSON.stringify(state);
-  try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* 保存できない環境でも遊べる */ }
+  try {
+    const prev = localStorage.getItem(SAVE_KEY);
+    if (prev && prev !== json && Date.now() - lastBak > 30000) { localStorage.setItem(SAVE_KEY + '.bak', prev); lastBak = Date.now(); }
+    localStorage.setItem(SAVE_KEY, json);
+  } catch (e) { /* 保存できない環境でも遊べる */ }
+  clearTimeout(idbTimer); idbTimer = setTimeout(() => IDB.set('save', json), 300);
+  if (!persistAsked) { persistAsked = true; try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* noop */ } }
 }
+const newerSave = (a, b) => (!a ? b : !b ? a : ((b.savedAt || 0) > (a.savedAt || 0) ? b : a));
 function parseSave(json) {
   try { const s = JSON.parse(json || 'null'); if (s && s.v === 1 && Array.isArray(s.roster) && s.roster.length === N) return migrate(s); } catch (e) { /* noop */ }
   return null;
 }
-function load() { let j = null; try { j = localStorage.getItem(SAVE_KEY); } catch (e) { /* noop */ } return parseSave(j); }
+function load() { let j = null, k = null; try { j = localStorage.getItem(SAVE_KEY); k = localStorage.getItem(SAVE_KEY + '.bak'); } catch (e) { /* noop */ } const main = parseSave(j); return main || parseSave(k); }
 function migrate(s) {
   if (typeof s.money !== 'number') s.money = 120;
   if (typeof s.bond !== 'number') s.bond = 30; if (typeof s.cared !== 'boolean') s.cared = true;
@@ -2717,8 +2736,9 @@ function saveBoxHtml() {
 function renderMenu() {
   const pop = $('#menuPop'); pop.hidden = !ui.menu; $('#menuBtn').setAttribute('aria-expanded', String(!!ui.menu));
   if (!ui.menu) return;
-  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div><p class="sub" style="margin:0">セーブはこのブラウザに自動で保存されます。シークレットウィンドウやブラウザのデータ削除では消えるので、大事なときはセーブコードに書き出しておきましょう。</p>
+  pop.innerHTML = `<b>メニュー</b>${speedHtml()}<div class="snd-row"><span class="lbl sub" style="font-weight:900">音</span><div class="seg"><button data-snd="bgm" aria-pressed="${Sound.pref.bgm}">BGM</button><button data-snd="sfx" aria-pressed="${Sound.pref.sfx}">効果音</button></div></div><p class="sub" style="margin:0">セーブはこのブラウザの2か所に自動で保存され、片方が消えてももう片方から戻ります。シークレットウィンドウ・ブラウザのデータ削除・別の端末では引き継げないので、大事なときはセーブコードかファイルに控えておきましょう。</p>
     <div class="row">${state ? '<button class="btn small" id="exportSave">セーブコードを書き出す</button>' : ''}<button class="btn small" id="importSave">セーブコードを読み込む</button></div>
+    <div class="row">${state && ui.canDownload ? '<button class="btn small" id="fileSave">ファイルに保存</button>' : ''}<label class="btn small" for="fileLoad" style="cursor:pointer">ファイルから読み込む</label><input type="file" id="fileLoad" accept=".txt,.json,text/plain,application/json" hidden></div>
     ${saveBoxHtml()}
     ${state ? (ui.resetAsk ? '<div class="row"><span>セーブを消して最初から始めますか？</span><button class="btn small" id="resetYes">消して始める</button><button class="btn small" id="resetNo">やめる</button></div>' : '<button class="linkbtn" id="resetAsk" style="align-self:flex-start">はじめからやりなおす</button>') : ''}
     <button class="btn small" id="menuClose">閉じる</button>`;
@@ -2728,6 +2748,16 @@ function renderMenu() {
   on('menuClose', () => { ui.menu = false; ui.resetAsk = false; ui.saveBox = null; renderMenu(); });
   on('exportSave', () => { ui.saveBox = { mode: 'export' }; renderMenu(); encodeSave(JSON.stringify(state)).then(code => { if (ui.saveBox && ui.saveBox.mode === 'export') { ui.saveBox.code = code; renderMenu(); } }); });
   on('importSave', () => { ui.saveBox = { mode: 'import' }; renderMenu(); });
+  on('fileSave', async () => {
+    try { const dl = await window.claude.use('downloads'); if (!dl) { ui.canDownload = false; renderMenu(); return; } const code = await encodeSave(JSON.stringify(state)); await dl.save({ filename: `hamster-sumo-save-${new Date().toISOString().slice(0, 10)}.txt`, data: code }); toast('セーブファイルを保存しました'); }
+    catch (e) { if (e && (e.code === 'unavailable' || e.code === 'not_granted' || e.code === 'capability_disabled')) { ui.canDownload = false; renderMenu(); } }
+  });
+  const fl = $('#fileLoad'); if (fl) fl.onchange = async () => {
+    const f = fl.files && fl.files[0]; if (!f) return;
+    let next = null; try { const txt = (await f.text()).trim(); next = parseSave(txt.startsWith('HS1') ? await decodeSave(txt) : txt); } catch (e) { next = null; }
+    if (!next) { ui.saveBox = { mode: 'import', msg: 'このファイルからセーブを読み取れませんでした。', err: true }; renderMenu(); return; }
+    state = next; ui.saveBox = null; ui.menu = false; ui.outing = null; ui.preview = null; ui.tab = 'train'; save(); adoptState(); toast('セーブファイルを読み込みました');
+  };
   on('saveBoxClose', () => { ui.saveBox = null; renderMenu(); });
   on('copyCode', () => {
     const ta = $('#saveCode'), code = ui.saveBox && ui.saveBox.code; if (!code) return;
@@ -2742,7 +2772,7 @@ function renderMenu() {
   });
   on('resetAsk', () => { ui.resetAsk = true; renderMenu(); });
   on('resetNo', () => { ui.resetAsk = false; renderMenu(); });
-  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.menu = false; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; ui.preview = null; showSolo(selectLook(), 'select'); render(); });
+  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_KEY + '.bak'); } catch (e) { /* noop */ } IDB.del('save'); state = null; ui.menu = false; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; ui.preview = null; showSolo(selectLook(), 'select'); render(); });
 }
 
 function renderSelect() {
@@ -3044,6 +3074,7 @@ function renderBanzuke() {
 window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
 function boot() {
+  try { if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d => { ui.canDownload = !!d; if (ui.menu) renderMenu(); }, () => {}); } catch (e) { /* noop */ }
   syncSnd();
   $('#sndBtn').onclick = () => { const on = !(Sound.pref.bgm || Sound.pref.sfx); Sound.setPref('bgm', on); Sound.setPref('sfx', on); Sound.unlock(); syncSnd(); if (ui.menu) renderMenu(); };
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => Sound.unlock(), { capture: true, passive: true }));
@@ -3059,6 +3090,12 @@ function boot() {
   const local = load();
   state = fromHot && (!local || (fromHot.savedAt || 0) >= (local.savedAt || 0)) ? fromHot : local;
   adoptState();
+  // IndexedDB の控えと照らし合わせ：こちらが新しければ戻す／なければ今のセーブを写して引き継ぐ
+  IDB.get('save').then(j => {
+    const mirror = parseSave(j);
+    if (mirror && (!state || (mirror.savedAt || 0) > (state.savedAt || 0))) { state = mirror; ui.outing = null; ui.preview = null; ui.tab = 'train'; try { localStorage.setItem(SAVE_KEY, j); } catch (e) { /* noop */ } adoptState(); toast('セーブを復元しました'); }
+    else if (state) IDB.set('save', JSON.stringify(state));
+  });
   try { const h = window.claude && window.claude.hot; if (h && typeof h.snapshot === 'function') h.snapshot(() => ({ save: state ? JSON.stringify(state) : null })); } catch (e) { /* noop */ }
 }
 function adoptState() {
