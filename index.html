@@ -3095,7 +3095,8 @@ const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { retu
 // Safari（iPhone のブラウザはすべて WebKit）は、ほかのサイトに埋め込まれたページの保存データをブラウザ終了時に消す
 const IS_WEBKIT = /(iPhone|iPad|iPod)/.test(UA) || (/AppleWebKit/.test(UA) && /Safari/.test(UA) && !/(Chrome|Chromium|Edg|OPR|Firefox|Android)/.test(UA));
 const EPHEMERAL = IN_LINE || (IN_FRAME && IS_WEBKIT);
-const SELF_URL = IN_FRAME ? ARTIFACT_URL : location.href.split('#')[0];
+const PAGES_URL = 'https://phacelia1215.github.io/hamster-sumo-game/';
+const SELF_URL = IN_FRAME ? PAGES_URL : location.href.split('#')[0];
 function setupInApp() {
   if (!EPHEMERAL) return;
   const box = $('#inApp'); box.hidden = false;
@@ -3107,7 +3108,8 @@ function setupInApp() {
   } else {
     $('#inAppTitle').textContent = 'ブラウザを閉じるとセーブが消えます';
     $('#inAppText').textContent = 'この表示（Safari などで claude.ai の中に表示されたゲーム）では、ブラウザを終了するとセーブが消えてしまいます。やめる前に「セーブコードを控える」で控えておき、次に遊ぶときに読み込んでください。';
-    $('#inAppNote').textContent = 'セーブコードはメモアプリなどに貼り付けて保存しておくと安心です。';
+    $('#openExt').hidden = false; $('#openExt').href = PAGES_URL; $('#openExt').textContent = 'セーブが消えないページで開く';
+    $('#inAppNote').textContent = '移るときは、先に「セーブコードを控える」で控えて、新しいページで読み込んでください。';
   }
   if (!state) { $('#inAppLoad').hidden = false; $('#inAppCode').hidden = true; $('#inAppClose').textContent = 'はじめから遊ぶ'; }
   $('#inAppLoad').onclick = () => { box.hidden = true; ui.menu = true; ui.saveBox = { mode: 'import' }; renderMenu(); };
