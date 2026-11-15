@@ -224,6 +224,23 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 }
 .dock-vs { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 8px; font-weight: 900; font-size: 14px; text-align: center; }
 .dock-vs .sub { font-weight: 700; }
+/* お出かけ */
+.stage[data-place="park"] { background: linear-gradient(#9fd8ff, #eaf8ff); }
+.stage[data-place="himawari"] { background: linear-gradient(#7fc8ff, #fff3c4); }
+.stage[data-place="umi"] { background: linear-gradient(#4fb0ec, #d9f2ff); }
+.stage[data-place="cafe"] { background: linear-gradient(#ffd3a1, #fff1dc); }
+.stage[data-place="jinja"] { background: linear-gradient(#ffaa80, #ffe7c9); }
+.outs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.out { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 10px; min-height: 76px; min-width: 0; }
+.out b { font-size: 15px; }
+.out span { font-size: 12px; font-weight: 700; color: var(--muted); }
+.out .price { color: var(--kin); font-weight: 900; }
+.out .good { color: var(--aka); font-weight: 900; }
+.offday { display: inline-block; background: var(--kin); color: var(--surface); border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 900; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { background: var(--surface-2); border-radius: 999px; padding: 2px 12px; font-weight: 900; }
+.omikuji { font-family: var(--font-display); font-size: 40px; line-height: 1.1; color: var(--aka); }
+@media (max-width: 879px) { .outs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* 進行スピード */
 .speed { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .speed .lbl { font-size: 13px; font-weight: 900; color: var(--muted); }
@@ -334,6 +351,58 @@ const KESHO = [
   { id: 'tane', name: '種づくし', price: 260, bg: '#2f6b3a' },
   { id: 'kin', name: '金の回し車', price: 400, bg: '#1b1626' },
 ];
+FURS.push(
+  { id: 'lavender', name: 'ラベンダー', price: 220, color: 0xc9b6ec },
+  { id: 'soda', name: 'ソーダ', price: 220, color: 0x9fd8f0 },
+  { id: 'cocoa', name: 'ココア', price: 150, color: 0x6b4a3a },
+);
+MAWASHIS.push(
+  { id: 'yozora', name: '夜空', price: 100, color: 0x232a5c },
+  { id: 'wakatake', name: '若竹', price: 100, color: 0x7fbf4d },
+  { id: 'daidai', name: '橙', price: 100, color: 0xf08a24 },
+  { id: 'gin', name: '銀', price: 220, color: 0xb8bcc8, rough: .3 },
+);
+KESHO.push(
+  { id: 'fuji', name: '富士山', price: 240, bg: '#1f4f8a' },
+  { id: 'nami', name: '青海波', price: 260, bg: '#14365e' },
+  { id: 'mangetsu', name: '満月', price: 320, bg: '#151a33' },
+);
+const ACCS = [
+  { id: 'none', name: 'つけない', price: 0 },
+  { id: 'megane', name: '丸めがね', price: 90, color: 0x6b4320 },
+  { id: 'sangura', name: 'サングラス', price: 140, color: 0x1c1420 },
+  { id: 'chou', name: '蝶ネクタイ', price: 80, color: 0xcf3f36 },
+  { id: 'scarf', name: 'スカーフ', price: 110, color: 0x2c8c9c },
+  { id: 'hana', name: 'ひまわりの髪飾り', price: 130, color: 0xf6c234 },
+  { id: 'medal', name: '金メダル', price: 300, color: 0xe2b23a },
+];
+const OUTFITS = [
+  { id: 'none', name: 'まわしのまま', price: 0 },
+  { id: 'parka', name: 'パーカー', price: 160, type: 'top', color: '#e86a5c', pat: 'plain', hood: true },
+  { id: 'aloha', name: 'アロハシャツ', price: 180, type: 'top', color: '#2fa7a0', pat: 'flower' },
+  { id: 'sailor', name: 'セーラー服', price: 220, type: 'top', color: '#f4f4f8', pat: 'plain', sailor: true },
+  { id: 'overall', name: 'オーバーオール', price: 200, type: 'overall', color: '#3d6fb0', pat: 'plain' },
+  { id: 'yukata', name: '浴衣', price: 260, type: 'robe', color: '#2a3a7a', pat: 'asagao', obi: 0xf2a0b8 },
+  { id: 'raincoat', name: 'レインコート', price: 150, type: 'robe', color: '#f6c234', pat: 'plain', obi: 0xe0a800, hood: true },
+  { id: 'haori', name: '紋付羽織', price: 350, type: 'robe', color: '#1f1a2a', pat: 'mon', obi: 0xe9e4ef },
+];
+const HATS = [
+  { id: 'none', name: 'かぶらない', price: 0 },
+  { id: 'mugiwara', name: '麦わら帽子', price: 120, color: 0xe8c66a },
+  { id: 'beret', name: 'ベレー帽', price: 110, color: 0xcf3f36 },
+  { id: 'knit', name: 'ニット帽', price: 100, color: 0x5b8fd8 },
+  { id: 'cap', name: 'キャップ', price: 90, color: 0x1d7a55 },
+  { id: 'ribbon', name: '大きなリボン', price: 80, color: 0xf2a0b8 },
+  { id: 'hanakanmuri', name: '花かんむり', price: 160, color: 0xf7b6c8 },
+];
+const OUTINGS = [
+  { id: 'park', name: 'こうえん', desc: 'のんびり散歩。元気が回復', cost: 0, energy: 45, stat: ['guts', 1], seeds: [5, 15], likes: ['parka', 'cap', 'overall', 'scarf'] },
+  { id: 'himawari', name: 'ひまわり畑', desc: '種ひろい。種がたくさん', cost: 0, energy: 20, seeds: [25, 45], likes: ['mugiwara', 'overall', 'hana'] },
+  { id: 'umi', name: 'うみ', desc: '砂浜ダッシュ。速さアップ', cost: 0, energy: 25, stat: ['spd', 2], seeds: [0, 10], likes: ['aloha', 'mugiwara', 'sailor', 'sangura'] },
+  { id: 'cafe', name: '商店街のカフェ', desc: '種ケーキで体づくり', cost: 30, energy: 100, stat: ['body', 2], seeds: [0, 0], likes: ['beret', 'sailor', 'megane', 'chou'] },
+  { id: 'jinja', name: '神社', desc: 'お参りとおみくじ', cost: 5, energy: 20, omikuji: true, seeds: [0, 0], likes: ['yukata', 'haori', 'hanakanmuri'] },
+];
+const OFF_DAYS = 3;
 const WIGS = [
   { id: 'auto', name: '番付どおり', tier: 0, note: 'いまの番付' },
   { id: 'none', name: 'カツラなし', tier: 0, note: 'ふわふわ地毛' },
@@ -351,7 +420,11 @@ const SHOP = [
   { cat: 'mawashi', label: 'まわし', items: MAWASHIS },
   { cat: 'kesho', label: '化粧まわし', items: KESHO },
   { cat: 'wig', label: 'カツラ', items: WIGS },
+  { cat: 'acc', label: '小物', items: ACCS },
+  { cat: 'outfit', label: 'お出かけ服', items: OUTFITS },
+  { cat: 'hat', label: '帽子', items: HATS },
 ];
+const OUT_CATS = ['outfit', 'hat'];
 const KENSHO = [8, 12, 16, 20, 25, 32, 40];
 const findIn = (list, id) => list.find(x => x.id === id) || list[0];
 
@@ -381,6 +454,19 @@ function keshoCanvas(id, name) {
     g.strokeStyle = '#e2b23a'; g.lineWidth = 9; g.beginPath(); g.arc(cx, cy, 64, 0, PI2); g.stroke();
     g.lineWidth = 4; for (let i = 0; i < 12; i++) { const a = i / 12 * PI2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * 62, cy + Math.sin(a) * 62); g.stroke(); }
     g.fillStyle = '#f3d27a'; dot(cx, cy, 14);
+  }
+  else if (id === 'fuji') {
+    g.fillStyle = '#e8413a'; dot(170, 54, 26);
+    g.fillStyle = '#6f8fc0'; g.beginPath(); g.moveTo(8, 184); g.lineTo(112, 60); g.lineTo(216, 184); g.closePath(); g.fill();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(112, 60); g.lineTo(84, 94); g.lineTo(98, 88); g.lineTo(112, 100); g.lineTo(126, 88); g.lineTo(140, 94); g.closePath(); g.fill();
+  } else if (id === 'nami') {
+    for (let row = 0; row < 6; row++) for (let i = -1; i < 7; i++) {
+      const x = i * 40 + (row % 2) * 20, y = 30 + row * 30;
+      for (let r = 26, j = 0; r > 4; r -= 7, j++) { g.fillStyle = j % 2 ? '#14365e' : '#7fc6d8'; g.beginPath(); g.arc(x, y, r, Math.PI, 0); g.fill(); }
+    }
+  } else if (id === 'mangetsu') {
+    g.fillStyle = '#ffe9a0'; dot(cx, 84, 54); g.fillStyle = '#f3d27a'; dot(cx - 18, 70, 9); dot(cx + 14, 100, 6);
+    g.fillStyle = '#0b0e1d'; for (let x = 4; x < 240; x += 9) { g.beginPath(); g.moveTo(x, 184); g.lineTo(x + 4, 140 - (x * 7) % 26); g.lineTo(x + 8, 184); g.fill(); }
   }
   g.strokeStyle = '#e2b23a'; g.lineWidth = 8; g.strokeRect(4, 4, 288, 180);
   if (name) {
@@ -460,19 +546,22 @@ function load() {
 }
 function migrate(s) {
   if (typeof s.money !== 'number') s.money = 120;
-  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'] }, s.owned || {});
-  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto' }, s.equip || {});
+  s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'] }, s.owned || {});
+  if (typeof s.off !== 'number') s.off = 0; if (typeof s.outed !== 'boolean') s.outed = false;
+  s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none' }, s.equip || {});
   s.roster.forEach(r => { if (!r.me && !r.kesho) r.kesho = pick(KESHO.slice(1)).id; });
   return s;
 }
 const me = () => state.roster.find(r => r.me);
 const wigUnlocked = W => W.id === 'auto' || W.id === 'none' || W.tier <= rankInfo(state.best).tier;
-function lookOf(r, preview) {
+function lookOf(r, preview, outing) {
   const K = kindOf(r.kind), pos = posOf(r), tier = rankInfo(pos).tier;
   if (!r.me) return { kind: r.kind, mawashi: r.mawashi, wig: WIG_BY_TIER[tier], kesho: pos < 24 ? r.kesho : null, name: r.name, yokozuna: pos < 2, body: r.stats.body };
   const e = Object.assign({}, state.equip, preview || {});
   const F = findIn(FURS, e.fur), M = findIn(MAWASHIS, e.mawashi);
-  return { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body };
+  const L = { kind: r.kind, fur: F.color ?? K.fur, furRough: F.rough, mawashi: M.color, mawashiRough: M.rough, wig: e.wig === 'auto' ? WIG_BY_TIER[tier] : e.wig, kesho: e.kesho === 'none' ? null : e.kesho, name: r.name, yokozuna: pos < 2, body: r.stats.body, acc: e.acc === 'none' ? null : e.acc };
+  if (outing) { L.kesho = null; L.yokozuna = false; L.outfit = e.outfit === 'none' ? null : e.outfit; L.hat = e.hat === 'none' ? null : e.hat; }
+  return L;
 }
 const selectLook = () => ({ kind: ui.kind, mawashi: MAWASHIS[0].color, wig: 'chonmage', body: 12 });
 const posOf = r => state.roster.indexOf(r);
@@ -489,7 +578,7 @@ function newGame(kindId, name) {
     const j = Math.floor(Math.random() * (i + 1)); const t = roster[i].name; roster[i].name = roster[j].name; roster[j].name = t;
   }
   roster.push({ id: 0, me: true, name, kind: K.id, mawashi: MAWASHI[0], stats: { ...K.stats }, w: 0, l: 0, delta: 0 });
-  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1 });
+  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1, off: 2, outed: false });
   pickOpponent(); save();
 }
 function pickOpponent() {
@@ -519,6 +608,23 @@ function train(T) {
   state.actions--; save();
   return (great ? '大成功！ ' : low ? 'へとへと… ' : '') + parts.join(' ');
 }
+function doOuting(O) {
+  const m = me(), e = state.equip, r = { lines: [] };
+  state.money -= O.cost; if (O.cost) r.lines.push(`お代 -${O.cost}粒`);
+  let seeds = Math.floor(rnd(O.seeds[0], O.seeds[1] + 1));
+  if (O.stat) { const [k, v] = O.stat; const b = m.stats[k]; m.stats[k] = Math.min(STAT_MAX, b + v); if (m.stats[k] > b) r.lines.push(`${STAT.find(x => x[0] === k)[1]}+${m.stats[k] - b}`); }
+  if (O.omikuji) {
+    const x = Math.random(), L = x < .15 ? ['大吉', 40, 2] : x < .4 ? ['中吉', 20, 1] : x < .7 ? ['小吉', 10, 1] : x < .9 ? ['吉', 5, 0] : ['凶', 0, 0];
+    r.omikuji = L[0]; seeds += L[1]; if (L[2]) { m.stats.guts = Math.min(STAT_MAX, m.stats.guts + L[2]); r.lines.push(`心+${L[2]}`); }
+  }
+  r.liked = [e.outfit, e.hat, e.acc].some(id => O.likes.includes(id));
+  if (r.liked) seeds += 15;
+  const before = state.energy; state.energy = Math.min(100, state.energy + O.energy + (r.liked ? 10 : 0));
+  if (state.energy > before) r.lines.push(`元気+${state.energy - before}`);
+  if (seeds > 0) { state.money += seeds; r.lines.push(`ひまわりの種 +${seeds}粒`); }
+  state.actions = 0; state.outed = true; save();
+  return r;
+}
 function finishBout(res, opp) {
   const m = me(), win = res.winner === 0;
   if (win) { m.w++; opp.l++; } else { m.l++; opp.w++; }
@@ -531,6 +637,10 @@ function finishBout(res, opp) {
   save();
 }
 function nextDay() {
+  if (state.off > 0) {
+    state.off--; state.outed = false; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 15);
+    state.phase = 'home'; save(); return;
+  }
   if (state.day >= 7) return endBasho();
   state.day++; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 15);
   state.phase = 'home'; pickOpponent(); save();
@@ -563,7 +673,7 @@ function endBasho() {
   state.roster.forEach(r => { r.w = 0; r.l = 0; if (!r.me) STAT.forEach(([k]) => { r.stats[k] = clamp(Math.round(r.stats[k] + rnd(-1.5, 2.2)), 5, STAT_MAX); }); });
   ui.news = news; ui.finished = bashoName(state.basho);
   state.basho++; state.day = 1; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 40);
-  state.faced = []; state.marks = []; state.phase = 'banzuke'; pickOpponent(); save();
+  state.faced = []; state.marks = []; state.phase = 'banzuke'; state.off = OFF_DAYS; state.outed = false; pickOpponent(); save();
 }
 
 /* ================= 3D ================= */
@@ -640,6 +750,89 @@ function initThree() {
     return g;
   }
 
+  /* 小物・お出かけ服・帽子 */
+  const SHELL_TOP = new T.SphereGeometry(1, 28, 16, 0, PI * 2, PI * .17, PI * .5);
+  const SHELL_ROBE = new T.SphereGeometry(1, 28, 20, 0, PI * 2, PI * .17, PI * .83);
+  const SHELL_LOW = new T.SphereGeometry(1, 28, 12, 0, PI * 2, PI * .5, PI * .5);
+  const HAT_CAP = new T.SphereGeometry(1, 28, 12, 0, PI * 2, 0, PI * .42);
+  const clothCache = new Map();
+  function clothTexture(O) {
+    if (clothCache.has(O.id)) return clothCache.get(O.id);
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d'), P2 = PI * 2;
+    const dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, P2); g.fill(); };
+    g.fillStyle = O.color; g.fillRect(0, 0, 256, 128);
+    const spots = [[20, 20], [80, 40], [140, 16], [200, 44], [40, 80], [110, 100], [170, 84], [230, 104], [250, 10]];
+    if (O.pat === 'flower') spots.forEach(([x, y], i) => { g.fillStyle = i % 2 ? '#ffffff' : '#ffd34d'; for (let k = 0; k < 5; k++) { const a = k / 5 * P2; dot(x + Math.cos(a) * 7, y + Math.sin(a) * 7, 6); } g.fillStyle = '#cf3f36'; dot(x, y, 3); });
+    else if (O.pat === 'asagao') spots.forEach(([x, y], i) => { g.fillStyle = '#ffffff'; dot(x, y, 11); g.fillStyle = i % 2 ? '#f2a0b8' : '#8fb8f0'; dot(x, y, 7); g.fillStyle = '#ffffff'; dot(x, y, 2); });
+    else if (O.pat === 'mon') [[64, 40], [192, 40]].forEach(([x, y]) => { g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 10, 0, P2); g.stroke(); g.fillStyle = '#ffffff'; for (let k = 0; k < 3; k++) { const a = k / 3 * P2 - PI / 2; dot(x + Math.cos(a) * 4, y + Math.sin(a) * 4, 3); } });
+    else { g.fillStyle = 'rgba(0,0,0,.06)'; for (let y = 0; y < 128; y += 8) g.fillRect(0, y, 256, 2); }
+    const t = new T.CanvasTexture(c); t.wrapS = T.RepeatWrapping; t.repeat.x = 2; clothCache.set(O.id, t); return t;
+  }
+  function addAcc(id, head, rig) {
+    const A = findIn(ACCS, id), c = A.color;
+    if (id === 'megane' || id === 'sangura') {
+      for (const s of [-1, 1]) {
+        if (id === 'megane') { const ring = new T.Mesh(new T.TorusGeometry(.13, .022, 8, 24), mat(c, .4)); ring.position.set(s * .25, .1, .64); head.add(ring); }
+        else { const lens = new T.Mesh(new T.CylinderGeometry(.15, .15, .03, 20), mat(c, .12)); lens.rotation.x = PI / 2; lens.position.set(s * .25, .1, .66); head.add(lens); }
+      }
+      const br = new T.Mesh(CYL, mat(c, .4)); br.scale.set(.016, .22, .016); br.rotation.z = PI / 2; br.position.set(0, .12, .69); head.add(br);
+    } else if (id === 'chou') {
+      for (const s of [-1, 1]) { const w = new T.Mesh(new T.ConeGeometry(.12, .22, 4), mat(c, .5)); w.rotation.z = s * PI / 2; w.position.set(s * .11, .28, .7); rig.add(w); }
+      rig.add(at(sph(.06, c, 1, 1, 1, .5), 0, .28, .73));
+    } else if (id === 'scarf') {
+      const t = new T.Mesh(new T.TorusGeometry(.56, .1, 10, 30), mat(c, .7)); t.rotation.x = PI / 2; t.position.y = .3; rig.add(t);
+      const tail = new T.Mesh(new T.BoxGeometry(.18, .42, .06), mat(c, .7)); tail.position.set(.22, .08, .72); tail.rotation.z = .2; rig.add(tail);
+    } else if (id === 'hana') {
+      const f = new T.Group(); const pet = new T.Mesh(new T.CylinderGeometry(.17, .17, .03, 14), mat(c, .6)); pet.rotation.x = PI / 2; f.add(pet);
+      const cen = new T.Mesh(new T.CylinderGeometry(.08, .08, .05, 12), mat(0x6b4320, .8)); cen.rotation.x = PI / 2; cen.position.z = .01; f.add(cen);
+      f.position.set(.42, .42, .3); f.rotation.y = .4; head.add(f);
+    } else if (id === 'medal') {
+      for (const s of [-1, 1]) { const rb = new T.Mesh(new T.BoxGeometry(.07, .42, .02), mat(0x1f5fa8, .6)); rb.position.set(s * .1, .14, .77); rb.rotation.z = s * .35; rig.add(rb); }
+      const d = new T.Mesh(new T.CylinderGeometry(.13, .13, .04, 20), mat(c, .25)); d.rotation.x = PI / 2; d.position.set(0, -.06, .8); rig.add(d);
+    }
+  }
+  function addOutfit(id, rig, arms) {
+    const O = findIn(OUTFITS, id), cm = new T.MeshStandardMaterial({ map: clothTexture(O), roughness: .8 }), col = new T.Color(O.color).getHex();
+    const shellOf = geo => { const m = new T.Mesh(geo, cm); m.scale.set(.85, .8, .79); m.castShadow = true; rig.add(m); return m; };
+    if (O.type === 'top') { shellOf(SHELL_TOP); arms.forEach(a => a.add(at(sph(.2, col, 1, .95, 1.05, .8), 0, -.04, .08))); }
+    if (O.type === 'robe') {
+      shellOf(SHELL_ROBE);
+      arms.forEach(a => { const sl = new T.Mesh(new T.BoxGeometry(.3, .44, .36), cm); sl.position.set(0, -.2, .06); sl.castShadow = true; a.add(sl); });
+      const obi = new T.Mesh(new T.TorusGeometry(.8, .11, 10, 36), mat(O.obi, .6)); obi.rotation.x = PI / 2; obi.scale.set(1.04, .97, 1); obi.position.y = -.2; rig.add(obi);
+      if (O.id !== 'raincoat') for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.06, .5, .03), mat(O.id === 'haori' ? 0xe9e4ef : 0xdfe6f5, .7)); lap.position.set(s * .1, .2, .77); lap.rotation.z = s * .5; rig.add(lap); }
+    }
+    if (O.type === 'overall') {
+      shellOf(SHELL_LOW);
+      const bib = new T.Mesh(new T.BoxGeometry(.55, .42, .06), cm); bib.position.set(0, .08, .74); bib.rotation.x = -.15; rig.add(bib);
+      for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.08, .5, .04), cm); st.position.set(s * .22, .38, .6); st.rotation.x = -.6; rig.add(st); rig.add(at(sph(.04, 0xf6c234, 1, 1, 1, .3), s * .2, .26, .79)); }
+    }
+    if (O.hood) rig.add(at(sph(.42, col, 1, .7, .6, .8), 0, .52, -.5));
+    if (O.id === 'parka') for (const s of [-1, 1]) { const st = new T.Mesh(CYL, mat(0xffffff, .6)); st.scale.set(.016, .26, .016); st.position.set(s * .1, .18, .75); rig.add(st); }
+    if (O.sailor) {
+      const col2 = new T.Mesh(new T.BoxGeometry(.95, .55, .05), mat(0x1f2a5c, .7)); col2.position.set(0, .42, -.6); col2.rotation.x = -.5; rig.add(col2);
+      const tie = new T.Mesh(new T.ConeGeometry(.12, .3, 3), mat(0xcf3f36, .6)); tie.rotation.z = PI; tie.position.set(0, .2, .76); rig.add(tie);
+    }
+  }
+  function addHat(id, head) {
+    const Hh = findIn(HATS, id), c = Hh.color, g = new T.Group(); head.add(g);
+    if (id === 'mugiwara') {
+      const brim = new T.Mesh(new T.CylinderGeometry(.92, .92, .04, 32), mat(c, .9)); brim.position.y = .54; brim.castShadow = true; g.add(brim);
+      const crown = new T.Mesh(new T.CylinderGeometry(.42, .5, .36, 24), mat(c, .9)); crown.position.y = .72; g.add(crown);
+      const rib = new T.Mesh(new T.CylinderGeometry(.505, .505, .09, 24), mat(0xcf3f36, .6)); rib.position.y = .6; g.add(rib); g.rotation.x = -.12;
+    } else if (id === 'beret') { g.add(at(sph(.52, c, 1.15, .32, 1.1, .8), .08, .6, -.02)); g.add(at(sph(.05, c, 1, 1.6, 1, .8), .08, .78, 0)); g.rotation.z = -.15; }
+    else if (id === 'knit' || id === 'cap') {
+      const cap = new T.Mesh(HAT_CAP, mat(c, .9)); cap.scale.set(.76, .68, .71); cap.castShadow = true; g.add(cap);
+      if (id === 'knit') { const rib = new T.Mesh(new T.TorusGeometry(.72, .07, 8, 32), mat(c, .9)); rib.rotation.x = PI / 2; rib.scale.set(1.03, .96, 1); rib.position.y = .18; g.add(rib); g.add(at(sph(.15, 0xffffff, 1, 1, 1, .9), 0, .72, -.04)); }
+      else { const brim = new T.Mesh(new T.CylinderGeometry(.42, .42, .04, 24, 1, false, -PI / 2, PI), mat(c, .8)); brim.position.set(0, .24, .48); brim.rotation.x = .12; g.add(brim); g.add(at(sph(.05, 0xffffff, 1, 1, 1, .6), 0, .68, 0)); }
+    } else if (id === 'ribbon') {
+      const bow = new T.Group(); for (const s of [-1, 1]) { const w = sph(.17, c, 1.3, .8, .5, .6); w.position.x = s * .17; w.rotation.z = s * .3; bow.add(w); } bow.add(sph(.07, c, 1, 1, 1, .6));
+      bow.position.set(.3, .56, .12); bow.rotation.z = -.3; g.add(bow);
+    } else if (id === 'hanakanmuri') {
+      const cols = [0xf7b6c8, 0xffffff, 0xf6c234];
+      for (let i = 0; i < 14; i++) { const a = i / 14 * PI * 2; g.add(at(sph(i % 2 ? .07 : .095, i % 2 ? 0x7fbf4d : cols[(i / 2 | 0) % 3], 1, 1, 1, .7), Math.cos(a) * .46, .5, Math.sin(a) * .43)); }
+    }
+  }
+
   function makeHamster(look) {
     const K = kindOf(look.kind), PINK = 0xf6aeb0, FUR = look.fur ?? K.fur, FR = look.furRough, MW = look.mawashi, MR = look.mawashiRough ?? .6;
     const root = new T.Group(), rig = new T.Group(); root.add(rig);
@@ -681,7 +874,10 @@ function initThree() {
     let wig = null;
     H.setWig = id => { if (wig) head.remove(wig); wig = buildWig(id); head.add(wig); };
     H.setKesho = v => { if (kesho) { kesho.visible = v; flap.visible = !v; } };
-    H.setWig(look.wig || 'none'); tsuna.visible = !!look.yokozuna;
+    H.setWig(look.hat ? 'none' : (look.wig || 'none')); tsuna.visible = !!look.yokozuna;
+    if (look.acc) addAcc(look.acc, head, rig);
+    if (look.outfit) { addOutfit(look.outfit, rig, arms); belt.visible = false; flap.visible = false; tsuna.visible = false; }
+    if (look.hat) addHat(look.hat, head);
     H.fat = 1 + Math.min(look.body || 10, STAT_MAX) / 500;
     scene.add(root);
     return H;
@@ -699,7 +895,35 @@ function initThree() {
     let eyeY = H.blink < 0 ? .1 : 1;
     const breathe = Math.sin(t * 2.2);
     switch (H.anim) {
-      case 'idle': r.scale.y = 1 + breathe * .015; r.position.y += breathe * .012; H.head.rotation.z = Math.sin(t * .9) * .05; break;
+      case 'idle': {
+        r.scale.y = 1 + breathe * .015; r.position.y += breathe * .012; H.head.rotation.z = Math.sin(t * .9) * .05;
+        const A = H.act; if (!A) break;
+        const a = t - A.start, k = clamp(a / A.dur, 0, 1), env = Math.sin(k * PI), hx = H.root.position.x, once = (key, fn) => { if (!A[key]) { A[key] = true; fn(); } };
+        switch (A.id) {
+          case 'groom': H.arms.forEach((ar, i) => { ar.rotation.x = -2.3 * Math.min(1, env * 2.5) + Math.sin(a * 16 + i * PI) * .25 * env; ar.rotation.z = (i ? 1 : -1) * .4 * env; }); H.head.rotation.x = .15 * env; if (env > .3) eyeY = .15; break;
+          case 'look': H.head.rotation.y = Math.sin(k * PI * 2) * .7; H.head.rotation.x = -.1 * env; if (k > .2) once('f', () => say3d('？', hx + .6, 2.4, .3, '#5b3a9e')); break;
+          case 'stretch': H.arms.forEach((ar, i) => { ar.rotation.x = -2.9 * env; ar.rotation.z = (i ? 1 : -1) * .35 * env; }); r.scale.y *= 1 + .1 * env; r.scale.x *= 1 - .03 * env; if (env > .4) eyeY = .1; H.head.rotation.x = -.2 * env; if (k > .3) once('f', () => say3d('ふわぁ〜', hx, 2.6, .3, '#7a5cc8')); break;
+          case 'hop': case 'tickle': {
+            const n = A.id === 'hop' ? 2 : 1, hp = Math.abs(Math.sin(k * PI * n));
+            r.position.y += hp * (A.id === 'hop' ? .45 : .35); r.scale.y *= 1 + (hp - .5) * .12; H.arms.forEach((ar, i) => { ar.rotation.x = -1.4 * hp; ar.rotation.z = (i ? 1 : -1) * .3 * hp; }); eyeY = .35;
+            if (A.id === 'tickle') { H.cheeks.forEach(c => c.scale.setScalar(.24 * (1 + .25 * env))); once('f', () => { say3d(pick(['きゅっ!', 'えへへ', 'くすぐったい!', 'ちゅー!']), hx, 2.6, .3, '#cf3f36'); spawn('heart', hx + .5, 2.1, .4, { v: [.3, .7, 0], life: .9, size: .28, pop: true }); }); }
+            else once('f', () => say3d('ぴょん', hx, 2.7, .3, '#1d7a55'));
+            break;
+          }
+          case 'sniff': H.head.rotation.x = -.25 * env + Math.sin(a * 30) * .03 * env; r.rotation.x = -.1 * env; r.position.y += .05 * env; H.arms.forEach(ar => { ar.rotation.x = -1.6 * env; }); if (k > .3) once('f', () => say3d('くんくん', hx + .4, 2.5, .3, '#6a6182')); break;
+          case 'scratch': { const f = H.feet[1]; f.position.y += .55 * env; f.position.x += .2 * env; f.position.z -= .1 * env; f.rotation.z = .8 * env + Math.sin(a * 30) * .2 * env; r.rotation.z = -.2 * env; H.head.rotation.z = .3 * env; if (env > .3) eyeY = .2; break; }
+          case 'spin': r.rotation.y = PI * 2 * ease(k); r.position.y += Math.sin(k * PI) * .2; if (k > .6) once('f', () => say3d('くるりん', hx, 2.6, .3, '#2c8c9c')); break;
+          case 'wave': H.arms[1].rotation.x = -2.6 * Math.min(1, env * 2); H.arms[1].rotation.z = .3 + Math.sin(a * 12) * .4 * env; eyeY = .35; once('f', () => spawn('heart', hx + .6, 2.2, .4, { v: [.2, .6, 0], life: 1, size: .26, pop: true })); break;
+          case 'clap': { const cl = Math.abs(Math.sin(a * 9)); H.arms.forEach((ar, i) => { ar.rotation.x = -1.5; ar.rotation.z = (i ? -1 : 1) * .55 * cl; }); break; }
+          case 'snack': {
+            H.seed.visible = k < .85; H.seed.scale.copy(H.seedBase).multiplyScalar(lerp(1.1, .4, k));
+            H.arms.forEach((ar, i) => { ar.rotation.x = -2.25; ar.rotation.z = (i ? 1 : -1) * .55; });
+            H.head.rotation.x = .08 + Math.abs(Math.sin(a * 14)) * .06; H.cheeks.forEach(c => c.scale.setScalar(.24 * (1 + .35 * k))); eyeY = .55;
+            once('f', () => say3d('もぐもぐ', hx + .6, 2.4, .3, '#b9861a')); break;
+          }
+        }
+        break;
+      }
       case 'shiko': {
         const C = 1.6, p = (t % C) / C, side = Math.floor(t / C) % 2 ? 1 : -1;
         const up = p < .12 ? 0 : p < .5 ? ease((p - .12) / .38) : p < .68 ? 1 : p < .76 ? 1 - Math.pow((p - .68) / .08, 2) : 0;
@@ -820,6 +1044,7 @@ function initThree() {
     else if (kind === 'ring') { g.strokeStyle = '#ffffff'; g.lineWidth = 12; g.beginPath(); g.arc(64, 64, 48, 0, P2); g.stroke(); }
     else if (kind === 'salt') { g.fillStyle = '#ffffff'; dot(64, 64, 30); g.fillStyle = 'rgba(255,255,255,.5)'; dot(64, 64, 50); }
     else if (kind === 'zabuton') { g.fillStyle = '#8a2d6b'; g.fillRect(16, 26, 96, 76); g.strokeStyle = '#5e1d48'; g.lineWidth = 6; g.strokeRect(16, 26, 96, 76); g.fillStyle = '#e2b23a'; [[16, 26], [112, 26], [16, 102], [112, 102]].forEach(([x, y]) => dot(x, y, 10)); }
+    else if (kind === 'butterfly') { g.fillStyle = '#ffb3d1'; g.beginPath(); g.ellipse(40, 46, 28, 22, -.4, 0, P2); g.ellipse(88, 46, 28, 22, .4, 0, P2); g.fill(); g.fillStyle = '#ffd6e6'; g.beginPath(); g.ellipse(46, 86, 18, 16, .3, 0, P2); g.ellipse(82, 86, 18, 16, -.3, 0, P2); g.fill(); g.fillStyle = '#4a3040'; g.fillRect(60, 36, 8, 64); }
     else if (kind === 'spark') { g.fillStyle = '#fff6c4'; g.beginPath(); g.moveTo(64, 4); g.lineTo(74, 54); g.lineTo(124, 64); g.lineTo(74, 74); g.lineTo(64, 124); g.lineTo(54, 74); g.lineTo(4, 64); g.lineTo(54, 54); g.closePath(); g.fill(); }
     const tex = new T.CanvasTexture(c); fxTex.set(kind, tex); return tex;
   }
@@ -949,6 +1174,60 @@ function initThree() {
     return G;
   }
 
+  /* お出かけ先 */
+  const places = {}; let placeId = null;
+  function buildPlace(id) {
+    const g = new T.Group(); g.visible = false; scene.add(g);
+    const ground = (c, w = 44, d = 44, z = 0, y = 0) => { const m = new T.Mesh(new T.PlaneGeometry(w, d), mat(c, 1)); m.rotation.x = -PI / 2; m.position.set(0, y, z); m.receiveShadow = true; g.add(m); return m; };
+    const box = (w, h, d, c, x, y, z, rough = .8) => { const m = new T.Mesh(new T.BoxGeometry(w, h, d), mat(c, rough)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+    const cyl = (r, h, c, x, y, z) => { const m = new T.Mesh(CYL, mat(c, .8)); m.scale.set(r, h, r); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
+    const tree = (x, z, s = 1) => { cyl(.18 * s, 1.6 * s, 0x8a5a3a, x, .8 * s, z); [[0, 2.0, 0, .9], [.55, 1.7, .2, .7], [-.55, 1.75, -.1, .7], [0, 2.5, 0, .6]].forEach(([a, b, c, r]) => g.add(at(sph(r * s, 0x5fae4f, 1, 1, 1, 1), x + a * s, b * s, z + c * s))); };
+    const sunflower = (x, z, h) => { cyl(.05, h, 0x4f8f3a, x, h / 2, z); g.add(at(sph(.2, 0x5fae4f, 1.6, .3, 1, 1), x + .18, h * .5, z)); const d = new T.Mesh(new T.CylinderGeometry(.5, .5, .06, 16), mat(0xf6c234, .8)); d.rotation.x = PI / 2 - .2; d.position.set(x, h, z); g.add(d); const c = new T.Mesh(new T.CylinderGeometry(.24, .24, .08, 14), mat(0x6b4320, .9)); c.rotation.x = PI / 2 - .2; c.position.set(x, h, z + .03); g.add(c); };
+    if (id === 'park') {
+      ground(0x9fd27a); ground(0xe6d3a3, 3, 44, 0, .01).rotation.z = .25;
+      tree(-4.2, -3); tree(4.6, -4, 1.2); tree(-6.5, -7.5, 1.4); tree(2, -8.5, 1.2); tree(7.5, -1.5, .9);
+      box(2.2, .12, .6, 0xa0703f, 3.2, .7, -.6); box(.12, .7, .5, 0x4a4048, 2.3, .35, -.6); box(.12, .7, .5, 0x4a4048, 4.1, .35, -.6); box(2.2, .5, .1, 0xa0703f, 3.2, 1.1, -.9);
+      for (let i = 0; i < 26; i++) g.add(at(sph(.09, [0xf7b6c8, 0xffffff, 0xf6c234, 0xc9b6ec][i % 4], 1, 1, 1, .8), Math.sin(i * 7.3) * 7, .08, -1.5 - (i * 1.7) % 6));
+    } else if (id === 'himawari') {
+      ground(0x9bc46a);
+      for (let row = 0; row < 4; row++) for (let i = -7; i <= 7; i++) { const x = i * 1.1 + (row % 2) * .55, z = -2.2 - row * 1.4; if (Math.abs(x) < .9 && row === 0) continue; sunflower(x, z, 2.0 + Math.sin(i * 3.1 + row) * .35 + row * .2); }
+      for (const x of [-3.6, -2.6, 2.7, 3.8]) sunflower(x, .4, 1.7 + Math.random() * .3);
+    } else if (id === 'umi') {
+      ground(0xf3dfa8);
+      const sea = new T.Mesh(new T.PlaneGeometry(60, 30), mat(0x4fb6e0, .25)); sea.rotation.x = -PI / 2; sea.position.set(0, .03, -17.5); g.add(sea);
+      const foam = box(60, .05, .5, 0xffffff, 0, .05, -2.6, .6);
+      cyl(.05, 2.4, 0xffffff, 3.6, 1.2, -.6);
+      const um = new T.Mesh(new T.ConeGeometry(1.5, .6, 12), mat(0xe8413a, .6)); um.position.set(3.6, 2.5, -.6); um.castShadow = true; g.add(um);
+      cyl(.5, .4, 0xe9d29a, -3.4, .2, .2); cyl(.32, .4, 0xe9d29a, -3.4, .6, .2); cyl(.18, .35, 0xe9d29a, -3.4, .95, .2);
+      g.userData.update = t => { foam.position.z = -2.6 + Math.sin(t * 1.4) * .35; };
+    } else if (id === 'cafe') {
+      ground(0xd9cbb8);
+      box(14, 5, .5, 0xf3e3c3, 0, 2.5, -4.2); box(3, 2.2, .1, 0xbfe6ff, -2.6, 1.6, -3.9, .2); box(1.3, 2.4, .1, 0x8a5a3a, 1.8, 1.2, -3.9);
+      const c = document.createElement('canvas'); c.width = 256; c.height = 32; const cg = c.getContext('2d'); for (let i = 0; i < 16; i++) { cg.fillStyle = i % 2 ? '#ffffff' : '#cf3f36'; cg.fillRect(i * 16, 0, 16, 32); }
+      const aw = new T.Mesh(new T.BoxGeometry(8, .15, 1.4), new T.MeshStandardMaterial({ map: new T.CanvasTexture(c), roughness: .8 })); aw.position.set(0, 3.3, -3.4); aw.rotation.x = .25; g.add(aw);
+      const sc = document.createElement('canvas'); sc.width = 256; sc.height = 96; const sg = sc.getContext('2d'); sg.fillStyle = '#2a2140'; sg.fillRect(0, 0, 256, 96); sg.fillStyle = '#f3d27a'; sg.font = '900 44px "Zen Maru Gothic", sans-serif'; sg.textAlign = 'center'; sg.textBaseline = 'middle'; sg.fillText('カフェ たね', 128, 50);
+      const sign = new T.Mesh(new T.PlaneGeometry(2.4, .9), new T.MeshStandardMaterial({ map: new T.CanvasTexture(sc) })); sign.position.set(0, 4.2, -3.9); g.add(sign);
+      cyl(.08, .9, 0x4a4048, 1.7, .45, .6); const top = new T.Mesh(new T.CylinderGeometry(.7, .7, .06, 24), mat(0xffffff, .5)); top.position.set(1.7, .92, .6); top.castShadow = true; g.add(top);
+      cyl(.26, .14, 0xfff3dc, 1.7, 1.02, .6); cyl(.26, .12, 0xf2a0b8, 1.7, 1.15, .6); g.add(at(sph(.08, 0xe8413a, 1, 1, 1, .4), 1.7, 1.28, .6));
+    } else if (id === 'jinja') {
+      ground(0xd8d2c4); ground(0xbfb7a6, 2.2, 44, 0, .01);
+      for (const x of [-1.7, 1.7]) cyl(.16, 3.3, 0xd8343a, x, 1.65, -3.2);
+      box(4.6, .26, .45, 0x1c1420, 0, 3.4, -3.2); box(4.2, .22, .35, 0xd8343a, 0, 3.15, -3.2); box(3.8, .18, .22, 0xd8343a, 0, 2.6, -3.2);
+      box(4.2, 2.0, 3, 0xc9a676, 0, 1, -8); const roof = new T.Mesh(new T.ConeGeometry(3.6, 1.6, 4), mat(0x3a3340, .7)); roof.rotation.y = PI / 4; roof.position.set(0, 2.8, -8); roof.castShadow = true; g.add(roof);
+      for (const x of [-3.2, 3.2]) { box(.5, .9, .5, 0x9a958c, x, .45, -1.4); box(.7, .35, .7, 0x9a958c, x, 1.05, -1.4); box(.8, .15, .8, 0x8a857c, x, 1.3, -1.4); }
+      box(1.0, .5, .55, 0x8a5a3a, 0, .25, -2.0);
+    }
+    places[id] = g; return g;
+  }
+  function showPlace(id) {
+    dohyo.visible = false; Object.values(places).forEach(g => { g.visible = false; });
+    (places[id] || buildPlace(id)).visible = true; placeId = id; stageEl.dataset.place = id;
+  }
+  function showDohyo() { dohyo.visible = true; Object.values(places).forEach(g => { g.visible = false; }); placeId = null; delete stageEl.dataset.place; }
+  const ACT_DUR = { groom: 1.8, look: 2.0, stretch: 1.7, hop: 1.1, sniff: 1.4, scratch: 1.5, spin: 1.2, wave: 1.5, snack: 2.2, tickle: 1.0, clap: 1.6 };
+  const IDLE_ACTS = ['groom', 'look', 'stretch', 'hop', 'sniff', 'scratch', 'spin', 'wave', 'snack'];
+  function startAct(H, id) { H.anim = 'idle'; H.act = { id, start: H.t, dur: ACT_DUR[id] }; }
+
   function endTraining() {
     const tr = api.training; if (!tr) return; api.training = null;
     tr.def.cleanup && tr.def.cleanup(tr);
@@ -958,7 +1237,7 @@ function initThree() {
   function startTraining(id, great) {
     endTraining();
     const H = api.solo, def = TRAIN_FX[id]; if (!H || !def) return 0;
-    H.anim = id; H.t = 0; H.ex = { rx: 0, rz: 0, y: 0, z: 0 }; H.root.position.set(0, 0, 0); H.root.quaternion.identity();
+    H.act = null; H.anim = id; H.t = 0; H.ex = { rx: 0, rz: 0, y: 0, z: 0 }; H.root.position.set(0, 0, 0); H.root.quaternion.identity();
     const tr = { id, def, H, t: 0, data: {}, ev: [] };
     def.setup && def.setup(tr);
     tr.ev = def.events ? def.events(tr) : [];
@@ -978,8 +1257,9 @@ function initThree() {
   const cam = { pos: new T.Vector3(0, 2.7, 8.6), look: new T.Vector3(0, 1.25, 0), tp: new T.Vector3(0, 2.7, 8.6), tl: new T.Vector3(0, 1.25, 0) };
   const api = { speed: 1, makeHamster, actors, pole, wheel, cam, mode: 'home', yaw: 0, shake: 0, solo: null, tweens: [], skip: false, training: null, spawn, say3d, dustRing, starBurst, sweat };
   api.startTraining = startTraining; api.makeGyoji = makeGyoji; api.follow = null;
+  api.showPlace = showPlace; api.startAct = startAct; api.sprite = sprite; api.scene = scene; api.extras = [];
   api.camTo = (p, l) => { cam.tp.set(...p); cam.tl.set(...l); };
-  api.clear = () => { endTraining(); api.follow = null; actors.splice(0).forEach(h => scene.remove(h.root)); api.solo = null; pole.visible = false; wheel.visible = false; };
+  api.clear = () => { endTraining(); showDohyo(); api.extras.splice(0).forEach(o => scene.remove(o)); api.follow = null; actors.splice(0).forEach(h => scene.remove(h.root)); api.solo = null; pole.visible = false; wheel.visible = false; };
   api.setCam = (mode, instant) => {
     if (mode === 'match') { cam.tp.set(0, 3.9, 11.2); cam.tl.set(0, 1.0, 0); } else { cam.tp.set(0, 2.7, 8.6); cam.tl.set(0, 1.25, 0); }
     if (instant) { cam.pos.copy(cam.tp); cam.look.copy(cam.tl); }
@@ -991,7 +1271,10 @@ function initThree() {
   let drag = null; const cv = renderer.domElement;
   cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, yaw: api.yaw }; });
   window.addEventListener('pointermove', e => { if (drag) api.yaw = drag.yaw + (e.clientX - drag.x) * .012; });
-  window.addEventListener('pointerup', () => { drag = null; });
+  window.addEventListener('pointerup', e => {
+    if (drag && Math.abs(e.clientX - drag.x) < 6 && api.solo && !api.training && api.mode !== 'match' && api.solo.anim === 'idle') startAct(api.solo, 'tickle');
+    drag = null;
+  });
 
   function resize() { const w = stageEl.clientWidth, h = stageEl.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stageEl); resize();
@@ -1004,6 +1287,12 @@ function initThree() {
       if (k >= 1) { api.tweens.splice(i, 1); tw.res(); }
     }
     if (api.solo && !api.training) { if (!drag && api.mode === 'select') api.yaw += dt * .5; api.solo.root.rotation.y = api.yaw; }
+    const S = api.solo;
+    if (S && !api.training && S.anim === 'idle' && api.mode !== 'match') {
+      if (S.act && S.t - S.act.start > S.act.dur) { S.act = null; S.nextAct = rnd(2.5, 6); }
+      if (!S.act) { S.nextAct = (S.nextAct ?? rnd(1.2, 2.5)) - dt; if (S.nextAct <= 0) startAct(S, pick(IDLE_ACTS)); }
+    }
+    if (placeId && places[placeId].userData.update) places[placeId].userData.update(time);
     stepTraining(dt);
     actors.forEach(h => pose(h, dt));
     updateFx(dt);
@@ -1026,7 +1315,7 @@ function showSolo(look, mode) {
   const H = three.makeHamster(look);
   three.actors.push(H); three.solo = H; three.setCam('home');
 }
-function showHome() { showSolo(lookOf(me(), ui.preview ? { [ui.preview.cat]: ui.preview.id } : null), 'home'); }
+function showHome() { const outView = ui.tab === 'shop' && OUT_CATS.includes(ui.shopCat); showSolo(lookOf(me(), ui.preview ? { [ui.preview.cat]: ui.preview.id } : null, outView), 'home'); }
 function playTraining(id, great) { if (!three || !three.solo) return 300; return Math.round(three.startTraining(id, great) * 1000 / three.speed) || 300; }
 function toast(text) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = text; stageEl.appendChild(d); setTimeout(() => d.remove(), 2000); }
 function sayLine(text) { sayEl.innerHTML = `<span>${esc(text)}</span>`; logLine(text); }
@@ -1199,10 +1488,11 @@ function render() {
   const ph = state ? state.phase : 'select';
   $('#mastInfo').textContent = state ? `優勝 ${state.yusho}回 ・ 最高位 ${rankInfo(state.best).short}` : '';
   tagEl.hidden = !state || ph === 'banzuke';
-  if (state) tagEl.textContent = `${bashoName(state.basho)} ${DAYS[state.day - 1]}`;
+  if (state) tagEl.textContent = state.off > 0 ? `${bashoName(state.basho)}まで あと${state.off}日・休み` : `${bashoName(state.basho)} ${DAYS[state.day - 1]}`;
   if (ph !== 'result') bigEl.hidden = true;
   if (ph !== 'result' && ph !== 'match') sayEl.textContent = '';
-  ({ select: renderSelect, home: renderHome, result: renderResult, banzuke: renderBanzuke })[ph]();
+  if (ui.outing && ph === 'home') renderOuting();
+  else ({ select: renderSelect, home: renderHome, result: renderResult, banzuke: renderBanzuke })[ph]();
   renderReset();
 }
 function renderReset() {
@@ -1214,7 +1504,7 @@ function renderReset() {
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
   on('resetAsk', () => { ui.resetAsk = true; renderReset(); });
   on('resetNo', () => { ui.resetAsk = false; renderReset(); });
-  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.resetAsk = false; ui.tab = 'train'; showSolo(selectLook(), 'select'); render(); });
+  on('resetYes', () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ } state = null; ui.resetAsk = false; ui.tab = 'train'; ui.outing = null; showSolo(selectLook(), 'select'); render(); });
 }
 
 function renderSelect() {
@@ -1243,6 +1533,83 @@ function whoCard() {
     <div class="stat5">${STAT.map(([k, l]) => `<div class="st5"><span>${l}</span><b>${m.stats[k]}</b><i><u style="width:${clamp(m.stats[k] / STAT_MAX * 100, 0, 100)}%"></u></i></div>`).join('')}</div>
   </div>`;
 }
+function outingCardHtml() {
+  const e = state.equip, wear = [findIn(OUTFITS, e.outfit).name, findIn(HATS, e.hat).id === 'none' ? '' : findIn(HATS, e.hat).name, findIn(ACCS, e.acc).id === 'none' ? '' : findIn(ACCS, e.acc).name].filter(Boolean).join('・');
+  return `<div class="card stack">
+    <div class="row between"><h2 style="margin:0">お出かけ</h2><span class="sub">${state.outed ? 'きょうはもう出かけた' : '休みの日に1回'}</span></div>
+    <div class="outs">${OUTINGS.map(O => { const liked = [e.outfit, e.hat, e.acc].some(id => O.likes.includes(id));
+      return `<button class="btn out" data-out="${O.id}" ${state.outed || ui.busy || state.money < O.cost ? 'disabled' : ''}><b>${O.name}</b><span>${O.desc}</span><span class="${O.cost ? 'price' : ''}">${O.cost ? `${O.cost}粒` : '無料'}${liked ? '<span class="good"> ・服がぴったり</span>' : ''}</span></button>`; }).join('')}</div>
+    <p class="sub">いまの服装：${esc(wear)}。行き先に合う服・帽子・小物で行くとボーナス。お出かけするとその日の稽古はおしまいです。</p>
+  </div>`;
+}
+async function startOuting(O) {
+  if (!O || state.outed || state.money < O.cost || ui.busy) return;
+  const r = doOuting(O); ui.outing = { O, r, done: false }; ui.preview = null; render();
+  await animateOuting(O, r);
+  if (ui.outing) { ui.outing.done = true; render(); }
+}
+function renderOuting() {
+  const { O, r, done } = ui.outing;
+  tagEl.hidden = false; tagEl.textContent = `お出かけ：${O.name}`;
+  panel.innerHTML = whoCard() + (done ? `<div class="card stack">
+      <h2>${O.name}で楽しんだ！</h2>
+      ${r.omikuji ? `<div class="omikuji">${r.omikuji}</div>` : ''}
+      ${r.liked ? '<p class="purse">服が行き先にぴったり！ボーナス</p>' : ''}
+      <div class="chips">${r.lines.map(l => `<span>${esc(l)}</span>`).join('')}</div>
+      <p class="sub">ハムスターをタップすると反応します。</p>
+    </div><div class="dock"><button class="btn primary wide" id="goHome">部屋に帰る</button></div>`
+    : `<div class="card stack"><h2>${O.name}へお出かけ中…</h2><ul class="log" id="log" aria-live="polite"></ul>${speedHtml()}</div>`);
+  if (!done) { logEl = $('#log'); bindSpeed(); }
+  const gh = $('#goHome'); if (gh) gh.onclick = () => { ui.outing = null; if (three) showHome(); render(); };
+}
+async function animateOuting(O, r) {
+  if (!three) return;
+  const PI = Math.PI, m = me(), { tween, wait, spawn, say3d, starBurst, dustRing, camTo } = three;
+  three.clear(); three.mode = 'outing'; three.skip = false; three.showPlace(O.id);
+  const H = three.makeHamster(lookOf(m, null, true)); three.actors.push(H);
+  camTo([0, 2.6, 9.6], [0, 1.2, 0]); three.cam.pos.set(-3, 3.2, 11.5);
+  H.root.position.x = -4.6; H.root.rotation.y = PI / 2; H.anim = 'walk';
+  sayLine(`${m.name}、${O.name}へおでかけ！`);
+  await tween(1.7, k => { H.root.position.x = lerp(-4.6, 0, k); });
+  H.anim = 'idle'; await tween(.3, k => { H.root.rotation.y = lerp(PI / 2, 0, k); });
+  const act = (id, dur) => { three.startAct(H, id); return wait(dur ?? 1.4); };
+  if (O.id === 'park') {
+    sayLine('ちょうちょだ！'); say3d('ちょうちょだ!', 0, 2.9, .3, '#1d7a55');
+    const bs = [0, 1].map(() => { const b = three.sprite('butterfly'); b.scale.set(.38, .38, 1); three.scene.add(b); three.extras.push(b); return b; });
+    const fly = tween(3.0, k => bs.forEach((b, i) => { const a = k * PI * 4 + i * PI; b.position.set(Math.cos(a) * 1.3, 2.0 + Math.sin(a * 2) * .3 + i * .25 + k * (k > .8 ? 4 : 0), Math.sin(a) * 1.0 + .5); b.material.rotation = Math.sin(k * 60) * .3; }));
+    await act('look', 1.6); await act('hop', 1.1); await fly;
+    await act('wave', 1.3);
+  } else if (O.id === 'himawari') {
+    sayLine('種がいっぱい落ちてる！');
+    for (let i = 0; i < 18; i++) spawn('shell', (Math.random() - .5) * 4, 3 + Math.random() * 1.5, Math.random() * .8, { v: [0, -.5, 0], g: 2.5, life: 1.4, size: .16, spin: (Math.random() - .5) * 8, fade: .8 });
+    H.anim = 'eat'; H.t = 0; await wait(3.0); H.anim = 'idle';
+    say3d('ほっぺパンパン!', 0, 2.9, .3, '#b9861a');
+  } else if (O.id === 'umi') {
+    sayLine('砂浜ダッシュ！'); H.anim = 'walk';
+    const run = async (from, to, rot) => { H.root.rotation.y = rot; await tween(1.0, k => { H.root.position.x = lerp(from, to, k); if (Math.random() < .25) spawn('sweat', H.root.position.x, .3, .2, { v: [(Math.random() - .5), 1.4, .4], g: 5, life: .6, size: .16 }); }); };
+    await run(0, 2.6, PI / 2); say3d('ざっぶーん!', 2.6, 2.6, .3, '#1f5fa8'); for (let i = 0; i < 10; i++) spawn('sweat', 2.6, .4, -.3, { v: [(Math.random() - .5) * 2.4, 2 + Math.random() * 1.5, (Math.random() - .5)], g: 6, life: .8, size: .2 });
+    await run(2.6, -2.4, -PI / 2); await run(-2.4, 0, PI / 2);
+    H.anim = 'idle'; H.root.rotation.y = 0; await act('stretch', 1.6);
+  } else if (O.id === 'cafe') {
+    sayLine('ひまわりの種ケーキをいただきます！'); H.root.rotation.y = PI / 3; say3d('いただきます!', 0, 2.9, .3, '#cf3f36');
+    H.anim = 'eat'; H.t = 0; await wait(3.0); H.anim = 'idle'; H.root.rotation.y = 0;
+    spawn('heart', .5, 2.2, .4, { v: [.2, .6, 0], life: 1, size: .3, pop: true }); say3d('しあわせ〜', 0, 2.9, .3, '#cf3f36'); await wait(.6);
+  } else if (O.id === 'jinja') {
+    sayLine('二礼二拍手一礼…'); await tween(.4, k => { H.root.rotation.y = lerp(0, PI, k); });
+    H.anim = 'bow'; H.t = 0; await wait(.8); H.anim = 'idle';
+    say3d('パンパン!', 0, 2.8, .3); await act('clap', 1.6);
+    H.anim = 'bow'; H.t = 0; await wait(.8); H.anim = 'idle';
+    await tween(.4, k => { H.root.rotation.y = lerp(PI, 0, k); });
+    sayLine(`おみくじは…${r.omikuji}！`);
+    spawn(`txt:${r.omikuji}!:${r.omikuji === '凶' ? '#5b3a9e' : '#cf3f36'}`, 0, 3.0, .3, { life: 2.2, size: 1.1, pop: true, fade: .8 });
+    if (r.omikuji === '凶') { H.anim = 'down'; await wait(1.0); H.anim = 'idle'; say3d('ころりん…', 0, 2.4, .3, '#5b3a9e'); }
+    else { starBurst(0, 1.8, .4, 10); await wait(.6); }
+  }
+  if (r.liked) { say3d('その服、似合ってる!', 0, 3.3, .3, '#b9861a'); spawn('heart', -.6, 2.2, .4, { v: [-.2, .6, 0], life: 1, size: .3, pop: true }); }
+  H.anim = 'win'; H.t = 0; starBurst(0, 1.6, .5, 6); dustRing(0, 0, 5, .5);
+  await wait(1.2);
+  H.anim = 'idle'; three.solo = H; three.yaw = 0;
+}
 function renderHome() {
   const m = me(), opp = byId(state.oppId), oi = rankInfo(posOf(opp));
   const tabs = `<div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="train" aria-selected="${ui.tab === 'train'}">稽古と取組</button><button class="tab" role="tab" data-tab="banzuke" aria-selected="${ui.tab === 'banzuke'}">番付表</button><button class="tab" role="tab" data-tab="shop" aria-selected="${ui.tab === 'shop'}">着せ替え</button></div>`;
@@ -1255,14 +1622,17 @@ function renderHome() {
     <div class="trains">${TRAININGS.map(T => `<button class="btn train" data-train="${T.id}" ${state.actions <= 0 || ui.busy || state.energy < T.cost ? 'disabled' : ''}><b>${T.name}</b><span>${T.note}</span><span>${T.cost ? `元気-${T.cost}` : '元気回復'}</span></button>`).join('')}</div>
     <p class="sub">元気が30を切ると稽古の効果が半分に。取組の調子にもひびきます。</p>
     ${speedHtml()}
-  </div>`;
-  const dock = `<div class="dock">
+  </div>${state.off > 0 ? outingCardHtml() : ''}`;
+  const dock = state.off > 0 ? `<div class="dock">
+    <div class="dock-vs"><span class="offday">休みの日</span><span>${bashoName(state.basho)}まで あと${state.off}日</span></div>
+    <button class="btn primary wide" id="nextDayBtn" ${ui.busy ? 'disabled' : ''}>${state.off > 1 ? '次の日へ' : `${BASHO[(state.basho - 1) % 6]}の初日へ`}</button>
+  </div>` : `<div class="dock">
     <div class="dock-vs"><span>${DAYS[state.day - 1]}の取組</span><span>${esc(m.name)} 対 ${esc(opp.name)}</span><span class="sub">（${oi.label}・${opp.w}勝${opp.l}敗）</span></div>
     <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>
   </div>`;
   panel.innerHTML = whoCard() + tabs + body + dock;
   bindSpeed();
-  panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; if (ui.preview) { ui.preview = null; showHome(); } render(); }; });
+  panel.querySelectorAll('.tab').forEach(b => { b.onclick = () => { ui.tab = b.dataset.tab; ui.preview = null; showHome(); render(); }; });
   if (ui.tab === 'shop') bindShop();
   panel.querySelectorAll('.train').forEach(b => {
     b.onclick = () => {
@@ -1273,6 +1643,8 @@ function renderHome() {
     };
   });
   const go = $('#goBout'); if (go) go.onclick = startBout;
+  const nd = $('#nextDayBtn'); if (nd) nd.onclick = () => { nextDay(); if (three) showHome(); render(); };
+  panel.querySelectorAll('[data-out]').forEach(b => { b.onclick = () => startOuting(OUTINGS.find(o => o.id === b.dataset.out)); });
 }
 
 function itemStatus(cat, it) {
@@ -1287,6 +1659,7 @@ function swatchHtml(cat, it) {
   if (cat === 'fur') return `<span class="sw" style="background:${hex(it.color ?? kindOf(m.kind).fur)}"></span>`;
   if (cat === 'mawashi') return `<span class="sw belt" style="background:${hex(it.color)}"></span>`;
   if (cat === 'kesho') return it.id === 'none' ? '<span class="sw apron empty"></span>' : `<span class="sw apron" style="background-image:url(${keshoThumb(it.id, m.name)})"></span>`;
+  if (cat === 'acc' || cat === 'outfit' || cat === 'hat') { if (it.id === 'none') return '<span class="sw empty"></span>'; return `<span class="sw" style="background:${typeof it.color === 'string' ? it.color : hex(it.color)}"></span>`; }
   if (it.id === 'auto') return '<span class="sw empty">番</span>';
   if (it.id === 'none') return '<span class="sw empty"></span>';
   return `<span class="sw" style="background:${hex(0x1c1420)};box-shadow:inset 0 0 0 ${it.pins ? 7 : 5}px ${hex(it.tie || 0x1c1420)}"></span>`;
@@ -1306,12 +1679,12 @@ function shopHtml() {
     <div class="items">${S.items.map(it => { const st = itemStatus(S.cat, it), on = P ? P.cat === S.cat && P.id === it.id : state.equip[S.cat] === it.id;
       return `<button class="item${st.locked ? ' locked' : ''}" data-id="${it.id}" aria-pressed="${on}">${swatchHtml(S.cat, it)}<b>${esc(it.name)}</b><span class="st ${st.cls}">${st.t}</span></button>`; }).join('')}</div>
     ${tryon}
-    <p class="sub">${S.cat === 'wig' ? 'カツラは番付が上がるたびに解禁されます。一度解禁したものはいつでも着られます。' : '取組に勝つと懸賞としてひまわりの種がもらえます。持っていないものはタップで試着できます。'}</p>
+    <p class="sub">${({ wig: 'カツラは番付が上がるたびに解禁されます。一度解禁したものはいつでも着られます。', acc: '小物は取組でもお出かけでも身につけます。', outfit: 'お出かけ服は休みの日のお出かけで着ます。行き先に合う服だとボーナスがもらえます。', hat: '帽子はお出かけのときにかぶります（カツラの上から）。' })[S.cat] || '取組に勝つと懸賞としてひまわりの種がもらえます。持っていないものはタップで試着できます。'}</p>
   </div>`;
 }
 function bindShop() {
   const cat = ui.shopCat || 'fur', S = SHOP.find(x => x.cat === cat);
-  panel.querySelectorAll('.cat').forEach(b => { b.onclick = () => { ui.shopCat = b.dataset.cat; if (ui.preview) { ui.preview = null; showHome(); } render(); }; });
+  panel.querySelectorAll('.cat').forEach(b => { b.onclick = () => { ui.shopCat = b.dataset.cat; ui.preview = null; showHome(); render(); }; });
   panel.querySelectorAll('.item').forEach(b => {
     b.onclick = () => {
       const it = findIn(S.items, b.dataset.id), st = itemStatus(cat, it);
