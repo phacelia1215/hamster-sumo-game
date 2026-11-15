@@ -1484,8 +1484,11 @@ function initThree() {
     else { g.fillStyle = 'rgba(0,0,0,.06)'; for (let y = 0; y < 128; y += 8) g.fillRect(0, y, 256, 2); }
     const t = new T.CanvasTexture(c); t.wrapS = T.RepeatWrapping; t.repeat.x = 2; clothCache.set(O.id, t); return t;
   }
-  function addAcc(id, head, rig) {
+  function addAcc(id, head, rig, hull) {
     const A = findIn(ACCS, id), c = A.color;
+    const ring = (Y, tube, col, rough = .7) => { const h = hull(Y), R = (h.rx + h.rz) / 2 + tube * .6; const t = new T.Mesh(new T.TorusGeometry(1, tube / R, 10, 40), mat(col, rough)); t.rotation.x = PI / 2; t.scale.set(h.rx + tube * .6, h.rz + tube * .6, 1); t.position.y = Y; rig.add(t); return t; };
+    const front = (y, off) => hull(y).fz + off;
+    const beads = (Y, drop, n, r, cols, off) => { for (let i = 0; i < n; i++) { const a = i / n * PI * 2, sa = Math.sin(a), y = Y - Math.max(0, sa) * drop, h = hull(y); rig.add(at(sph(r, cols[i % cols.length], 1, 1, 1, .4), Math.cos(a) * (h.rx + off), y, sa * ((sa > 0 ? h.fz : h.rz) + off))); } };
     if (id === 'megane' || id === 'sangura') {
       for (const s of [-1, 1]) {
         if (id === 'megane') { const ring = new T.Mesh(new T.TorusGeometry(.13, .022, 8, 24), mat(c, .4)); ring.position.set(s * .25, .1, .64); head.add(ring); }
@@ -1493,39 +1496,41 @@ function initThree() {
       }
       const br = new T.Mesh(CYL, mat(c, .4)); br.scale.set(.016, .22, .016); br.rotation.z = PI / 2; br.position.set(0, .12, .69); head.add(br);
     } else if (id === 'chou') {
-      for (const s of [-1, 1]) { const w = new T.Mesh(new T.ConeGeometry(.12, .22, 4), mat(c, .5)); w.rotation.z = s * PI / 2; w.position.set(s * .11, .28, .7); rig.add(w); }
-      rig.add(at(sph(.06, c, 1, 1, 1, .5), 0, .28, .73));
+      const z = front(.3, .05); for (const s of [-1, 1]) { const w = new T.Mesh(new T.ConeGeometry(.12, .22, 4), mat(c, .5)); w.rotation.z = s * PI / 2; w.position.set(s * .11, .3, z); rig.add(w); }
+      rig.add(at(sph(.06, c, 1, 1, 1, .5), 0, .3, z + .03));
     } else if (id === 'scarf') {
-      const t = new T.Mesh(new T.TorusGeometry(.56, .1, 10, 30), mat(c, .7)); t.rotation.x = PI / 2; t.position.y = .3; rig.add(t);
-      const tail = new T.Mesh(new T.BoxGeometry(.18, .42, .06), mat(c, .7)); tail.position.set(.22, .08, .72); tail.rotation.z = .2; rig.add(tail);
+      ring(.48, .075, c);
+      const tail = new T.Mesh(new T.BoxGeometry(.18, .42, .06), mat(c, .7)); tail.position.set(.22, .12, front(.12, .05)); tail.rotation.z = .2; rig.add(tail);
     } else if (id === 'hana') {
       const f = new T.Group(); const pet = new T.Mesh(new T.CylinderGeometry(.17, .17, .03, 14), mat(c, .6)); pet.rotation.x = PI / 2; f.add(pet);
       const cen = new T.Mesh(new T.CylinderGeometry(.08, .08, .05, 12), mat(0x6b4320, .8)); cen.rotation.x = PI / 2; cen.position.z = .01; f.add(cen);
       f.position.set(.42, .42, .3); f.rotation.y = .4; head.add(f);
     } else if (id === 'pearl') {
-      for (let i = 0; i < 16; i++) { const a = i / 16 * PI * 2; rig.add(at(sph(.055, c, 1, 1, 1, .15), Math.cos(a) * .56, .3 - Math.max(0, Math.sin(a)) * .06, Math.sin(a) * .54)); }
+      beads(.34, .1, 18, .055, [c], .04);
     } else if (id === 'suzu') {
-      const t = new T.Mesh(new T.TorusGeometry(.56, .05, 8, 30), mat(c, .6)); t.rotation.x = PI / 2; t.position.y = .3; rig.add(t);
-      rig.add(at(sph(.1, 0xe2b23a, 1, 1, 1, .2), 0, .2, .72)); rig.add(at(sph(.025, 0x1c1420), 0, .14, .8));
+      ring(.48, .05, c, .6);
+      const bz = front(.24, .09); rig.add(at(sph(.1, 0xe2b23a, 1, 1, 1, .2), 0, .24, bz)); rig.add(at(sph(.025, 0x1c1420), 0, .18, bz + .08));
     } else if (id === 'bandana') {
-      const t = new T.Mesh(new T.TorusGeometry(.56, .08, 8, 30), mat(c, .7)); t.rotation.x = PI / 2; t.position.y = .3; rig.add(t);
-      const tri = new T.Mesh(new T.ConeGeometry(.22, .34, 3), mat(c, .7)); tri.rotation.z = PI; tri.scale.z = .3; tri.position.set(0, .14, .7); rig.add(tri);
-      for (let i = 0; i < 4; i++) rig.add(at(sph(.022, 0xffffff), (i - 1.5) * .07, .2 - Math.abs(i - 1.5) * .03, .76));
+      ring(.48, .07, c);
+      const tz = front(.18, .05); const tri = new T.Mesh(new T.ConeGeometry(.22, .34, 3), mat(c, .7)); tri.rotation.z = PI; tri.scale.z = .3; tri.position.set(0, .18, tz); rig.add(tri);
+      for (let i = 0; i < 4; i++) rig.add(at(sph(.022, 0xffffff), (i - 1.5) * .07, .24 - Math.abs(i - 1.5) * .03, tz + .04));
     } else if (id === 'heartglass') {
       for (const s of [-1, 1]) { const sh = new T.Shape(); sh.moveTo(0, -.12); sh.bezierCurveTo(-.2, 0, -.1, .14, 0, .05); sh.bezierCurveTo(.1, .14, .2, 0, 0, -.12); const m = new T.Mesh(new T.ShapeGeometry(sh), new T.MeshStandardMaterial({ color: c, roughness: .2, side: T.DoubleSide })); m.position.set(s * .25, .1, .66); head.add(m); }
       const br = new T.Mesh(CYL, mat(0x1c1420, .4)); br.scale.set(.014, .2, .014); br.rotation.z = PI / 2; br.position.set(0, .13, .68); head.add(br);
     } else if (id === 'lei') {
       const cols = [0xff9eb5, 0xffffff, 0xf6c234, 0xe8413a];
-      for (let i = 0; i < 20; i++) { const a = i / 20 * PI * 2; rig.add(at(sph(.11, cols[i % 4], 1, 1, 1, .7), Math.cos(a) * .7, .2 - Math.max(0, Math.sin(a)) * .3, Math.sin(a) * .68)); }
+      beads(.32, .3, 22, .1, cols, .07);
     } else if (id === 'starpin') {
       const sh = new T.Shape(); for (let i = 0; i < 10; i++) { const a = -PI / 2 + i * PI / 5, r = i % 2 ? .06 : .14; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
       const m = new T.Mesh(new T.ExtrudeGeometry(sh, { depth: .05, bevelEnabled: false }), mat(c, .3)); m.scale.setScalar(1.7); m.position.set(-.34, .48, .42); m.rotation.y = -.4; head.add(m);
     } else if (id === 'medal') {
-      for (const s of [-1, 1]) { const rb = new T.Mesh(new T.BoxGeometry(.07, .42, .02), mat(0x1f5fa8, .6)); rb.position.set(s * .1, .14, .77); rb.rotation.z = s * .35; rig.add(rb); }
-      const d = new T.Mesh(new T.CylinderGeometry(.13, .13, .04, 20), mat(c, .25)); d.rotation.x = PI / 2; d.position.set(0, -.06, .8); rig.add(d);
+      for (const s of [-1, 1]) { const rb = new T.Mesh(new T.BoxGeometry(.07, .42, .02), mat(0x1f5fa8, .6)); rb.position.set(s * .1, .16, front(.16, .03)); rb.rotation.z = s * .35; rb.rotation.x = -.25; rig.add(rb); }
+      const d = new T.Mesh(new T.CylinderGeometry(.13, .13, .04, 20), mat(c, .25)); d.rotation.x = PI / 2; d.position.set(0, -.06, front(-.06, .05)); rig.add(d);
     }
   }
   function addOutfit(id, rig, arms) {
+    const SX = findIn(OUTFITS, id).puffy ? .92 : .85, SY = findIn(OUTFITS, id).puffy ? .86 : .8, SZ = findIn(OUTFITS, id).puffy ? .86 : .79;
+    const surf = (m, x, y, off = .025) => { const q = Math.max(0, 1 - (x / SX) ** 2 - (y / SY) ** 2); m.position.set(x, y, SZ * Math.sqrt(q) + off); m.rotation.x = -Math.asin(clamp(y / SY, -1, 1)) * .9; rig.add(m); return m; };
     const O = findIn(OUTFITS, id), cm = new T.MeshStandardMaterial({ map: clothTexture(O), roughness: .8 }), col = new T.Color(O.color).getHex();
     const shellOf = geo => { const m = new T.Mesh(geo, cm); if (O.puffy) m.scale.set(.92, .86, .86); else m.scale.set(.85, .8, .79); m.castShadow = true; rig.add(m); return m; };
     if (O.type === 'top') { shellOf(SHELL_TOP); arms.forEach(a => a.add(at(sph(.2, col, 1, .95, 1.05, .8), 0, -.04, .08))); }
@@ -1533,7 +1538,7 @@ function initThree() {
       shellOf(SHELL_ROBE);
       arms.forEach(a => { const sl = new T.Mesh(new T.BoxGeometry(.3, .44, .36), cm); sl.position.set(0, -.2, .06); sl.castShadow = true; a.add(sl); });
       if (O.obi) { const obi = new T.Mesh(new T.TorusGeometry(.8, .11, 10, 36), mat(O.obi, .6)); obi.rotation.x = PI / 2; obi.scale.set(1.04, .97, 1); obi.position.y = -.2; rig.add(obi); }
-      if (O.id === 'yukata' || O.id === 'haori') for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.06, .5, .03), mat(O.id === 'haori' ? 0xe9e4ef : 0xdfe6f5, .7)); lap.position.set(s * .1, .2, .77); lap.rotation.z = s * .5; rig.add(lap); }
+      if (O.id === 'yukata' || O.id === 'haori') for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.06, .5, .03), mat(O.id === 'haori' ? 0xe9e4ef : 0xdfe6f5, .7)); lap.rotation.z = s * .5; surf(lap, s * .1, .2, .03); }
     }
     if (O.type === 'overall') {
       shellOf(SHELL_LOW);
@@ -1541,17 +1546,17 @@ function initThree() {
       for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.08, .5, .04), cm); st.position.set(s * .22, .38, .6); st.rotation.x = -.6; rig.add(st); rig.add(at(sph(.04, 0xf6c234, 1, 1, 1, .3), s * .2, .26, .79)); }
     }
     if (O.hood) rig.add(at(sph(.42, col, 1, .7, .6, .8), 0, .52, -.5));
-    if (O.id === 'parka') for (const s of [-1, 1]) { const st = new T.Mesh(CYL, mat(0xffffff, .6)); st.scale.set(.016, .26, .016); st.position.set(s * .1, .18, .75); rig.add(st); }
-    if (O.lapel) for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.07, .6, .03), mat(0xffffff, .7)); lap.position.set(s * .12, .14, .77); lap.rotation.z = s * .42; rig.add(lap); }
+    if (O.id === 'parka') for (const s of [-1, 1]) { const st = new T.Mesh(CYL, mat(0xffffff, .6)); st.scale.set(.016, .26, .016); surf(st, s * .1, .18, .03); }
+    if (O.lapel) for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.07, .6, .03), mat(0xffffff, .7)); lap.rotation.z = s * .42; surf(lap, s * .12, .14, .03); }
     if (O.tux) {
-      const shirt = new T.Mesh(new T.BoxGeometry(.32, .55, .04), mat(0xffffff, .6)); shirt.position.set(0, .1, .78); shirt.rotation.x = -.12; rig.add(shirt);
-      for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.12, .5, .04), mat(0x2e2a3a, .3)); lap.position.set(s * .17, .14, .79); lap.rotation.z = s * .32; rig.add(lap); const w = new T.Mesh(new T.ConeGeometry(.08, .16, 4), mat(0x1c1420, .5)); w.rotation.z = s * PI / 2; w.position.set(s * .07, .33, .8); rig.add(w); }
-      for (const y of [.02, -.12]) rig.add(at(sph(.025, 0x1c1420), 0, y, .81));
+      const shirt = new T.Mesh(new T.BoxGeometry(.32, .55, .04), mat(0xffffff, .6)); surf(shirt, 0, .1, .025);
+      for (const s of [-1, 1]) { const lap = new T.Mesh(new T.BoxGeometry(.12, .5, .04), mat(0x2e2a3a, .3)); lap.rotation.z = s * .32; surf(lap, s * .17, .14, .045); const w = new T.Mesh(new T.ConeGeometry(.08, .16, 4), mat(0x1c1420, .5)); w.rotation.z = s * PI / 2; surf(w, s * .07, .33, .06); w.rotation.z = s * PI / 2; }
+      for (const y of [.02, -.12]) surf(sph(.025, 0x1c1420), 0, y, .05);
     }
     if (O.frog) for (const s of [-1, 1]) { rig.add(at(sph(.17, new T.Color(O.color).getHex(), 1, 1, 1, .8), s * .26, 1.4, -.02)); rig.add(at(sph(.11, 0xffffff, 1, 1, 1, .4), s * .26, 1.42, .1)); rig.add(at(sph(.055, 0x1c1420, 1, 1, 1, .2), s * .26, 1.42, .19)); }
     if (O.sailor) {
       const col2 = new T.Mesh(new T.BoxGeometry(.95, .55, .05), mat(0x1f2a5c, .7)); col2.position.set(0, .42, -.6); col2.rotation.x = -.5; rig.add(col2);
-      const tie = new T.Mesh(new T.ConeGeometry(.12, .3, 3), mat(0xcf3f36, .6)); tie.rotation.z = PI; tie.position.set(0, .2, .76); rig.add(tie);
+      const tie = new T.Mesh(new T.ConeGeometry(.12, .3, 3), mat(0xcf3f36, .6)); tie.rotation.z = PI; surf(tie, 0, .2, .05);
     }
   }
   function addHat(id, head) {
@@ -1618,29 +1623,31 @@ function initThree() {
       else if (id === 'sandal') { const b = new T.Mesh(new T.BoxGeometry(.34, .05, .52), mat(c, .7)); b.position.y = -.12; f.add(b); for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.04, .04, .26), mat(0xffffff, .6)); st.position.set(s * .08, -.01, .1); st.rotation.y = s * .4; f.add(st); } }
     });
   }
-  function addBag(id, rig, arms) {
+  function addBag(id, rig, arms, hull) {
     const B = findIn(BAGS, id), c = B.color;
+    const backZ = Math.max(hull(-.3).rz, hull(0).rz, hull(.3).rz);
+    const straps = col => { for (const s of [-1, 1]) { const y = .12, st = new T.Mesh(new T.BoxGeometry(.07, .6, .03), mat(col, .7)); st.position.set(s * .3, y, hull(y).fz * Math.sqrt(Math.max(0, 1 - (.3 / hull(y).rx) ** 2)) + .03); st.rotation.x = -.2; rig.add(st); } };
     if (id === 'pochette') {
-      const g = new T.Group(); g.rotation.z = .7; const strap = new T.Mesh(new T.TorusGeometry(.86, .025, 6, 40), mat(0x6b4320, .6)); strap.rotation.x = PI / 2; strap.scale.set(1, .92, 1); g.add(strap); rig.add(g);
-      const pouch = new T.Mesh(new T.BoxGeometry(.3, .26, .12), mat(c, .6)); pouch.position.set(.62, -.32, .48); pouch.rotation.y = .7; pouch.castShadow = true; rig.add(pouch);
+      const h0 = hull(0), g = new T.Group(); g.rotation.z = .7; const strap = new T.Mesh(new T.TorusGeometry(1, .028, 6, 48), mat(0x6b4320, .6)); strap.rotation.x = PI / 2; strap.scale.set(h0.rx + .04, Math.max(h0.rz, h0.fz) + .04, 1); g.add(strap); rig.add(g);
+      const hp = hull(-.32), pa = .75; const pouch = new T.Mesh(new T.BoxGeometry(.3, .26, .12), mat(c, .6)); pouch.position.set(Math.sin(pa) * (hp.rx + .07), -.32, Math.cos(pa) * (hp.fz + .07)); pouch.rotation.y = pa; pouch.castShadow = true; rig.add(pouch);
     } else if (id === 'ryukku') {
-      const bg = new T.Mesh(new T.BoxGeometry(.64, .72, .32), mat(c, .7)); bg.position.set(0, -.02, -.84); bg.castShadow = true; rig.add(bg);
-      const fl = new T.Mesh(new T.BoxGeometry(.66, .24, .36), mat(c, .5)); fl.position.set(0, .28, -.84); rig.add(fl);
-      for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.07, .6, .03), mat(c, .7)); st.position.set(s * .3, .12, .67); st.rotation.x = -.2; rig.add(st); }
+      const z = -(backZ + .12); const bg = new T.Mesh(new T.BoxGeometry(.64, .72, .32), mat(c, .7)); bg.position.set(0, -.02, z); bg.castShadow = true; rig.add(bg);
+      const fl = new T.Mesh(new T.BoxGeometry(.66, .24, .36), mat(c, .5)); fl.position.set(0, .28, z); rig.add(fl);
+      straps(c);
     } else if (id === 'kago') {
       const b = new T.Mesh(new T.CylinderGeometry(.21, .16, .26, 16), mat(c, .95)); b.position.set(0, -.58, .2); b.castShadow = true; arms[0].add(b);
       const h = new T.Mesh(new T.TorusGeometry(.16, .022, 6, 20, PI), mat(c, .95)); h.position.set(0, -.45, .2); arms[0].add(h);
     } else if (id === 'tanebukuro') {
-      rig.add(at(sph(.42, c, 1, 1.1, .8, 1), 0, -.08, -.86)); rig.add(at(sph(.1, 0x6b4320, 1, .6, 1, .9), 0, .38, -.82));
+      const z = -(backZ + .22); rig.add(at(sph(.42, c, 1, 1.1, .8, 1), 0, -.08, z)); rig.add(at(sph(.1, 0x6b4320, 1, .6, 1, .9), 0, .38, z + .04));
     } else if (id === 'tote') {
       const b = new T.Mesh(new T.BoxGeometry(.36, .34, .1), mat(c, .9)); b.position.set(0, -.62, .18); b.castShadow = true; arms[1].add(b);
       const h = new T.Mesh(new T.TorusGeometry(.12, .02, 6, 16, PI), mat(0x6b4320, .7)); h.position.set(0, -.45, .18); arms[1].add(h);
       const lg = new T.Mesh(new T.BoxGeometry(.14, .1, .02), mat(0x5b3a9e, .6)); lg.position.set(0, -.62, .24); arms[1].add(lg);
     } else if (id === 'randoseru') {
-      const bg = new T.Mesh(new T.BoxGeometry(.66, .72, .36), mat(c, .35)); bg.position.set(0, 0, -.86); bg.castShadow = true; rig.add(bg);
-      const fl = new T.Mesh(new T.CylinderGeometry(.33, .33, .68, 20, 1, false, 0, PI), mat(c, .35)); fl.rotation.z = PI / 2; fl.scale.set(1, 1, .5); fl.position.set(0, .14, -1.0); rig.add(fl);
-      rig.add(at(sph(.05, 0xe2b23a, 1, 1, 1, .2), 0, -.12, -1.05));
-      for (const s of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(.08, .62, .03), mat(c, .35)); st.position.set(s * .3, .12, .67); st.rotation.x = -.2; rig.add(st); }
+      const z = -(backZ + .14); const bg = new T.Mesh(new T.BoxGeometry(.66, .72, .36), mat(c, .35)); bg.position.set(0, 0, z); bg.castShadow = true; rig.add(bg);
+      const fl = new T.Mesh(new T.CylinderGeometry(.33, .33, .68, 20, 1, false, 0, PI), mat(c, .35)); fl.rotation.z = PI / 2; fl.scale.set(1, 1, .5); fl.position.set(0, .14, z - .14); rig.add(fl);
+      rig.add(at(sph(.05, 0xe2b23a, 1, 1, 1, .2), 0, -.12, z - .19));
+      straps(c);
     } else if (id === 'kinchaku') {
       arms[1].add(at(sph(.2, c, 1, 1.05, 1, .8), 0, -.66, .16)); arms[1].add(at(sph(.09, c, 1.3, .5, 1.3, .8), 0, -.47, .16));
       const st = new T.Mesh(new T.TorusGeometry(.08, .015, 6, 14), mat(0xf6c234, .5)); st.position.set(0, -.42, .16); arms[1].add(st);
@@ -1658,7 +1665,8 @@ function initThree() {
   }
 
   // 顔・お腹の正面（+z方向）を抜いた球（phiは+zが π/2）
-  const FUR_BODY = new T.SphereGeometry(1, 36, 20, PI * .5 + PI * .3, PI * 1.4);
+  const FUR_BODY = new T.SphereGeometry(1, 36, 16, PI * .5 + PI * .3, PI * 1.4, 0, PI * .6);
+  const FUR_HEAD_MID = new T.SphereGeometry(1, 40, 22, 0, PI * 2, PI * .16, PI * .74);
   const FUR_HEAD_FULL = new T.SphereGeometry(1, 40, 24, 0, PI * 2, 0, PI * .9);
   const FUR_HEAD_LOW = new T.SphereGeometry(1, 40, 16, 0, PI * 2, PI * .4, PI * .5);
   // 頭の毛：目・鼻・口のまわりだけ穴をあけたテクスチャ（球のUVに合わせて穴の位置を計算）
@@ -1737,7 +1745,8 @@ function initThree() {
       if (!look.outfit) layers(rig, FUR_BODY, .8, .76, .74, 5, .028);
       // 頭：顔の正面まで。帽子をかぶるときは頭頂部をあける
       const hatCovers = look.hat && (HAT_EARS[look.hat] === 'hide' || HAT_EARS[look.hat] === 'side');
-      const hgeo = hatCovers ? FUR_HEAD_LOW : FUR_HEAD_FULL, htex = hatCovers ? furHeadTex(FUR, PI * .4, PI * .5) : furHeadTex(FUR, 0, PI * .9);
+      const wigOn = !hatCovers && look.wig && look.wig !== 'none';
+      const hgeo = hatCovers ? FUR_HEAD_LOW : wigOn ? FUR_HEAD_MID : FUR_HEAD_FULL, htex = hatCovers ? furHeadTex(FUR, PI * .4, PI * .5) : wigOn ? furHeadTex(FUR, PI * .16, PI * .74) : furHeadTex(FUR, 0, PI * .9);
       for (let i = 1; i <= 4; i++) {
         const m = new T.Mesh(hgeo, new T.MeshStandardMaterial({ map: htex, transparent: true, alphaTest: .12 + i * .1, roughness: 1, depthWrite: false }));
         const k = 1 + i * .022; m.scale.set(.71 * k, .63 * k, .66 * k); m.renderOrder = 2 + i; head.add(m);
@@ -1765,7 +1774,21 @@ function initThree() {
     H.setWig = id => { if (wig) head.remove(wig); wig = buildWig(id); head.add(wig); };
     H.setKesho = v => { if (kesho) { kesho.visible = v; flap.visible = !v; } };
     H.setWig(look.hat ? 'none' : (look.wig || 'none')); tsuna.visible = !!look.yokozuna;
-    if (look.acc) addAcc(look.acc, head, rig);
+    // 体のいちばん外側（体・お腹・服・ふわふわ毛）を高さごとに求め、小物とバッグをその上に置く
+    const OF = look.outfit ? findIn(OUTFITS, look.outfit) : null;
+    const ellAt = (a, b, cz, y, cy = 0) => { const q = 1 - ((y - cy) / b) ** 2; return q > 0 ? [a * Math.sqrt(q), cz * Math.sqrt(q)] : [0, 0]; };
+    const hull = y => {
+      let rx = 0, rz = 0, fz = 0; const add = ([x, z]) => { rx = Math.max(rx, x); rz = Math.max(rz, z); };
+      add(ellAt(.8, .76, .736, y));
+      const bel = ellAt(.64, .64, .397, y, -.06); if (bel[1]) fz = .36 + bel[1];
+      if (OF) { const [a, b, cz] = OF.puffy ? [.92, .86, .86] : [.85, .8, .79]; const top = OF.type === 'overall' ? 0 : b * Math.cos(PI * .17), bot = OF.type === 'top' ? b * Math.cos(PI * .67) : -b; if (y <= top + .02 && y >= bot) add(ellAt(a, b, cz, y)); if (OF.type === 'overall' && y > 0 && y < .3) fz = Math.max(fz, .8); }
+      else if (coat === 'fluffy' && y > -.3) add(ellAt(.8 * 1.06, .76 * 1.06, .74 * 1.06, y));
+      const hd = ellAt(.713, .627, .66, y, .82); if (hd[0]) { add([hd[0], hd[1]]); fz = Math.max(fz, hd[1] + .1); }
+      return { rx, rz, fz: Math.max(fz, rz) };
+    };
+    const hatCover = look.hat && (HAT_EARS[look.hat] === 'hide' || HAT_EARS[look.hat] === 'side');
+    const headMount = new T.Group(); if (hatCover || coat === 'fluffy') headMount.scale.setScalar(hatCover ? 1.1 : 1.06); head.add(headMount);
+    if (look.acc) addAcc(look.acc, headMount, rig, hull);
     if (look.outfit) { addOutfit(look.outfit, rig, arms); belt.visible = false; flap.visible = false; tsuna.visible = false; }
     if (look.hat) {
       addHat(look.hat, head);
@@ -1774,7 +1797,7 @@ function initThree() {
       else if (mode === 'side') ears.forEach((e, i) => { const s = i ? 1 : -1; e.position.set(s * .6, .3, .04); e.rotation.set(0, s * .25, -s * 1.15); e.scale.setScalar(.9); });
     }
     if (look.shoes) { addShoes(look.shoes, feet); H.lift = SHOE_LIFT[look.shoes] || 0; }
-    if (look.bag) addBag(look.bag, rig, arms);
+    if (look.bag) addBag(look.bag, rig, arms, hull);
     H.fat = 1 + Math.min(look.body || 10, STAT_MAX) / 500;
     scene.add(root);
     return H;
@@ -2884,7 +2907,7 @@ function renderBanzuke() {
 }
 
 /* ================= 起動 ================= */
-window.__sumo = { Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
+window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
 function boot() {
   syncSnd();
