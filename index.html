@@ -205,6 +205,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .sw.belt { border-radius: 6px; height: 22px; margin-block: 11px; width: 52px; }
 .sw.apron { border-radius: 4px; width: 58px; height: 44px; }
 .sw.empty { border-style: dashed; background: transparent; }
+.sw.icon { border-radius: 10px; width: 48px; height: 48px; background-color: #fbf7ee; background-size: 100% 100%; }
 .tryon { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
 .tryon .acts { display: flex; gap: 8px; margin-left: auto; }
 /* 力士カード（コンパクト） */
@@ -549,6 +550,85 @@ function coatThumb(id, fur) {
   const key = id + fur; if (coatThumbCache.has(key)) return coatThumbCache.get(key);
   const c = document.createElement('canvas'); c.width = c.height = 64; drawCoat(c.getContext('2d'), id, 64, 64, fur);
   const u = c.toDataURL(); coatThumbCache.set(key, u); return u;
+}
+/* お出かけアイテムのアイコン（64x64） */
+const iconCache = new Map();
+function outIcon(cat, it) {
+  const key = cat + ':' + it.id; if (iconCache.has(key)) return iconCache.get(key);
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), P2 = Math.PI * 2;
+  const col = typeof it.color === 'string' ? it.color : it.color !== undefined ? hex(it.color) : '#999999';
+  const INK = '#2a2140';
+  g.lineJoin = 'round'; g.lineCap = 'round'; g.lineWidth = 2.5; g.strokeStyle = INK;
+  const fs = (fill) => { g.fillStyle = fill; g.fill(); g.stroke(); };
+  const circ = (x, y, r, fill, stroke = true) => { g.beginPath(); g.arc(x, y, r, 0, P2); g.fillStyle = fill; g.fill(); if (stroke) g.stroke(); };
+  const ell = (x, y, rx, ry, rot, fill, stroke = true) => { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, P2); g.fillStyle = fill; g.fill(); if (stroke) g.stroke(); };
+  const poly = (pts, fill) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); fs(fill); };
+  const pattern = (pat) => {
+    if (pat === 'flower') [[24, 26], [40, 38], [28, 48], [42, 22]].forEach(([x, y], i) => { for (let k = 0; k < 5; k++) { const a = k / 5 * P2; circ(x + Math.cos(a) * 3, y + Math.sin(a) * 3, 2.6, i % 2 ? '#ffffff' : '#ffd34d', false); } circ(x, y, 1.4, '#cf3f36', false); });
+    else if (pat === 'asagao') [[24, 28], [40, 40], [30, 50], [42, 24]].forEach(([x, y], i) => { circ(x, y, 4.5, '#ffffff', false); circ(x, y, 2.6, i % 2 ? '#f2a0b8' : '#8fb8f0', false); });
+    else if (pat === 'dots') { for (let y = 20; y < 62; y += 8) for (let x = 12 + (y / 8 % 2) * 4; x < 56; x += 8) circ(x, y, 1.8, '#ffffff', false); }
+    else if (pat === 'stripe') { g.fillStyle = 'rgba(255,255,255,.85)'; for (let x = 14; x < 54; x += 6) g.fillRect(x, 8, 1.6, 54); }
+    else if (pat === 'jersey') { g.fillStyle = '#ffffff'; g.fillRect(22, 8, 3, 54); g.fillRect(39, 8, 3, 54); }
+    else if (pat === 'quilt') { g.fillStyle = 'rgba(0,0,0,.22)'; for (let y = 18; y < 62; y += 8) g.fillRect(0, y, 64, 2); }
+    else if (pat === 'mon') { g.strokeStyle = '#ffffff'; g.lineWidth = 1.5; g.beginPath(); g.arc(32, 28, 4, 0, P2); g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; }
+  };
+  const clipFill = (path, fill, pat) => { path(); g.save(); g.clip(); g.fillStyle = fill; g.fillRect(0, 0, 64, 64); pattern(pat); g.restore(); path(); g.stroke(); };
+  if (cat === 'outfit') {
+    const O = it;
+    const shirt = () => { g.beginPath(); [[22, 10], [42, 10], [57, 21], [50, 31], [46, 28], [46, 57], [18, 57], [18, 28], [14, 31], [7, 21]].forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+    const robe = () => { g.beginPath(); [[22, 6], [42, 6], [60, 16], [57, 36], [46, 34], [49, 60], [15, 60], [18, 34], [7, 36], [4, 16]].forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+    if (O.type === 'overall') {
+      g.strokeStyle = INK; poly([[20, 12], [24, 12], [26, 26], [22, 26]], col); poly([[44, 12], [40, 12], [38, 26], [42, 26]], col);
+      poly([[20, 24], [44, 24], [46, 60], [34, 60], [32, 44], [30, 60], [18, 60]], col); circ(24, 28, 2, '#f6c234'); circ(40, 28, 2, '#f6c234');
+      g.beginPath(); g.moveTo(24, 36); g.lineTo(40, 36); g.stroke();
+    } else if (O.type === 'robe') {
+      clipFill(robe, col, O.pat);
+      if (O.obi) { g.fillStyle = hex(O.obi); g.fillRect(16.5, 36, 31, 7); g.strokeRect(16.5, 36, 31, 7); }
+      if (O.id === 'yukata' || O.id === 'haori') { g.strokeStyle = O.id === 'haori' ? '#e9e4ef' : '#dfe6f5'; g.lineWidth = 3; g.beginPath(); g.moveTo(26, 6); g.lineTo(34, 30); g.moveTo(38, 6); g.lineTo(30, 30); g.stroke(); g.strokeStyle = INK; g.lineWidth = 2.5; }
+      if (O.hood) ell(32, 7, 11, 5, 0, col);
+    } else {
+      clipFill(shirt, col, O.pat);
+      if (O.hood) { ell(32, 9, 11, 5, 0, col); g.beginPath(); g.moveTo(28, 14); g.lineTo(28, 24); g.moveTo(36, 14); g.lineTo(36, 24); g.strokeStyle = '#ffffff'; g.stroke(); g.strokeStyle = INK; }
+      if (O.sailor) { poly([[22, 10], [42, 10], [38, 22], [32, 26], [26, 22]], '#1f2a5c'); poly([[28, 24], [36, 24], [32, 34]], '#cf3f36'); }
+      if (O.pat === 'plain' && !O.sailor && !O.hood) { g.beginPath(); g.moveTo(32, 12); g.lineTo(32, 56); g.stroke(); }
+      if (O.puffy) { shirt(); g.lineWidth = 3.5; g.stroke(); g.lineWidth = 2.5; }
+    }
+  } else if (cat === 'hat') {
+    const id = it.id;
+    if (id === 'mugiwara') { ell(32, 42, 27, 8, 0, col); g.beginPath(); g.moveTo(18, 41); g.quadraticCurveTo(18, 16, 32, 16); g.quadraticCurveTo(46, 16, 46, 41); g.closePath(); fs(col); g.fillStyle = '#cf3f36'; g.fillRect(18.5, 33, 27, 6); }
+    else if (id === 'beret') { ell(32, 36, 25, 11, -.15, col); g.beginPath(); g.moveTo(32, 25); g.lineTo(33, 19); g.stroke(); }
+    else if (id === 'knit') { g.beginPath(); g.moveTo(13, 46); g.quadraticCurveTo(13, 14, 32, 14); g.quadraticCurveTo(51, 14, 51, 46); g.closePath(); fs(col); g.beginPath(); g.rect(11, 42, 42, 10); fs(col); for (let x = 16; x < 52; x += 5) { g.beginPath(); g.moveTo(x, 43); g.lineTo(x, 51); g.stroke(); } circ(32, 12, 6, '#ffffff'); }
+    else if (id === 'cap') { g.beginPath(); g.moveTo(10, 42); g.quadraticCurveTo(10, 14, 32, 14); g.quadraticCurveTo(52, 14, 52, 42); g.closePath(); fs(col); ell(46, 42, 15, 5, 0, col); circ(32, 14, 2.5, '#ffffff'); }
+    else if (id === 'ribbon') { poly([[32, 32], [10, 18], [10, 46]], col); poly([[32, 32], [54, 18], [54, 46]], col); circ(32, 32, 6, col); }
+    else if (id === 'hanakanmuri') { ell(32, 34, 24, 11, 0, 'rgba(0,0,0,0)'); for (let i = 0; i < 10; i++) { const a = i / 10 * P2; circ(32 + Math.cos(a) * 22, 34 + Math.sin(a) * 10, i % 2 ? 3.5 : 5, i % 2 ? '#7fbf4d' : ['#f7b6c8', '#ffffff', '#f6c234'][(i / 2 | 0) % 3]); } }
+    else if (id === 'silk') { ell(32, 50, 22, 6, 0, col); g.beginPath(); g.rect(20, 12, 24, 38); fs(col); g.fillStyle = '#cf3f36'; g.fillRect(21.5, 40, 21, 6); ell(32, 12, 12, 3, 0, '#3a3340'); }
+    else if (id === 'nekomimi') { g.beginPath(); g.moveTo(8, 48); g.quadraticCurveTo(32, 26, 56, 48); g.lineWidth = 5; g.strokeStyle = col; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; poly([[12, 42], [16, 12], [28, 34]], col); poly([[52, 42], [48, 12], [36, 34]], col); poly([[16, 36], [18, 20], [24, 33]], '#f6aeb0'); poly([[48, 36], [46, 20], [40, 33]], '#f6aeb0'); }
+    else if (id === 'amigasa') { poly([[4, 46], [32, 14], [60, 46]], col); for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(32 - i * 7, 14 + i * 8); g.lineTo(32 + i * 7, 14 + i * 8); g.stroke(); } }
+    else if (id === 'headphone') { g.beginPath(); g.arc(32, 38, 20, Math.PI, 0); g.lineWidth = 6; g.strokeStyle = col; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; g.beginPath(); g.rect(6, 34, 11, 18); fs(col); g.beginPath(); g.rect(47, 34, 11, 18); fs(col); }
+  } else if (cat === 'acc') {
+    const id = it.id;
+    if (id === 'megane' || id === 'sangura') { const f = id === 'sangura' ? '#1c1420' : 'rgba(191,230,255,.6)'; g.lineWidth = 3.5; g.strokeStyle = id === 'sangura' ? '#1c1420' : col; circ(19, 34, 11, f); circ(45, 34, 11, f); g.beginPath(); g.moveTo(30, 32); g.quadraticCurveTo(32, 28, 34, 32); g.stroke(); if (id === 'sangura') { g.strokeStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(13, 30); g.lineTo(18, 26); g.moveTo(39, 30); g.lineTo(44, 26); g.stroke(); } }
+    else if (id === 'chou') { poly([[32, 32], [8, 18], [8, 46]], col); poly([[32, 32], [56, 18], [56, 46]], col); circ(32, 32, 6, col); }
+    else if (id === 'scarf') { g.beginPath(); g.ellipse(32, 24, 22, 10, 0, 0, P2); g.lineWidth = 8; g.strokeStyle = col; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; poly([[36, 30], [46, 30], [50, 58], [40, 58]], col); }
+    else if (id === 'hana') { for (let k = 0; k < 12; k++) { const a = k / 12 * P2; ell(32 + Math.cos(a) * 15, 32 + Math.sin(a) * 15, 7, 4, a, col); } circ(32, 32, 10, '#6b4320'); }
+    else if (id === 'medal') { poly([[18, 6], [26, 6], [34, 34], [28, 36]], '#1f5fa8'); poly([[46, 6], [38, 6], [30, 34], [36, 36]], '#1f5fa8'); circ(32, 44, 14, col); g.fillStyle = '#fff6c4'; g.font = '900 14px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('1', 32, 45); }
+    else if (id === 'pearl') { for (let i = 0; i <= 12; i++) { const a = Math.PI * (.1 + .8 * i / 12); circ(32 - Math.cos(a) * 24, 14 + Math.sin(a) * 30, 3.6, col); } }
+    else if (id === 'suzu') { g.beginPath(); g.ellipse(32, 22, 24, 12, 0, 0, Math.PI); g.lineWidth = 6; g.strokeStyle = col; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; circ(32, 42, 10, '#e2b23a'); g.beginPath(); g.moveTo(26, 44); g.lineTo(38, 44); g.stroke(); circ(32, 48, 1.8, INK, false); }
+  } else if (cat === 'shoes') {
+    const id = it.id;
+    if (id === 'sneaker') { g.beginPath(); g.moveTo(8, 46); g.lineTo(10, 26); g.quadraticCurveTo(22, 22, 30, 30); g.quadraticCurveTo(46, 32, 56, 40); g.lineTo(56, 46); g.closePath(); fs(col); g.beginPath(); g.rect(6, 45, 52, 7); fs('#ffffff'); g.strokeStyle = '#ffffff'; g.beginPath(); [24, 30, 36].forEach(x => { g.moveTo(x - 3, 30); g.lineTo(x + 3, 34); }); g.stroke(); g.strokeStyle = INK; }
+    else if (id === 'boots') { g.beginPath(); g.moveTo(16, 6); g.lineTo(36, 6); g.lineTo(36, 38); g.quadraticCurveTo(54, 40, 56, 54); g.lineTo(14, 54); g.closePath(); fs(col); g.fillStyle = '#ffffff'; g.fillRect(17.5, 10, 17, 4); }
+    else if (id === 'geta') { g.beginPath(); g.rect(6, 30, 52, 9); fs(col); g.beginPath(); g.rect(12, 39, 9, 12); fs(col); g.beginPath(); g.rect(43, 39, 9, 12); fs(col); g.beginPath(); g.moveTo(14, 30); g.quadraticCurveTo(26, 14, 44, 30); g.lineWidth = 4; g.strokeStyle = '#cf3f36'; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; }
+    else if (id === 'slipper') { g.beginPath(); g.moveTo(8, 48); g.quadraticCurveTo(6, 30, 28, 28); g.quadraticCurveTo(52, 26, 58, 44); g.lineTo(58, 50); g.lineTo(8, 50); g.closePath(); fs(col); circ(22, 28, 8, '#ffffff'); }
+    else if (id === 'sandal') { ell(32, 44, 26, 8, 0, col); g.beginPath(); g.moveTo(16, 42); g.lineTo(26, 30); g.lineTo(36, 42); g.lineWidth = 4; g.strokeStyle = '#ffffff'; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; }
+  } else if (cat === 'bag') {
+    const id = it.id;
+    if (id === 'pochette') { g.beginPath(); g.moveTo(10, 6); g.lineTo(40, 36); g.lineWidth = 3; g.strokeStyle = '#6b4320'; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; g.beginPath(); g.roundRect ? g.roundRect(24, 30, 32, 24, 6) : g.rect(24, 30, 32, 24); fs(col); g.beginPath(); g.moveTo(24, 38); g.quadraticCurveTo(40, 46, 56, 38); g.stroke(); circ(40, 43, 2.5, '#e2b23a'); }
+    else if (id === 'ryukku') { g.beginPath(); g.roundRect ? g.roundRect(14, 12, 36, 46, 10) : g.rect(14, 12, 36, 46); fs(col); g.beginPath(); g.roundRect ? g.roundRect(14, 12, 36, 16, 8) : g.rect(14, 12, 36, 16); fs(col); g.beginPath(); g.rect(22, 36, 20, 14); fs(col); g.beginPath(); g.arc(32, 12, 6, Math.PI, 0); g.stroke(); }
+    else if (id === 'kago') { g.beginPath(); g.arc(32, 30, 16, Math.PI, 0); g.lineWidth = 4; g.strokeStyle = '#a0703f'; g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; poly([[10, 30], [54, 30], [48, 56], [16, 56]], col); g.strokeStyle = '#a0703f'; g.lineWidth = 1.5; for (let y = 36; y < 56; y += 6) { g.beginPath(); g.moveTo(12, y); g.lineTo(52, y); g.stroke(); } g.lineWidth = 2.5; g.strokeStyle = INK; }
+    else if (id === 'tanebukuro') { g.beginPath(); g.moveTo(24, 18); g.quadraticCurveTo(6, 30, 12, 50); g.quadraticCurveTo(32, 62, 52, 50); g.quadraticCurveTo(58, 30, 40, 18); g.closePath(); fs(col); poly([[24, 18], [20, 8], [32, 14], [44, 8], [40, 18]], col); g.fillStyle = '#6b4320'; g.fillRect(24, 16, 16, 4); ell(32, 40, 5, 9, .3, '#2a2430'); g.strokeStyle = '#ffffff'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(30, 34); g.lineTo(33, 46); g.stroke(); g.lineWidth = 2.5; g.strokeStyle = INK; }
+  }
+  const u = c.toDataURL(); iconCache.set(key, u); return u;
 }
 const OFF_DAYS = 3;
 const WIGS = [
@@ -1920,7 +2000,7 @@ function swatchHtml(cat, it) {
   if (cat === 'coat') return `<span class="sw" style="background-image:url(${coatThumb(it.id, findIn(FURS, state.equip.fur).color ?? kindOf(m.kind).fur)})"></span>`;
   if (cat === 'mawashi') return `<span class="sw belt" style="background:${hex(it.color)}"></span>`;
   if (cat === 'kesho') return it.id === 'none' ? '<span class="sw apron empty"></span>' : `<span class="sw apron" style="background-image:url(${keshoThumb(it.id, m.name)})"></span>`;
-  if (OUT_CATS.includes(cat)) { if (it.id === 'none') return '<span class="sw empty"></span>'; return `<span class="sw" style="background:${typeof it.color === 'string' ? it.color : hex(it.color)}"></span>`; }
+  if (OUT_CATS.includes(cat)) { if (it.id === 'none') return '<span class="sw empty"></span>'; return `<span class="sw icon" style="background-image:url(${outIcon(cat, it)})"></span>`; }
   if (it.id === 'auto') return '<span class="sw empty">番</span>';
   if (it.id === 'none') return '<span class="sw empty"></span>';
   return `<span class="sw" style="background:${hex(0x1c1420)};box-shadow:inset 0 0 0 ${it.pins ? 7 : 5}px ${hex(it.tie || 0x1c1420)}"></span>`;
