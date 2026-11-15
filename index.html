@@ -3132,14 +3132,24 @@ async function importFromHash() {
 function setupInApp() {
   if (ON_CLOUD) { setupMove(); return; }
   if (!EPHEMERAL) return;
-  // LINE が外部ブラウザへ引き渡す途中（openExternalBrowser=1）は案内を出さない
-  if (IN_LINE && /[?&]openExternalBrowser=1/.test(location.search)) return;
   const box = $('#inApp'); box.hidden = false;
   if (IN_LINE) {
-    $('#inAppTitle').textContent = 'LINEのブラウザで開いています';
-    $('#inAppText').textContent = 'LINEの中のブラウザでは、LINEを終了するとセーブが消えてしまいます。続きを残したいときは、Safari や Chrome で開いて遊んでください。';
-    $('#openExt').hidden = false; $('#openExt').href = SELF_URL + (SELF_URL.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
+    // LINE の中では遊べない：閉じられない案内で外部ブラウザへ
+    const handoff = /[?&]openExternalBrowser=1/.test(location.search);
+    $('#inAppTitle').textContent = handoff ? 'Safari / Chrome に切り替えています…' : 'LINEの中では遊べません';
+    $('#inAppText').textContent = handoff ? '切り替わらないときは、下のボタンか、右上の「…」→「ブラウザで開く」を押してください。' : 'LINEの中のブラウザでは、LINEを終了するとセーブが消えてしまうため遊べません。Safari や Chrome で開いて遊んでください。';
+    $('#inAppClose').hidden = true; $('#inAppCode').hidden = !state;
+    ['.mast', '.layout', '#menuPop'].forEach(sel => { const el = document.querySelector(sel); if (el) { el.inert = true; el.setAttribute('aria-hidden', 'true'); } });
+    const base = SELF_URL.replace(/[?&]openExternalBrowser=1/, '').replace(/\?$/, '');
+    $('#openExt').hidden = false; $('#openExt').href = base + (base.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
     $('#inAppNote').textContent = '開けないときは、右上の「…」から「ブラウザで開く」を選んでください。';
+    $('#inAppLoad').hidden = true;
+    $('#inAppCode').onclick = () => encodeSave(JSON.stringify(state)).then(code => {
+      let ta = $('#moveCode'); if (!ta) { ta = document.createElement('textarea'); ta.id = 'moveCode'; ta.readOnly = true; ta.className = 'movecode'; $('#inAppNote').before(ta); }
+      ta.value = code; ta.focus(); ta.select();
+      try { navigator.clipboard.writeText(code).then(() => { $('#inAppNote').textContent = 'コピーしました。Safari / Chrome で開いたら、メニュー →「セーブコードを読み込む」に貼り付けてください。'; }, () => {}); } catch (e) { /* noop */ }
+    });
+    return;
   } else {
     $('#inAppTitle').textContent = 'ブラウザを閉じるとセーブが消えます';
     $('#inAppText').textContent = 'この表示（Safari などで claude.ai の中に表示されたゲーム）では、ブラウザを終了するとセーブが消えてしまいます。やめる前に「セーブコードを控える」で控えておき、次に遊ぶときに読み込んでください。';
