@@ -740,7 +740,15 @@ function initThree() {
         } else { const k = ease(clamp((t - 3.05) / .3, 0, 1)); r.rotation.z = lerp(L, 0, k); r.position.y = lerp(.8, RIG_Y, k) + Math.sin(k * PI) * .5; H.arms.forEach((a, i) => { a.rotation.x = -2.8; a.rotation.z = (i ? 1 : -1) * .5; }); eyeY = .35; }
         break;
       }
-      case 'shikiri': r.rotation.x = .55; r.position.y -= .1; H.arms.forEach(a => { a.rotation.x = -.5; }); break;
+      case 'shikiri': r.rotation.x = .62 + breathe * .02; r.position.y -= .17; H.arms.forEach(a => { a.rotation.x = -.15; a.position.z = .42; }); H.head.rotation.x = -.45; eyeY = .75; break;
+      case 'walk': r.position.y += Math.abs(Math.sin(t * 9)) * .07; r.rotation.z = Math.sin(t * 9) * .06; H.feet.forEach((ft, i) => { ft.position.z += Math.sin(t * 9 + i * PI) * .18; ft.position.y += Math.max(0, Math.cos(t * 9 + i * PI)) * .1; }); H.arms.forEach((a, i) => { a.rotation.x = -.3 + Math.sin(t * 9 + i * PI) * .4; }); break;
+      case 'salt': { const k = t < .35 ? -ease(t / .35) : t < .55 ? lerp(-1, 1, ease((t - .35) / .2)) : 1; H.arms[1].rotation.x = k > 0 ? -.3 - k * 2.2 : -.3 + -k * .9; H.arms[1].rotation.z = k > 0 ? -k * .3 : 0; r.rotation.x = k > 0 ? -.08 * k : .1 * -k; break; }
+      case 'teeter': r.rotation.x = -.45 + Math.sin(t * 9) * .14; H.arms.forEach((a, i) => { a.rotation.x = -t * 16 - i * PI; }); eyeY = 1.35; H.cheeks.forEach(c => c.scale.setScalar(.28)); break;
+      case 'bow': r.rotation.x = .45 * Math.min(1, t * 2); H.head.rotation.x = .2; eyeY = .1; break;
+      case 'gyoji': r.rotation.x = .05; H.arms[1].rotation.x = -1.25 + Math.sin(t * 2) * .05; H.arms[0].rotation.x = -.5; break;
+      case 'gyojiCall': r.rotation.x = .22; H.arms[1].rotation.x = -1.55 + Math.sin(t * 5) * .08; H.arms[0].rotation.x = -.9; eyeY = .8; break;
+      case 'gyojiNokotta': r.position.y += Math.abs(Math.sin(t * 8)) * .1; r.rotation.z = Math.sin(t * 8) * .08; H.arms[1].rotation.x = -1.6; H.arms[1].rotation.z = Math.sin(t * 12) * .3; H.arms[0].rotation.x = -.6; break;
+      case 'gyojiPoint': H.arms[1].rotation.x = -2.2; H.arms[1].rotation.z = (H.pointDir || 1) * .95; r.rotation.z = -(H.pointDir || 1) * .08; H.arms[0].rotation.x = -.4; break;
       case 'push':
         r.rotation.x = .34 + Math.sin(t * 15) * .04; r.position.x = Math.sin(t * 11) * .03;
         H.arms.forEach(a => { a.rotation.x = -1.3; a.position.z = .42; });
@@ -769,6 +777,8 @@ function initThree() {
     else if (kind === 'star') { g.fillStyle = '#ffd34d'; g.strokeStyle = '#e2a400'; g.lineWidth = 6; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -PI / 2 + i * PI / 5, r = i % 2 ? 24 : 56; g.lineTo(64 + Math.cos(a) * r, 66 + Math.sin(a) * r); } g.closePath(); g.fill(); g.stroke(); }
     else if (kind === 'shell') { g.translate(64, 64); g.rotate(.4); g.fillStyle = '#2a2430'; g.beginPath(); g.ellipse(0, 0, 26, 50, 0, 0, P2); g.fill(); g.strokeStyle = '#e9e4ef'; g.lineWidth = 6; g.beginPath(); g.moveTo(-10, -34); g.lineTo(-10, 34); g.moveTo(10, -34); g.lineTo(10, 34); g.stroke(); }
     else if (kind === 'ring') { g.strokeStyle = '#ffffff'; g.lineWidth = 12; g.beginPath(); g.arc(64, 64, 48, 0, P2); g.stroke(); }
+    else if (kind === 'salt') { g.fillStyle = '#ffffff'; dot(64, 64, 30); g.fillStyle = 'rgba(255,255,255,.5)'; dot(64, 64, 50); }
+    else if (kind === 'zabuton') { g.fillStyle = '#8a2d6b'; g.fillRect(16, 26, 96, 76); g.strokeStyle = '#5e1d48'; g.lineWidth = 6; g.strokeRect(16, 26, 96, 76); g.fillStyle = '#e2b23a'; [[16, 26], [112, 26], [16, 102], [112, 102]].forEach(([x, y]) => dot(x, y, 10)); }
     else if (kind === 'spark') { g.fillStyle = '#fff6c4'; g.beginPath(); g.moveTo(64, 4); g.lineTo(74, 54); g.lineTo(124, 64); g.lineTo(74, 74); g.lineTo(64, 124); g.lineTo(54, 74); g.lineTo(4, 64); g.lineTo(54, 54); g.closePath(); g.fill(); }
     const tex = new T.CanvasTexture(c); fxTex.set(kind, tex); return tex;
   }
@@ -884,6 +894,20 @@ function initThree() {
       cleanup: tr => { tr.data.b.parent && tr.data.b.parent.remove(tr.data.b); tr.data.b.material.dispose(); },
     },
   };
+  function makeGyoji() {
+    const G = makeHamster({ kind: 'pearl', mawashi: 0x2c8c9c, wig: 'none', body: 10 });
+    const robe = new T.Mesh(new T.CylinderGeometry(.66, 1.0, 1.0, 24), mat(0x2c8c9c, .6)); robe.position.y = -.38; robe.castShadow = true; G.rig.add(robe);
+    const trim = new T.Mesh(new T.TorusGeometry(.98, .05, 6, 32), mat(0xe2b23a, .4)); trim.rotation.x = PI / 2; trim.position.y = -.86; G.rig.add(trim);
+    const sash = new T.Mesh(new T.TorusGeometry(.72, .08, 8, 32), mat(0xcf3f36, .5)); sash.rotation.x = PI / 2; sash.position.y = .02; G.rig.add(sash);
+    const hat = new T.Mesh(new T.CylinderGeometry(.2, .3, .55, 16), mat(0x1c1420, .4)); hat.position.set(0, .82, -.08); hat.rotation.x = -.25; G.head.add(hat);
+    const gun = new T.Group(); gun.position.set(0, -.4, .12); G.arms[1].add(gun);
+    const handle = new T.Mesh(CYL, mat(0x6b4320, .6)); handle.scale.set(.035, .42, .035); handle.position.y = -.12; gun.add(handle);
+    const disc = new T.Mesh(new T.CylinderGeometry(.3, .3, .04, 24), mat(0xe2b23a, .3)); disc.rotation.x = PI / 2; disc.position.y = -.5; gun.add(disc);
+    const inner = new T.Mesh(new T.CylinderGeometry(.2, .2, .05, 24), mat(0x1c1420, .3)); inner.rotation.x = PI / 2; inner.position.y = -.5; gun.add(inner);
+    G.root.scale.setScalar(.8); G.anim = 'gyoji';
+    return G;
+  }
+
   function endTraining() {
     const tr = api.training; if (!tr) return; api.training = null;
     tr.def.cleanup && tr.def.cleanup(tr);
@@ -912,8 +936,9 @@ function initThree() {
   }
   const cam = { pos: new T.Vector3(0, 2.7, 8.6), look: new T.Vector3(0, 1.25, 0), tp: new T.Vector3(0, 2.7, 8.6), tl: new T.Vector3(0, 1.25, 0) };
   const api = { makeHamster, actors, pole, wheel, cam, mode: 'home', yaw: 0, shake: 0, solo: null, tweens: [], skip: false, training: null, spawn, say3d, dustRing, starBurst, sweat };
-  api.startTraining = startTraining;
-  api.clear = () => { endTraining(); actors.splice(0).forEach(h => scene.remove(h.root)); api.solo = null; pole.visible = false; wheel.visible = false; };
+  api.startTraining = startTraining; api.makeGyoji = makeGyoji; api.follow = null;
+  api.camTo = (p, l) => { cam.tp.set(...p); cam.tl.set(...l); };
+  api.clear = () => { endTraining(); api.follow = null; actors.splice(0).forEach(h => scene.remove(h.root)); api.solo = null; pole.visible = false; wheel.visible = false; };
   api.setCam = (mode, instant) => {
     if (mode === 'match') { cam.tp.set(0, 3.9, 11.2); cam.tl.set(0, 1.0, 0); } else { cam.tp.set(0, 2.7, 8.6); cam.tl.set(0, 1.25, 0); }
     if (instant) { cam.pos.copy(cam.tp); cam.look.copy(cam.tl); }
@@ -941,6 +966,7 @@ function initThree() {
     stepTraining(dt);
     actors.forEach(h => pose(h, dt));
     updateFx(dt);
+    if (api.follow) api.follow(dt);
     cam.pos.lerp(cam.tp, 1 - Math.pow(.02, dt)); cam.look.lerp(cam.tl, 1 - Math.pow(.02, dt));
     camera.position.copy(cam.pos);
     if (api.shake > 0) { api.shake -= dt; camera.position.x += Math.sin(time * 90) * .08 * api.shake * 3; camera.position.y += Math.cos(time * 70) * .06 * api.shake * 3; }
@@ -969,53 +995,131 @@ function logLine(text, cls) { if (!logEl) return; const li = document.createElem
 async function animateBout(res, m, opp) {
   if (!three) return;
   const PI = Math.PI, east = posOf(m) % 2 === 0, s = east ? 1 : -1; // 東は正面から見て左
-  three.clear(); three.mode = 'match'; three.skip = false; three.setCam('match');
-  const A = three.makeHamster(lookOf(m));
-  const B = three.makeHamster(lookOf(opp));
-  three.actors.push(A, B);
-  const H = [A, B], names = [m.name, opp.name], X = RING - 1.0, d = .84, start = 1.7;
+  three.clear(); three.mode = 'match'; three.skip = false;
+  const A = three.makeHamster(lookOf(m)), B = three.makeHamster(lookOf(opp)), G = three.makeGyoji();
+  three.actors.push(A, B, G);
+  const H = [A, B], names = [m.name, opp.name], X = RING - 1.0, d = .84, start = 1.7, entry = 4.4;
+  const tiers = [rankInfo(posOf(m)).tier, rankInfo(posOf(opp)).tier];
+  const { tween, wait, spawn, say3d, dustRing, starBurst, sweat, camTo } = three;
+  const fx = (fn) => { if (!three.skip) fn(); };
   A.root.rotation.y = s * PI / 2; B.root.rotation.y = -s * PI / 2;
-  A.root.position.set(-s * start, 0, 0); B.root.position.set(s * start, 0, 0);
+  A.root.position.set(-s * entry, 0, 0); B.root.position.set(s * entry, 0, 0);
+  G.root.position.set(0, 0, -2.5);
   let cur = 0;
   const place = x => { const cx = s * x * X; A.root.position.x = cx - s * d; B.root.position.x = cx + s * d; };
-  const moveTo = (x, dur) => { const from = cur; cur = x; return three.tween(dur, k => place(lerp(from, x, ease(k)))); };
-  const { tween, wait } = three;
+  const moveTo = (x, dur) => { const from = cur; cur = x; return tween(dur, k => place(lerp(from, x, ease(k)))); };
+  const follow = (zoom = 1) => {
+    three.follow = dt => {
+      const cx = clamp((A.root.position.x + B.root.position.x) / 2, -2.6, 2.6);
+      three.cam.tl.set(cx, 1.05, 0); three.cam.tp.set(cx * .75, 3.4 * zoom, 10.5 * zoom);
+      G.root.position.x += (cx * .6 - G.root.position.x) * Math.min(1, dt * 3);
+    };
+  };
+  const gyoji = (anim, text) => { G.anim = anim; G.t = 0; if (text) fx(() => say3d(text, G.root.position.x, 2.7, -2.3, '#2c8c9c')); };
+  const feetDust = (h, dir) => fx(() => spawn('dust', h.root.position.x - dir * .3, .15, (Math.random() - .5) * .6, { v: [-dir * .7, .3, 0], life: .6, size: .34, grow: 1.4, fade: .2 }));
 
-  say(`ひが〜し〜、${east ? m.name : opp.name}。に〜し〜、${east ? opp.name : m.name}。`);
-  await wait(1.2);
-  A.anim = B.anim = 'shiko'; A.t = B.t = 0; await wait(2);
-  A.anim = B.anim = 'shikiri'; say('はっけよ〜い…'); await wait(1);
-  say('のこった！'); A.anim = B.anim = 'push'; A.setKesho(false); B.setKesho(false);
-  await tween(.2, k => { A.root.position.x = -s * lerp(start, d, k); B.root.position.x = s * lerp(start, d, k); });
-  three.shake = .25;
+  // 呼び上げと入場
+  camTo([0, 5.2, 13.5], [0, 1, 0]); three.cam.pos.set(0, 6, 15);
+  const [eName, wName] = east ? [m.name, opp.name] : [opp.name, m.name];
+  say(`ひが〜し〜、${eName}〜。`); await wait(.9);
+  say(`に〜し〜、${wName}〜。`);
+  A.anim = B.anim = 'walk';
+  await tween(1.1, k => { A.root.position.x = -s * lerp(entry, 2.7, ease(k)); B.root.position.x = s * lerp(entry, 2.7, ease(k)); });
+  // 塩まき
+  A.anim = B.anim = 'salt'; A.t = B.t = 0;
+  await wait(.4);
+  fx(() => { for (const [h, dir] of [[A, s], [B, -s]]) for (let i = 0; i < 14; i++) spawn('salt', h.root.position.x + dir * .4, 2.0, 0, { v: [dir * (1.2 + Math.random() * 1.6), 1.6 + Math.random() * 1.4, (Math.random() - .5) * 1.6], g: 6, life: .8, size: .07 + Math.random() * .06, fade: .5 }); say3d('パーッ', 0, 3.1, 0, '#6a6182'); });
+  await wait(.6);
+  // 四股
+  camTo([0, 3.3, 10.5], [0, 1.1, 0]);
+  A.anim = B.anim = 'shiko'; A.t = B.t = 0;
+  await wait(1.22);
+  fx(() => { dustRing(A.root.position.x, 0, 6, .8); dustRing(B.root.position.x, 0, 6, .8); say3d('ドスン!', 0, 2.9, 0, '#cf3f36'); });
+  three.shake = .18;
+  await wait(.5);
+  // 仕切り・睨み合い
+  A.anim = B.anim = 'walk';
+  await tween(.45, k => { A.root.position.x = -s * lerp(2.7, start, k); B.root.position.x = s * lerp(2.7, start, k); });
+  A.anim = B.anim = 'shikiri'; gyoji('gyojiCall', '見合って!');
+  say('見合って、見合って…');
+  camTo([0, 1.8, 8.0], [0, 1.0, 0]);
+  await wait(.5);
+  fx(() => spawn('txt:バチバチ:#b9861a', 0, 1.9, .3, { life: 1, size: .55, pop: true, fade: .7 }));
+  await tween(.9, k => { three.cam.tp.set(0, 1.7, 8.0 - k * .8); });
+  // 立合い
+  say('はっけよい！'); gyoji('gyojiNokotta', 'はっけよい!');
+  A.setKesho(false); B.setKesho(false); A.anim = B.anim = 'push';
+  await tween(.16, k => { A.root.position.x = -s * lerp(start, d, k * k); B.root.position.x = s * lerp(start, d, k * k); });
+  three.shake = .35;
+  fx(() => { spawn('ring', 0, 1.2, .2, { life: .35, size: .6, grow: 2.4, fade: .1 }); say3d('ドンッ!!', 0, 2.8, .3, '#cf3f36'); dustRing(-.8, 0, 5, .8); dustRing(.8, 0, 5, .8); });
+  follow(.9);
+  let nok = 0;
   for (const e of res.events) {
-    if (e.t === 'tachiai') { await moveTo(e.x, .5); if (Math.abs(e.x) > .15) say(`${names[e.x > 0 ? 0 : 1]}、するどい立合い！`); }
-    else if (e.t === 'push') { if (Math.abs(e.dx) > .25) say(`${names[e.dx > 0 ? 0 : 1]}、一気に前へ！`); await moveTo(e.x, .62); }
-    else if (e.t === 'waza') { say(`${names[e.by]}、いなして体を入れかえる！`); const h = H[e.by]; await Promise.all([moveTo(e.x, .55), tween(.55, k => { h.ex.z = Math.sin(k * PI) * .45; })]); }
-    else if (e.t === 'miss') { say(`${names[e.by]}の技、${names[1 - e.by]}がこらえた！`); await moveTo(e.x, .5); }
-    else if (e.t === 'nebari') { say(`${names[e.by]}、土俵際でねばる！`); const h = H[e.by]; await tween(.6, k => { h.ex.rx = -.55 * Math.sin(k * PI); }); await moveTo(e.x, .45); }
+    if (e.t === 'tachiai') { await moveTo(e.x, .5); if (Math.abs(e.x) > .15) { const w = e.x > 0 ? 0 : 1; say(`${names[w]}、するどい立合い！`); fx(() => say3d('速い!', H[w].root.position.x, 2.5, .3, '#1f5fa8')); } }
+    else if (e.t === 'push') {
+      const w = e.dx > 0 ? 0 : 1, dir = w === 0 ? s : -s;
+      if (Math.abs(e.dx) > .25) { say(`${names[w]}、一気に前へ！`); fx(() => say3d('ぐいっ!', H[w].root.position.x, 2.5, .3)); }
+      else if (nok++ % 2 === 0) { say('のこった、のこった！'); gyoji('gyojiNokotta', 'のこった!'); }
+      feetDust(H[1 - w], -dir);
+      if (Math.random() < .35) fx(() => sweat(H[Math.random() < .5 ? 0 : 1].root.position.x, 2.0, .2));
+      await moveTo(e.x, .62); feetDust(H[1 - w], -dir);
+    }
+    else if (e.t === 'waza') {
+      say(`${names[e.by]}、いなして体を入れかえる！`); fx(() => say3d('いなし!', H[e.by].root.position.x, 2.5, .3, '#1d7a55'));
+      const h = H[e.by], o = H[1 - e.by];
+      await Promise.all([moveTo(e.x, .55), tween(.55, k => { h.ex.z = Math.sin(k * PI) * .45; o.ex.rz = Math.sin(k * PI * 2) * .25; })]);
+    }
+    else if (e.t === 'miss') { say(`${names[e.by]}の技、${names[1 - e.by]}がこらえた！`); fx(() => say3d('こらえた!', H[1 - e.by].root.position.x, 2.5, .3, '#5b3a9e')); three.shake = .1; await moveTo(e.x, .5); }
+    else if (e.t === 'nebari') {
+      const h = H[e.by], ex = h.root.position.x;
+      three.follow = null; camTo([ex * .8, 1.8, 6.8], [ex, 1.1, 0]);
+      say(`${names[e.by]}、土俵際でねばる！`); fx(() => say3d('土俵際!', ex, 2.6, .3, '#cf3f36'));
+      h.anim = 'teeter'; h.t = 0;
+      await tween(.9, k => { h.ex.rx = -.3 * Math.sin(k * PI); });
+      fx(() => sweat(ex, 2.0, .3));
+      h.anim = 'push'; follow(.9);
+      await moveTo(e.x, .45);
+    }
     else if (e.t === 'end') {
       const W = H[e.winner], L = H[1 - e.winner];
       const dirL = e.winner === 0 ? s : -s; // 負けた側の土俵際の向き
       const lx = L.root.position.x, wx = W.root.position.x, roll = PI * 2.5;
-      W.anim = 'idle';
+      W.anim = 'idle'; three.follow = null;
+      let land = 0;
       if (e.type === 'out') {
-        three.shake = .2;
-        await tween(.9, k => { L.root.position.x = lerp(lx, dirL * (RING + 1.15), ease(k)); L.ex.rx = -roll * k; L.ex.y = Math.sin(k * PI) * .7 - .16 * k; });
+        camTo([dirL * 2.2, 3, 9.5], [dirL * 2.6, 1, 0]);
+        await tween(.9, k => { L.root.position.x = lerp(lx, dirL * (RING + 1.15), ease(k)); L.ex.rx = -roll * k; L.ex.y = Math.sin(k * PI) * .9 - .16 * k; });
+        land = dirL * (RING + 1.15); fx(() => say3d('ドスーン!', land, 2.4, .3, '#cf3f36'));
       } else if (e.type === 'throw') {
-        await tween(.9, k => { W.root.rotation.y = (e.winner === 0 ? s : -s) * PI / 2 + k * PI * 2; L.root.position.z = lerp(0, 2.3, ease(k)); L.root.position.x = lerp(lx, wx, ease(k)); L.ex.rz = roll * k; L.ex.y = Math.sin(k * PI) * .8 - .1 * k; });
+        camTo([wx * .6, 3.6, 9.6], [wx, 1.1, .8]);
+        await tween(1.0, k => { W.root.rotation.y = (e.winner === 0 ? s : -s) * PI / 2 + k * PI * 2; L.root.position.z = lerp(0, 2.3, ease(k)); L.root.position.x = lerp(lx, wx, ease(k)); L.ex.rz = roll * k; L.ex.y = Math.sin(k * PI) * 1.3 - .1 * k; });
+        land = wx; fx(() => say3d('ズドン!', wx, 2.4, 2.3, '#cf3f36'));
       } else if (e.type === 'slap') {
+        camTo([lx * .7, 2.6, 8.4], [lx, 1, 0]);
         await tween(.7, k => { W.root.position.z = -1.1 * ease(k); L.root.position.x = lerp(lx, lx - dirL * 1.5, ease(k)); L.ex.rx = PI / 2 * ease(k); L.ex.y = -.2 * k; });
+        land = lx - dirL * 1.5; fx(() => say3d('ベチャッ', land, 2.0, .3, '#5b3a9e'));
       } else { // うっちゃり
-        await tween(1, k => { W.root.rotation.y = (e.winner === 0 ? s : -s) * PI / 2 + k * PI; L.root.position.x = lerp(lx, -dirL * (RING + 1.15), ease(k)); L.ex.rx = roll * k; L.ex.y = Math.sin(k * PI) * 1.1 - .16 * k; });
+        camTo([wx * .6, 1.8, 7.2], [wx, 1.2, 0]);
+        fx(() => say3d('うっちゃり!!', wx, 3.0, .3, '#b9861a'));
+        await tween(1.2, k => { W.root.rotation.y = (e.winner === 0 ? s : -s) * PI / 2 + k * PI; W.ex.rx = -.5 * Math.sin(k * PI); L.root.position.x = lerp(lx, -dirL * (RING + 1.15), ease(k)); L.ex.rx = roll * k; L.ex.y = Math.sin(k * PI) * 1.4 - .16 * k; });
+        land = -dirL * (RING + 1.15);
       }
-      L.anim = 'down'; W.anim = 'win';
+      three.shake = .3;
+      fx(() => { dustRing(land, L.root.position.z, 10, 1.2); starBurst(land, 1.4, L.root.position.z, 6); });
+      L.anim = 'down'; W.anim = 'win'; W.ex.rx = 0;
       const wy = W.root.rotation.y;
+      // 軍配と勝ち名乗り
+      G.pointDir = Math.sign(W.root.position.x - G.root.position.x) || 1; gyoji('gyojiPoint', '勝負あり!');
+      camTo([W.root.position.x * .7, 2.9, 9.4], [W.root.position.x, 1.5, 0]);
       await tween(.3, k => { W.root.rotation.y = lerp(wy, 0, k); });
       say(`${e.kimarite}で、${names[e.winner]}の勝ち！`);
+      const upset = tiers[1 - e.winner] >= 5 && tiers[e.winner] < tiers[1 - e.winner];
+      if (upset) fx(() => { for (let i = 0; i < 16; i++) spawn('zabuton', (Math.random() - .5) * 10, 1 + Math.random(), 6 + Math.random() * 2, { v: [(Math.random() - .5) * 3, 4 + Math.random() * 3, -5 - Math.random() * 3], g: 7, life: 1.6, size: .45, spin: (Math.random() - .5) * 10, fade: .8 }); say3d(tiers[1 - e.winner] === 6 && tiers[e.winner] <= 2 ? '金星!!' : '座布団が舞う!', W.root.position.x, 3.2, .3, '#b9861a'); });
       bigEl.className = 'stage-big' + (e.winner === 0 ? ' win' : '');
       bigEl.innerHTML = `<div class="k">${esc(e.kimarite)}</div><div class="s">${e.winner === 0 ? '白星！' : '黒星…'}</div>`;
       bigEl.hidden = false;
+      await wait(1.0);
+      L.anim = 'bow'; L.t = 0; L.ex = { rx: 0, rz: 0, y: 0, z: 0 }; L.root.rotation.y = 0;
       await wait(.6);
     }
   }
