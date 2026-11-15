@@ -3097,7 +3097,30 @@ const IS_WEBKIT = /(iPhone|iPad|iPod)/.test(UA) || (/AppleWebKit/.test(UA) && /S
 const EPHEMERAL = IN_LINE || (IN_FRAME && IS_WEBKIT);
 const PAGES_URL = 'https://phacelia1215.github.io/hamster-sumo-game/';
 const SELF_URL = IN_FRAME ? PAGES_URL : location.href.split('#')[0];
+const ON_CLOUD = IN_FRAME && !/github\.io$/.test(location.hostname);
+function setupMove() {
+  // claude.ai 版：GitHub Pages 版へ引っ越しの案内（セーブを付けて開く）
+  const box = $('#inApp'); box.hidden = false;
+  $('#inAppTitle').textContent = 'ハムスター大相撲は引っ越しました';
+  $('#inAppText').textContent = '新しいページでは、ブラウザを閉じてもセーブが消えません。いまのセーブもそのまま持っていけます。';
+  const a = $('#openExt'); a.hidden = false; a.textContent = state ? 'セーブを持って新しいページへ' : '新しいページで遊ぶ'; a.href = PAGES_URL;
+  if (state) encodeSave(JSON.stringify(state)).then(code => { a.href = PAGES_URL + '#hs=' + code; });
+  $('#inAppLoad').hidden = true; $('#inAppCode').hidden = !state;
+  $('#inAppClose').textContent = 'このまま遊ぶ'; $('#inAppNote').textContent = 'うまく開けないときは、「セーブコードを控える」で控えて、新しいページのメニューから読み込んでください。';
+  $('#inAppClose').onclick = () => { box.hidden = true; };
+  $('#inAppCode').onclick = () => { box.hidden = true; ui.menu = true; ui.saveBox = { mode: 'export' }; renderMenu(); encodeSave(JSON.stringify(state)).then(code => { if (ui.saveBox && ui.saveBox.mode === 'export') { ui.saveBox.code = code; renderMenu(); } }); };
+}
+// 新しいページ側：URL のセーブを受け取る
+async function importFromHash() {
+  const h = location.hash || ''; if (!h.startsWith('#hs=')) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* noop */ }
+  let next = null; try { next = parseSave(await decodeSave(decodeURIComponent(h.slice(4)))); } catch (e) { next = null; }
+  if (!next) { toast('セーブを読み取れませんでした'); return; }
+  if (state && (state.savedAt || 0) > (next.savedAt || 0)) { toast('こちらのセーブのほうが新しいので、そのまま続けます'); return; }
+  state = next; ui.outing = null; ui.preview = null; ui.tab = 'train'; save(); adoptState(); toast('セーブを引き継ぎました');
+}
 function setupInApp() {
+  if (ON_CLOUD) { setupMove(); return; }
   if (!EPHEMERAL) return;
   const box = $('#inApp'); box.hidden = false;
   if (IN_LINE) {
@@ -3134,6 +3157,7 @@ function boot() {
   state = fromHot && (!local || (fromHot.savedAt || 0) >= (local.savedAt || 0)) ? fromHot : local;
   adoptState();
   setupInApp();
+  importFromHash();
   // IndexedDB の控えと照らし合わせ：こちらが新しければ戻す／なければ今のセーブを写して引き継ぐ
   IDB.get('save').then(j => {
     const mirror = parseSave(j);
