@@ -381,6 +381,21 @@ body { overflow: hidden; }
   .st5 span { font-size: 10px; }
   .st5 b { font-size: 13px; }
 }
+/* スマホ横向き：土俵とパネルを左右に並べる */
+@media (orientation: landscape) and (max-height: 560px) {
+  .app { padding-block: 4px; gap: 4px; }
+  .mast .t1 { font-size: 15px; } .mast .t2 { font-size: 11px; } .mast-info { display: none; } .menu-btn { min-height: 30px; }
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); grid-template-rows: minmax(0, 1fr); gap: 6px; }
+  .panel { gap: 5px; }
+  .status { padding: 5px 8px; gap: 3px; }
+  .st-name .shikona { font-size: 16px; }
+  .st5 span { font-size: 10px; } .st5 b { font-size: 12px; }
+  .tab { min-height: 32px; font-size: 13px; }
+  .card { padding: 8px 10px; }
+  .train { min-height: 42px; padding: 3px 6px; } .train span + span { display: none; }
+  .dock .btn.wide { min-height: 40px; }
+  .stage-say { font-size: 13px; }
+}
 </style>
 <!--/ARTIFACT-HEAD-->
 </head>
@@ -3095,7 +3110,7 @@ function renderBanzuke() {
 /* ================= 起動 ================= */
 window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
-const APP_VERSION = '2026.11.15-c';
+const APP_VERSION = '2026.11.15-d';
 const ARTIFACT_URL = 'https://claude.ai/artifact/3qb1eHLG5rfxa5FXszc8zn';
 const UA = navigator.userAgent || '';
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
