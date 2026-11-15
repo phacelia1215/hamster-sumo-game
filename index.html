@@ -570,10 +570,130 @@ function drawCoat(g, id, w, h, fur) {
   else if (id === 'kirakira') { [[.1, .2], [.3, .7], [.55, .3], [.8, .75], [.92, .2], [.45, .9], [.2, .45], [.7, .05]].forEach(([fx, fy], i) => { const X = fx * w, Y = fy * h, r = w / (i % 2 ? 30 : 20); g.fillStyle = i % 3 ? '#ffffff' : '#fff1a8'; g.beginPath(); g.moveTo(X, Y - r * 2); g.quadraticCurveTo(X, Y, X + r * 2, Y); g.quadraticCurveTo(X, Y, X, Y + r * 2); g.quadraticCurveTo(X, Y, X - r * 2, Y); g.quadraticCurveTo(X, Y, X, Y - r * 2); g.fill(); }); g.fillStyle = 'rgba(255,255,255,.7)'; for (let i = 0; i < 30; i++) dot(((i * 37) % 100) / 100 * w, ((i * 61) % 100) / 100 * h, w / 200 + 1); }
   else if (id === 'fluffy') { g.fillStyle = mixHex(fur, 0xffffff, .35); for (let i = 0; i < 14; i++) { const a = i / 14 * P2; dot(w / 2 + Math.cos(a) * w * .42, h / 2 + Math.sin(a) * h * .42, w * .1); } g.fillStyle = hex(fur); dot(w / 2, h / 2, w * .36); }
 }
+/* 芸術的な毛並み：1024x512 の正距円筒テクスチャに構図を描く（u=.75 が背中、u=.25 が正面） */
+const artCache = new Map();
+function artCoat(id, fur) {
+  const key = id + fur; if (artCache.has(key)) return artCache.get(key);
+  const W = 1024, H = 512, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const P2 = Math.PI * 2, BACK = W * .75;
+  let sd = 11; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const deep = mixHex(fur, 0x1c1420, .72), dark = mixHex(fur, 0x2a1622, .5), light = mixHex(fur, 0xffffff, .5), pale = mixHex(fur, 0xffffff, .8);
+  const wrap = (x, fn) => { fn(x); if (x < W * .25) fn(x + W); if (x > W * .75) fn(x - W); };
+  const dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, P2); g.fill(); };
+  const star = (x, y, ro, ri, n = 5, rot = -Math.PI / 2) => { g.beginPath(); for (let i = 0; i < n * 2; i++) { const a = rot + i * Math.PI / n, r = i % 2 ? ri : ro; g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } g.closePath(); };
+  const sparkle = (x, y, r) => { g.beginPath(); g.moveTo(x, y - r); g.quadraticCurveTo(x, y, x + r, y); g.quadraticCurveTo(x, y, x, y + r); g.quadraticCurveTo(x, y, x - r, y); g.quadraticCurveTo(x, y, x, y - r); };
+  const heart = (x, y, s) => { g.beginPath(); g.moveTo(x, y + s); g.bezierCurveTo(x - s * 1.7, y - s * .1, x - s * .8, y - s * 1.35, x, y - s * .45); g.bezierCurveTo(x + s * .8, y - s * 1.35, x + s * 1.7, y - s * .1, x, y + s); g.closePath(); };
+  // 先細りの筆ストローク（二次ベジェ）
+  const brush = (x0, y0, x1, y1, x2, y2, w0, col) => {
+    const N = 26, L = [], Rr = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N, mt = 1 - t, x = mt * mt * x0 + 2 * mt * t * x1 + t * t * x2, y = mt * mt * y0 + 2 * mt * t * y1 + t * t * y2;
+      const dx = 2 * mt * (x1 - x0) + 2 * t * (x2 - x1), dy = 2 * mt * (y1 - y0) + 2 * t * (y2 - y1), len = Math.hypot(dx, dy) || 1;
+      const w = w0 * Math.min(1, t / .12) * Math.pow(1 - t, 1.1);
+      L.push([x - dy / len * w, y + dx / len * w]); Rr.push([x + dy / len * w, y - dx / len * w]);
+    }
+    g.beginPath(); L.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); Rr.reverse().forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fillStyle = col; g.fill();
+  };
+  g.fillStyle = hex(fur); g.fillRect(0, 0, W, H);
+  // 下地：毛の流れ
+  g.lineCap = 'round';
+  for (let i = 0; i < 1800; i++) { const x = R() * W, y = R() * H, l = 6 + R() * 10; g.strokeStyle = R() < .5 ? `rgba(255,255,255,${.05 + R() * .06})` : `rgba(40,20,30,${.04 + R() * .05})`; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (R() - .5) * 3, y + l); g.stroke(); }
+
+  if (id === 'buchi') {
+    const blob = (x, y, r, col, s1) => wrap(x, X => { g.beginPath(); for (let i = 0; i <= 64; i++) { const a = i / 64 * P2, rr = r * (1 + .2 * Math.sin(3 * a + s1) + .12 * Math.sin(5 * a + s1 * 2) + .05 * Math.sin(11 * a + s1 * 3)); const px = X + Math.cos(a) * rr, py = y + Math.sin(a) * rr * .9; i ? g.lineTo(px, py) : g.moveTo(px, py); } g.closePath(); g.fillStyle = col; g.fill(); });
+    const spots = [[BACK, H * .44, 118, 1], [W * .06, H * .3, 70, 2], [W * .52, H * .64, 62, 3], [BACK - 150, H * .12, 58, 4], [W * .96, H * .78, 46, 5], [BACK + 120, H * .2, 34, 6]];
+    g.shadowColor = deep; g.shadowBlur = 26; spots.forEach(([x, y, r, k]) => blob(x, y, r, dark, k)); g.shadowBlur = 0;
+    spots.forEach(([x, y, r, k]) => blob(x + r * .1, y + r * .08, r * .72, deep, k + 1.3));
+    g.fillStyle = 'rgba(255,255,255,.14)'; spots.forEach(([x, y, r]) => wrap(x, X => { g.beginPath(); g.ellipse(X - r * .35, y - r * .4, r * .32, r * .12, -.4, 0, P2); g.fill(); }));
+  } else if (id === 'tora') {
+    g.shadowColor = deep; g.shadowBlur = 6;
+    for (let k = -5; k <= 5; k++) {
+      const x = BACK + k * 46 + (R() - .5) * 10; const out = Math.sign(k) || (R() < .5 ? -1 : 1), len = H * (.42 + R() * .22 - Math.abs(k) * .015);
+      wrap(x, X => brush(X, H * .04, X + out * 30, H * .04 + len * .55, X + out * (60 + Math.abs(k) * 6), H * .04 + len, 15 - Math.abs(k) * .6, deep));
+      if (k % 2 === 0) wrap(x, X => brush(X + out * 20, H * .5, X + out * 46, H * .64, X + out * 80, H * .78, 9, deep));
+    }
+    for (let k = 0; k < 6; k++) { const x = W * (.42 + k * .015) + (k % 2 ? 0 : 6); brush(x, H * .3, x + 30, H * .45, x + 64, H * .62, 8, dark); }
+    g.shadowBlur = 0;
+  } else if (id === 'hoshi') {
+    for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,250,220,${.2 + R() * .5})`; dot(R() * W, R() * H, .8 + R() * 1.8); }
+    const pts = []; for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push([W * .58 + t * W * .36, H * .16 + Math.sin(t * 2.2) * H * .38]); }
+    for (let i = pts.length - 1; i > 0; i--) { const t = i / pts.length; g.strokeStyle = `rgba(255,236,150,${.08 + (1 - t) * .55})`; g.lineWidth = 2 + (1 - t) * 26; g.beginPath(); g.moveTo(...pts[i]); g.lineTo(...pts[i - 1]); g.stroke(); }
+    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.beginPath(); pts.slice(0, 28).forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+    g.shadowColor = '#fff3a0'; g.shadowBlur = 34; star(pts[0][0], pts[0][1], 50, 22); g.fillStyle = '#ffd84d'; g.fill(); g.shadowBlur = 0; star(pts[0][0] - 6, pts[0][1] - 6, 20, 9); g.fillStyle = '#fffbe0'; g.fill();
+    for (let i = 0; i < 26; i++) { const x = R() * W, y = R() * H, r = 6 + R() * 14; if (x > W * .12 && x < W * .38 && y < H * .4) continue; g.shadowColor = '#fff3a0'; g.shadowBlur = 14; wrap(x, X => { star(X, y, r, r * .45, 5, -Math.PI / 2 + R() * .6); g.fillStyle = R() < .3 ? '#ffffff' : '#ffe680'; g.fill(); }); }
+    g.shadowBlur = 0;
+  } else if (id === 'heart') {
+    g.lineCap = 'round'; g.setLineDash([2, 14]); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 6; g.beginPath(); for (let x = 0; x <= W; x += 8) { const y = H * .7 + Math.sin(x / W * P2 * 2) * H * .1; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.setLineDash([]);
+    for (let x = 0; x < W; x += 64) { const y = H * .7 + Math.sin(x / W * P2 * 2) * H * .1; heart(x, y - 2, 9); g.fillStyle = x % 128 ? '#ff9eb5' : '#ffffff'; g.fill(); }
+    const bq = [[0, 0, 62, '#ff5f86'], [-74, 30, 38, '#ff9eb5'], [70, 34, 40, '#ffffff'], [-40, -64, 30, '#ffc2d1'], [46, -60, 32, '#e8413a'], [-112, -16, 22, '#ffffff'], [110, -10, 24, '#ff9eb5'], [0, 82, 26, '#ffc2d1']];
+    bq.forEach(([dx, dy, sz, col]) => wrap(BACK + dx, X => { heart(X, H * .38 + dy, sz); g.fillStyle = col; g.fill(); g.lineWidth = 5; g.strokeStyle = 'rgba(255,255,255,.9)'; g.stroke(); g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(X - sz * .45, H * .38 + dy - sz * .45, sz * .22, sz * .12, -.6, 0, P2); g.fill(); }));
+    for (let i = 0; i < 18; i++) { const x = R() * W, y = R() * H * .55; if (Math.abs(x - BACK) < 160 || (x > W * .12 && x < W * .38)) continue; heart(x, y, 7 + R() * 9); g.fillStyle = ['#ff9eb5', '#ffffff', '#ff5f86'][i % 3]; g.fill(); }
+  } else if (id === 'mizutama') {
+    const cols = 24, rows = 11;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const x = (i + (j % 2) * .5) * W / cols, y = (j + .5) * H / rows + Math.sin(i / cols * P2 * 2 + j * .4) * 8;
+      const r = 4 + 15 * (.5 + .5 * Math.sin(i / cols * P2 * 2 - j * .55));
+      wrap(x, X => { g.fillStyle = pale; dot(X, y, r + 3); g.fillStyle = j % 3 === 1 ? light : '#ffffff'; dot(X, y, r); g.fillStyle = 'rgba(255,255,255,.7)'; dot(X - r * .35, y - r * .35, r * .25); });
+    }
+  } else if (id === 'sakura') {
+    const petal = (x, y, s, rot, col = '#ffb3c8') => { g.save(); g.translate(x, y); g.rotate(rot); const gr = g.createLinearGradient(0, 0, 0, -s); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, col); g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.bezierCurveTo(-s * .55, -s * .3, -s * .5, -s * .9, -s * .14, -s); g.lineTo(0, -s * .86); g.lineTo(s * .14, -s); g.bezierCurveTo(s * .5, -s * .9, s * .55, -s * .3, 0, 0); g.fill(); g.restore(); };
+    const flower = (x, y, s, rot) => wrap(x, X => { for (let k = 0; k < 5; k++) petal(X, y, s, rot + k * P2 / 5); g.strokeStyle = '#e0708f'; g.lineWidth = 1.6; for (let k = 0; k < 8; k++) { const a = k / 8 * P2 + rot; g.beginPath(); g.moveTo(X, y); g.lineTo(X + Math.cos(a) * s * .38, y + Math.sin(a) * s * .38); g.stroke(); g.fillStyle = '#ffd34d'; dot(X + Math.cos(a) * s * .38, y + Math.sin(a) * s * .38, 2.4); } });
+    g.shadowColor = 'rgba(0,0,0,.25)'; g.shadowBlur = 4;
+    wrap(W * .5, X => { brush(X, H * .06, X + W * .2, H * .44, X + W * .46, H * .26, 18, '#5a3a2e'); brush(X + W * .2, H * .36, X + W * .22, H * .2, X + W * .28, H * .1, 9, '#5a3a2e'); brush(X + W * .32, H * .4, X + W * .36, H * .52, X + W * .42, H * .58, 8, '#5a3a2e'); });
+    g.shadowBlur = 0;
+    [[.56, .14, 30, .2], [.66, .34, 40, .7], [.75, .3, 34, 1.4], [.86, .3, 38, .3], [.73, .12, 26, 2], [.9, .5, 30, 1], [.62, .5, 24, .9]].forEach(([fx, fy, sz, r]) => flower(W * fx, H * fy, sz, r));
+    for (let i = 0; i < 34; i++) { const t = i / 34, x = W * (.95 + t * .6) % W, y = H * (.25 + t * .7) + Math.sin(t * 9) * 26; petal(x, y, 10 + R() * 8, R() * P2, i % 3 ? '#ffb3c8' : '#ffd1de'); }
+  } else if (id === 'onpu') {
+    const yAt = x => H * .52 + Math.sin(x / W * P2) * H * .16 + Math.sin(x / W * P2 * 2 + 1) * H * .05;
+    g.strokeStyle = deep; g.globalAlpha = .75; g.lineWidth = 2.6;
+    for (let l = -2; l <= 2; l++) { g.beginPath(); for (let x = 0; x <= W; x += 6) { const y = yAt(x) + l * 13; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+    g.globalAlpha = 1;
+    const head = (x, y, filled, col) => { g.save(); g.translate(x, y); g.rotate(-.35); g.beginPath(); g.ellipse(0, 0, 10, 7, 0, 0, P2); if (filled) { g.fillStyle = col; g.fill(); } else { g.lineWidth = 3; g.strokeStyle = col; g.stroke(); } g.restore(); };
+    const stem = (x, y, col, h = 52) => { g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 9, y - 2); g.lineTo(x + 9, y - h); g.stroke(); };
+    for (let x = 30, n = 0; x < W; x += 54 + (n % 3) * 10, n++) {
+      if (x > W * .14 && x < W * .36) continue;
+      const pos = [-2, -1, 0, 1, 2, 1, -1, 0][n % 8], y = yAt(x) + pos * 13 * .5 * 2 / 2 + pos * 6.5, col = n % 5 === 2 ? '#e8413a' : deep, kind = n % 4;
+      if (kind === 0) { head(x, y, true, col); stem(x, y, col); }
+      else if (kind === 1) { head(x, y, false, col); stem(x, y, col); }
+      else if (kind === 2) { head(x, y, true, col); stem(x, y, col); g.beginPath(); g.moveTo(x + 9, y - 52); g.quadraticCurveTo(x + 30, y - 38, x + 24, y - 20); g.stroke(); }
+      else { const x2 = x + 34, y2 = yAt(x2) - 6; head(x, y, true, col); head(x2, y2, true, col); stem(x, y, col); stem(x2, y2, col); g.lineWidth = 8; g.beginPath(); g.moveTo(x + 9, y - 52); g.lineTo(x2 + 9, y2 - 52); g.stroke(); x += 34; }
+    }
+    g.globalAlpha = .55; for (let i = 0; i < 10; i++) { const x = R() * W, y = H * (.08 + R() * .2); g.fillStyle = light; g.font = `900 ${22 + R() * 18}px serif`; g.fillText(i % 2 ? '♪' : '♫', x, y); } g.globalAlpha = 1;
+  } else if (id === 'kumo') {
+    const GOLD = '#d9a520', cloud = (x, y, s, dir) => wrap(x, X => {
+      g.fillStyle = pale; g.strokeStyle = GOLD; g.lineWidth = 4;
+      brush(X - dir * s * .2, y + s * .35, X - dir * s * 1.6, y + s * .6, X - dir * s * 3.2, y + s * .2, s * .28, pale);
+      const lobes = [[0, 0, .6], [dir * .7, .12, .48], [-dir * .62, .18, .44], [dir * .25, -.42, .42]];
+      lobes.forEach(([dx, dy, r]) => { g.beginPath(); g.arc(X + dx * s, y + dy * s, r * s, 0, P2); g.fill(); g.stroke(); });
+      lobes.forEach(([dx, dy, r]) => { g.beginPath(); for (let a = 0; a < P2 * 1.6; a += .2) { const rr = r * s * .78 * (1 - a / (P2 * 1.8)); g.lineTo(X + dx * s + Math.cos(a * dir) * rr, y + dy * s + Math.sin(a * dir) * rr); } g.stroke(); });
+    });
+    cloud(BACK, H * .42, 70, 1); cloud(W * .5, H * .22, 46, -1); cloud(W * .02, H * .62, 52, 1); cloud(BACK + 60, H * .82, 38, -1);
+    g.fillStyle = '#ffe9a0'; for (let i = 0; i < 26; i++) { const x = R() * W, y = R() * H; if (x > W * .14 && x < W * .36) continue; sparkle(x, y, 4 + R() * 6); g.fill(); }
+  } else if (id === 'hishi') {
+    const cols = 12, dw = W / cols, dh = H / 4.5, A = mixHex(fur, 0x1c1420, .32), B = mixHex(fur, 0xffffff, .38);
+    for (let j = -1; j < 6; j++) for (let i = 0; i <= cols; i++) { const x = i * dw + (j % 2 ? dw / 2 : 0), y = j * dh / 2 + dh / 2; g.beginPath(); g.moveTo(x, y - dh / 2); g.lineTo(x + dw / 2, y); g.lineTo(x, y + dh / 2); g.lineTo(x - dw / 2, y); g.closePath(); g.fillStyle = (i + j) % 2 ? A : B; g.fill(); }
+    g.strokeStyle = '#fff6e0'; g.lineWidth = 3; g.setLineDash([10, 9]);
+    for (let i = -cols; i <= cols * 2; i++) { const x = i * dw; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + H * dw / dh, H); g.stroke(); g.beginPath(); g.moveTo(x, 0); g.lineTo(x - H * dw / dh, H); g.stroke(); }
+    g.setLineDash([]);
+  } else if (id === 'grad') {
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, mixHex(fur, 0x3a2a6a, .55)); gr.addColorStop(.38, hex(fur)); gr.addColorStop(.7, mixHex(fur, 0xff8a7a, .42)); gr.addColorStop(1, mixHex(fur, 0xfff1d6, .75));
+    g.globalAlpha = .92; g.fillStyle = gr; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
+    const sun = g.createRadialGradient(BACK, H * .62, 10, BACK, H * .62, 190); sun.addColorStop(0, 'rgba(255,240,180,.75)'); sun.addColorStop(1, 'rgba(255,240,180,0)'); g.fillStyle = sun; g.fillRect(BACK - 200, H * .62 - 200, 400, 400);
+    for (let i = 0; i < 70; i++) { const y = R() * H, x = R() * W, l = 120 + R() * 260; g.strokeStyle = R() < .5 ? `rgba(255,255,255,${.06 + R() * .08})` : `rgba(90,50,120,${.05 + R() * .06})`; g.lineWidth = 4 + R() * 10; g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + l * .3, y - 10, x + l * .6, y + 10, x + l, y); g.stroke(); }
+  } else if (id === 'kirakira') {
+    [[BACK, H * .45, 220, 'rgba(190,160,255,.38)'], [W * .5, H * .25, 160, 'rgba(255,170,210,.3)'], [W * .04, H * .6, 170, 'rgba(150,200,255,.3)']].forEach(([x, y, r, col]) => wrap(x, X => { const ng = g.createRadialGradient(X, y, 4, X, y, r); ng.addColorStop(0, col); ng.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = ng; g.fillRect(X - r, y - r, r * 2, r * 2); }));
+    for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255,255,255,${.25 + R() * .6})`; dot(R() * W, R() * H, .6 + R() * 1.6); }
+    const cons = [[[.66, .25], [.7, .36], [.76, .32], [.8, .45], [.86, .4], [.84, .58]], [[.46, .5], [.5, .42], [.55, .48], [.52, .6]], [[.92, .15], [.98, .22], [1.04, .18], [1.08, .3]]];
+    cons.forEach(pts => { g.strokeStyle = 'rgba(255,255,255,.65)'; g.lineWidth = 2; g.beginPath(); pts.forEach(([fx, fy], i) => { const x = fx * W % W, y = fy * H; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); pts.forEach(([fx, fy], i) => { const x = fx * W % W, y = fy * H; g.shadowColor = '#ffffff'; g.shadowBlur = 16; g.fillStyle = i % 2 ? '#ffffff' : '#fff1a8'; sparkle(x, y, 12 + (i % 3) * 5); g.fill(); g.shadowBlur = 0; }); });
+    g.shadowColor = '#ffffff'; g.shadowBlur = 30; g.fillStyle = '#ffffff'; sparkle(BACK, H * .62, 34); g.fill(); g.shadowBlur = 0;
+  }
+  artCache.set(key, c); return c;
+}
 const coatThumbCache = new Map();
 function coatThumb(id, fur) {
   const key = id + fur; if (coatThumbCache.has(key)) return coatThumbCache.get(key);
-  const c = document.createElement('canvas'); c.width = c.height = 64; drawCoat(c.getContext('2d'), id, 64, 64, fur);
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  if (TEX_COATS.includes(id)) c.getContext('2d').drawImage(artCoat(id, fur), 1024 * .55, 512 * .1, 400, 400, 0, 0, 64, 64); else drawCoat(c.getContext('2d'), id, 64, 64, fur);
   const u = c.toDataURL(); coatThumbCache.set(key, u); return u;
 }
 /* お出かけアイテムのアイコン（64x64） */
@@ -1332,8 +1452,7 @@ function initThree() {
   const coatTexCache = new Map();
   function coatTex(id, fur) {
     const key = id + fur; if (coatTexCache.has(key)) return coatTexCache.get(key);
-    const c = document.createElement('canvas'); c.width = 256; c.height = 128; drawCoat(c.getContext('2d'), id, 256, 128, fur);
-    const t = new T.CanvasTexture(c); if (id !== 'grad') { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(.55, .7); } coatTexCache.set(key, t); return t;
+    const t = new T.CanvasTexture(artCoat(id, fur)); t.anisotropy = 4; coatTexCache.set(key, t); return t;
   }
 
   // 顔・お腹の正面（+z方向）を抜いた球（phiは+zが π/2）
@@ -1357,13 +1476,15 @@ function initThree() {
     const root = new T.Group(), rig = new T.Group(); root.add(rig);
     const coat = look.coat, coatMat = coat && TEX_COATS.includes(coat) ? new T.MeshStandardMaterial({ map: coatTex(coat, FUR), roughness: coat === 'kirakira' ? .3 : .85 }) : null;
     const furR = coat === 'tsuya' || coat === 'kirakira' ? .28 : FR;
-    const furSph = (r, sx, sy, sz) => { if (!coatMat) return sph(r, FUR, sx, sy, sz, furR); const m = new T.Mesh(SPH, coatMat); m.scale.set(r * sx, r * sy, r * sz); m.castShadow = true; return m; };
+    let headMat = null;
+    if (coatMat) { const t2 = coatMat.map.clone(); t2.wrapS = T.RepeatWrapping; t2.offset.x = .42; t2.needsUpdate = true; headMat = new T.MeshStandardMaterial({ map: t2, roughness: coatMat.roughness }); }
+    const furSph = (r, sx, sy, sz, onHead) => { if (!coatMat) return sph(r, FUR, sx, sy, sz, furR); const m = new T.Mesh(SPH, onHead ? headMat : coatMat); m.scale.set(r * sx, r * sy, r * sz); m.castShadow = true; return m; };
     rig.add(furSph(.8, 1, .95, .92));
     rig.add(at(sph(.64, K.belly, 1, 1, .62), 0, -.06, .36));
     rig.add(at(sph(.11, K.belly), 0, -.45, -.68));
     if (K.pattern === 'stripe') rig.add(at(sph(.81, K.stripe, .14, .97, .93), 0, 0, -.06));
     const head = new T.Group(); head.position.set(0, .82, .1); rig.add(head);
-    head.add(furSph(.66, 1.08, .95, 1));
+    head.add(furSph(.66, 1.08, .95, 1, true));
     if (K.pattern === 'stripe') head.add(at(sph(.67, K.stripe, .15, .96, 1), 0, 0, -.05));
     head.add(at(sph(.3, K.belly, 1.25, .8, .7), 0, -.14, .5));
     const cheeks = [], eyes = [];
@@ -1788,7 +1909,7 @@ function initThree() {
     const tr = api.training; if (!tr) return; api.training = null;
     tr.def.cleanup && tr.def.cleanup(tr);
     const H = tr.H; H.anim = 'idle'; H.root.position.set(0, 0, 0); H.root.quaternion.identity(); H.ex = { rx: 0, rz: 0, y: 0, z: 0 };
-    api.yaw = 0; api.setCam('home');
+    api.yaw = -.38; api.setCam('home');
   }
   function startTraining(id, great) {
     endTraining();
@@ -1867,7 +1988,7 @@ function initThree() {
 /* ---------- 3D 場面 ---------- */
 function showSolo(look, mode) {
   if (!three) return;
-  three.clear(); three.mode = mode; three.yaw = mode === 'select' ? .4 : 0;
+  three.clear(); three.mode = mode; three.yaw = mode === 'select' ? .4 : -.38;
   const H = three.makeHamster(look);
   three.actors.push(H); three.solo = H; three.setCam('home');
 }
@@ -2185,7 +2306,7 @@ async function animateOuting(O, r) {
   if (r.liked) { say3d('その服、似合ってる!', 0, 3.3, .3, '#b9861a'); spawn('heart', -.6, 2.2, .4, { v: [-.2, .6, 0], life: 1, size: .3, pop: true }); }
   H.anim = 'win'; H.t = 0; starBurst(0, 1.6, .5, 6); dustRing(0, 0, 5, .5);
   await wait(1.2);
-  H.anim = 'idle'; three.solo = H; three.yaw = 0;
+  H.anim = 'idle'; three.solo = H; three.yaw = -.38;
 }
 function trainHtml() {
   return `<div class="card stack">
