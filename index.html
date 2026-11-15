@@ -2876,8 +2876,13 @@ function trainHtml() {
   </div>`;
 }
 function dayDock() {
-  if (state.off > 0) return `<div class="dock-vs"><span class="offday">休みの日</span><span>${bashoName(state.basho)}まで あと${state.off}日</span></div>
-    <button class="btn primary wide" id="nextDayBtn" ${ui.busy ? 'disabled' : ''}>${state.off > 1 ? '次の日へ' : `${BASHO[(state.basho - 1) % 6]}の初日へ`}</button>`;
+  if (state.off > 0) {
+    // 休みの日は飛ばせない：お出かけしてから寝て次の日へ
+    if (!state.outed) return `<div class="dock-vs"><span class="offday">休みの日</span><span>${bashoName(state.basho)}まで あと${state.off}日</span></div>
+      <div class="dock-vs" style="text-align:right;align-items:flex-end"><b>行き先をえらんで</b><span>お出かけしよう</span></div>`;
+    return `<div class="dock-vs"><span class="offday">休みの日</span><span>お出かけから帰ってきた</span></div>
+      <button class="btn primary wide" id="nextDayBtn" ${ui.busy ? 'disabled' : ''}>帰って寝る</button>`;
+  }
   const m = me(), opp = byId(state.oppId), oi = rankInfo(posOf(opp));
   return `<div class="dock-vs"><b>${DAYS[state.day - 1]}の取組</b><span>${esc(m.name)} 対 ${esc(opp.name)}</span><span class="sub">${oi.label}・${opp.w}勝${opp.l}敗</span></div>
     <button class="btn primary wide" id="goBout" ${ui.busy ? 'disabled' : ''}>土俵へあがる</button>`;
