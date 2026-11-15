@@ -3132,6 +3132,8 @@ async function importFromHash() {
 function setupInApp() {
   if (ON_CLOUD) { setupMove(); return; }
   if (!EPHEMERAL) return;
+  // LINE が外部ブラウザへ引き渡す途中（openExternalBrowser=1）は案内を出さない
+  if (IN_LINE && /[?&]openExternalBrowser=1/.test(location.search)) return;
   const box = $('#inApp'); box.hidden = false;
   if (IN_LINE) {
     $('#inAppTitle').textContent = 'LINEのブラウザで開いています';
