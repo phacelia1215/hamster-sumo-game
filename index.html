@@ -1134,7 +1134,8 @@ function parseSave(json) {
 function load() { let j = null, k = null; try { j = localStorage.getItem(SAVE_KEY); k = localStorage.getItem(SAVE_KEY + '.bak'); } catch (e) { /* noop */ } const main = parseSave(j); return main || parseSave(k); }
 function migrate(s) {
   if (typeof s.money !== 'number') s.money = 120;
-  if (typeof s.bond !== 'number') s.bond = 30; if (typeof s.cared !== 'boolean') s.cared = true;
+  if (typeof s.bond !== 'number') s.bond = 30;
+  if (s.balance !== 2) { s.roster.forEach((r, i) => { if (r.me) return; Object.keys(r.stats).forEach(k => { r.stats[k] = Math.min(STAT_MAX, Math.max(r.stats[k], Math.round(npcBase(i) * rnd(.85, 1.1)))); }); }); s.balance = 2; } if (typeof s.cared !== 'boolean') s.cared = true;
   s.owned = Object.assign({ fur: ['natural'], mawashi: ['murasaki'], kesho: ['none'], acc: ['none'], outfit: ['none'], hat: ['none'], shoes: ['none'], bag: ['none'], coat: ['natural'] }, s.owned || {});
   if (typeof s.off !== 'number') s.off = 0; if (typeof s.outed !== 'boolean') s.outed = false;
   s.equip = Object.assign({ fur: 'natural', mawashi: 'murasaki', kesho: 'none', wig: 'auto', acc: 'none', outfit: 'none', hat: 'none', shoes: 'none', bag: 'none', coat: 'natural' }, s.equip || {});
@@ -1156,10 +1157,11 @@ const selectLook = () => ({ kind: ui.kind, mawashi: MAWASHIS[0].color, wig: 'cho
 const posOf = r => state.roster.indexOf(r);
 const byId = id => state.roster.find(r => r.id === id);
 
+const npcBase = pos => 12 + (N - 1 - pos) * 3.0;
 function newGame(kindId, name) {
   const K = kindOf(kindId), roster = [];
   for (let i = 0; i < N - 1; i++) {
-    const base = 9 + (N - 1 - i) * 2.3, st = {};
+    const base = npcBase(i), st = {};
     STAT.forEach(([k]) => { st[k] = Math.round(base * rnd(.8, 1.2)); });
     roster.push({ id: i + 1, name: NPC_NAMES[i], kind: pick(KINDS).id, mawashi: pick(MAWASHI), kesho: pick(KESHO.slice(1)).id, stats: st, w: 0, l: 0, delta: 0 });
   }
@@ -1167,7 +1169,7 @@ function newGame(kindId, name) {
     const j = Math.floor(Math.random() * (i + 1)); const t = roster[i].name; roster[i].name = roster[j].name; roster[j].name = t;
   }
   roster.push({ id: 0, me: true, name, kind: K.id, mawashi: MAWASHI[0], stats: { ...K.stats }, w: 0, l: 0, delta: 0 });
-  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1, off: 0, outed: false });
+  state = migrate({ v: 1, basho: 1, day: 1, actions: ACTIONS, energy: 100, phase: 'home', roster, faced: [], oppId: null, marks: [], yusho: 0, best: N - 1, off: 0, outed: false, balance: 2 });
   pickOpponent(); save();
 }
 function pickOpponent() {
@@ -1187,8 +1189,9 @@ function train(T) {
   const m = me(), low = state.energy < 30 && T.cost > 0;
   const great = !low && Math.random() < .15, parts = [];
   for (const k in T.gain) {
-    let g = T.gain[k] * (great ? 2 : 1) * (low ? .5 : 1) * (1 - m.stats[k] / 200) * rnd(.85, 1.25);
-    g = Math.max(1, Math.round(g));
+    // 能力が高いほど伸びにくい（端数は確率で1）
+    let g = T.gain[k] * (great ? 2 : 1) * (low ? .5 : 1) * Math.pow(Math.max(0, 1 - m.stats[k] / 140), 1.4) * rnd(.85, 1.25);
+    g = Math.floor(g) + (Math.random() < g % 1 ? 1 : 0);
     const before = m.stats[k]; m.stats[k] = Math.min(STAT_MAX, before + g);
     if (m.stats[k] > before) parts.push(`${STAT.find(s => s[0] === k)[1]}+${m.stats[k] - before}`);
   }
@@ -1268,6 +1271,7 @@ function nextDay() {
 }
 function endBasho() {
   const m = me(), oldPos = posOf(m), oldInfo = rankInfo(oldPos), news = [];
+  let wonYusho = false;
   // 優勝争い
   const div = state.roster.filter(r => rankInfo(posOf(r)).division === oldInfo.division);
   const top = Math.max(...div.map(r => r.w));
@@ -1275,13 +1279,24 @@ function endBasho() {
     const rivals = div.filter(r => !r.me && r.w === top);
     let won = true;
     for (const r of rivals) { if (simulateBout(effStats(m.stats, .95), effStats(r.stats, .9)).winner !== 0) { won = false; news.push({ t: `優勝決定戦で${r.name}に敗れる…あと一歩！` }); break; } }
-    if (won) { const bonus = 100 + oldInfo.tier * 50; state.yusho++; state.money += bonus; news.push({ t: `${oldInfo.division}優勝！（${m.w}勝${m.l}敗${rivals.length ? '・決定戦を制す' : ''}）賞金 +${bonus}粒`, gold: true }); }
+    if (won) { wonYusho = true; const bonus = 100 + oldInfo.tier * 50; state.yusho++; state.money += bonus; news.push({ t: `${oldInfo.division}優勝！（${m.w}勝${m.l}敗${rivals.length ? '・決定戦を制す' : ''}）賞金 +${bonus}粒`, gold: true }); }
   }
   // 番付編成
   const order = state.roster.map((r, i) => ({ r, i, s: i - (r.w - r.l) * 1.3 }));
   order.sort((a, b) => a.s - b.s || a.i - b.i);
-  order.forEach((o, ni) => { o.r.delta = o.i - ni; o.r.pw = o.r.w; o.r.pl = o.r.l; });
-  state.roster = order.map(o => o.r);
+  let arr = order.map(o => o.r);
+  // 昇進のきまり：1場所で上がれる幅に上限／大関・横綱は条件つき
+  const prev = state.prevBasho || { w: 0, pos: N - 1, yusho: false };
+  let np = arr.indexOf(m), target = Math.max(np, oldPos - (m.w === 7 ? 8 : m.w >= 5 ? 5 : 3));
+  const ozekiOK = oldPos < 8 && m.w >= 6 && prev.pos < 8 && prev.w >= 5;
+  const yokozunaOK = oldPos < 4 && wonYusho && prev.yusho && prev.pos < 4;
+  if (target < 4 && oldPos >= 4 && !ozekiOK) { target = 4; if (oldPos < 8 && m.w >= 5) news.push({ t: '大関昇進は見送り。三役で2場所続けて好成績（5勝・6勝以上）が必要です' }); }
+  if (target < 2 && oldPos >= 2 && !yokozunaOK) { target = 2; if (oldPos < 4 && wonYusho) news.push({ t: '綱取りへ前進！来場所も優勝すれば横綱昇進', gold: true }); }
+  if (target !== np) { arr.splice(np, 1); arr.splice(target, 0, m); }
+  const oldIdx = new Map(state.roster.map((r, i) => [r.id, i]));
+  arr.forEach((r, ni2) => { r.delta = oldIdx.get(r.id) - ni2; r.pw = r.w; r.pl = r.l; });
+  state.roster = arr;
+  state.prevBasho = { w: m.w, pos: oldPos, yusho: wonYusho };
   const newPos = posOf(m), ni = rankInfo(newPos);
   news.push({ t: `${m.w}勝${m.l}敗で${m.w > m.l ? '勝ち越し' : '負け越し'}。新番付は ${ni.label}。` });
   if (ni.tier > oldInfo.tier) news.push({ t: ['', '新十両！関取の仲間入り。大銀杏が結えます', '新入幕！幕内力士に昇進', '新三役！小結に昇進', '関脇に昇進！', '大関昇進！', '横綱昇進！！ 綱を締めて土俵入り'][ni.tier], gold: ni.tier >= 5 });
@@ -1291,7 +1306,7 @@ function endBasho() {
   if (newPos < state.best) state.best = newPos;
   if (ni.tier > prevBest) { const W = WIGS.find(w => w.tier === ni.tier && w.fan); if (W) news.push({ t: `新しいカツラ「${W.name}」を解禁！着せ替えで選べます`, gold: true }); }
   // 来場所の準備
-  state.roster.forEach(r => { r.w = 0; r.l = 0; if (!r.me) STAT.forEach(([k]) => { r.stats[k] = clamp(Math.round(r.stats[k] + rnd(-1.5, 2.2)), 5, STAT_MAX); }); });
+  state.roster.forEach(r => { r.w = 0; r.l = 0; if (!r.me) STAT.forEach(([k]) => { r.stats[k] = clamp(Math.round(r.stats[k] + rnd(-1.5, 1.8)), 5, STAT_MAX); }); });
   ui.news = news; ui.finished = bashoName(state.basho);
   state.basho++; state.day = 1; state.actions = ACTIONS; state.energy = Math.min(100, state.energy + 40);
   state.faced = []; state.marks = []; state.phase = 'banzuke'; state.off = OFF_DAYS; state.outed = false; pickOpponent(); save();
@@ -3110,7 +3125,7 @@ function renderBanzuke() {
 /* ================= 起動 ================= */
 window.__sumo = { get three() { return three; }, Sound, simulateBout, rankInfo, get state() { return state; }, render: () => { if (three && state) showHome(); render(); } };
 function syncSnd() { const on = Sound.pref.bgm || Sound.pref.sfx; $('#sndBtn').setAttribute('aria-pressed', String(on)); }
-const APP_VERSION = '2026.11.15-d';
+const APP_VERSION = '2026.11.16-a';
 const ARTIFACT_URL = 'https://claude.ai/artifact/3qb1eHLG5rfxa5FXszc8zn';
 const UA = navigator.userAgent || '';
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
